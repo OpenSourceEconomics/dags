@@ -4,7 +4,7 @@
 # You can set these variables from the command line.
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
-SPHINXPROJ    = pybaum
+SPHINXPROJ    = dags
 SOURCEDIR     = source
 BUILDDIR      = build
 
