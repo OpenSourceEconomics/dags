@@ -1,0 +1,21 @@
+[tool.nbqa.config]
+isort = "setup.cfg"
+black = "pyproject.toml"
+
+[tool.nbqa.mutate]
+isort = 1
+black = 1
+pyupgrade = 1
+
+
+[tool.nbqa.addopts]
+isort = ["--treat-comment-as-code", "# %%", "--profile=black"]
+pyupgrade = ["--py37-plus"]
+
+
+[build-system]
+requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.0"]
+
+
+[tool.setuptools_scm]
+write_to = "src/dags/_version.py"

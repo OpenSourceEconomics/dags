@@ -1,0 +1,31 @@
+name: dags
+
+channels:
+  - conda-forge
+  - nodefaults
+
+dependencies:
+  - python >=3.9
+  - networkx
+  - pip
+  - setuptools_scm
+  - toml
+
+  # Testing
+  - pre-commit
+  - pytest
+  - pytest-cov
+  - pytest-xdist
+  - tox-conda
+
+  # Documentation
+  - sphinx >=4
+  - sphinx-autoapi
+  - sphinx-copybutton
+  - sphinx-panels
+  - pydata-sphinx-theme>=0.3.0
+
+  # Development
+  - jupyterlab
+  - nbsphinx
+  - pdbpp
