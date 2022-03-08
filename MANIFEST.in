@@ -1,5 +1,6 @@
 include CITATION
 include LICENSE
+include README.rst
 include CHANGES.rst
 
 exclude *.yaml

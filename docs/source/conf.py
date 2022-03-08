@@ -2,7 +2,7 @@ import os
 from importlib.metadata import version
 
 
-author = "Janos Gabler, Tobias Raabe"
+author = "Janoś Gabler, Tobias Raabe"
 
 # Set variable so that todos are shown in local build
 on_rtd = os.environ.get("READTHEDOCS") == "True"

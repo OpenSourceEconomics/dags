@@ -6,10 +6,12 @@ channels:
 
 dependencies:
   - python >=3.9
-  - networkx
   - pip
   - setuptools_scm
   - toml
+
+  # Package
+  - networkx
 
   # Testing
   - pre-commit
@@ -28,4 +30,3 @@ dependencies:
   # Development
   - jupyterlab
   - nbsphinx
-  - pdbpp

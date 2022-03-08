@@ -6,7 +6,7 @@ import networkx as nx
 
 
 def concatenate_functions(functions, targets, return_dict: bool = False):
-    """Combine functions to one function that generates target.
+    """Combine functions to one function that generates the targets.
 
     Functions can depend on the output of other functions as inputs, as long as the
     dependencies can be described by a directed acyclic graph (DAG).
