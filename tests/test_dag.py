@@ -101,7 +101,7 @@ def test_get_ancestors_multiple_targets():
     assert calculated == expected
 
 
-def test_aggregate_functions_with_and():
+def test_concatenate_functions_with_aggregation_via_and():
     funcs = {"f1": lambda: True, "f2": lambda: False}
     aggregated = concatenate_functions(
         functions=funcs,
@@ -111,7 +111,7 @@ def test_aggregate_functions_with_and():
     assert not aggregated()
 
 
-def test_aggregate_functions_with_or():
+def test_concatenate_functions_with_aggregation_via_or():
     funcs = {"f1": lambda: True, "f2": lambda: False}
     aggregated = concatenate_functions(
         functions=funcs,

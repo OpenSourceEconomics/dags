@@ -282,11 +282,6 @@ def _create_concatenated_function(
     return concatenated
 
 
-def _dict_subset(dictionary, keys):
-    """Reduce dictionary to keys."""
-    return {k: dictionary[k] for k in keys}
-
-
 def _format_list_linewise(list_):
     formatted_list = '",\n    "'.join(list_)
     return textwrap.dedent(
