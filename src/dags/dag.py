@@ -1,5 +1,6 @@
 import inspect
 import textwrap
+from functools import partial
 
 import networkx as nx
 from dags.process_output import aggregated_output
@@ -8,13 +9,19 @@ from dags.process_output import list_output
 from dags.process_output import single_output
 
 
-def concatenate_functions(functions, targets, return_type="tuple", aggregator=None):
-    """Combine functions to one function that generates the targets.
+def concatenate_functions(
+    functions,
+    targets,
+    return_type="tuple",
+    aggregator=None,
+    specific_inputs=None,
+):
+    """Combine functions to one function that generates targets.
 
     Functions can depend on the output of other functions as inputs, as long as the
     dependencies can be described by a directed acyclic graph (DAG).
 
-    Functions that are not required to produce the target will simply be ignored.
+    Functions that are not required to produce the targets will simply be ignored.
 
     The arguments of the combined function are all arguments of relevant functions
     that are not themselves function names.
@@ -29,6 +36,9 @@ def concatenate_functions(functions, targets, return_type="tuple", aggregator=No
             targets are a single string or if an aggregator is provided.
         aggregator (callable or None): Binary reduction function that is used to
             aggregate the targets into a single target.
+        specific_inputs (list): A list of function inputs are specific to each function
+            despite having the same name. Those inputs will be provided as a dict
+            where the keys are function names and the values are the actual argument.
 
     Returns:
         function: A function that produces targets when called with suitable arguments.
@@ -36,25 +46,26 @@ def concatenate_functions(functions, targets, return_type="tuple", aggregator=No
     """
     _targets = _harmonize_targets(targets)
     _functions = _harmonize_functions(functions)
+    _specific_inputs = _harmonize_specific_inputs(specific_inputs)
     _fail_if_targets_have_wrong_types(_targets)
     _fail_if_functions_are_missing(_functions, _targets)
 
-    raw_dag = _create_complete_dag(_functions)
-    dag = _limit_dag_to_targets_and_their_ancestors(raw_dag, _targets)
-    signature = _create_signature_of_concatenated_function(_functions, dag)
-    exec_info = _create_execution_info(_functions, dag)
-    concatenated = _create_concatenated_function(exec_info, signature, _targets)
+    _raw_dag = _create_complete_dag(_functions)
+    _dag = _limit_dag_to_targets_and_their_ancestors(_raw_dag, _targets)
+    _signature = _create_signature_of_concatenated_function(_functions, _dag)
+    _exec_info = _create_execution_info(_functions, _dag, _specific_inputs)
+    _concatenated = _create_concatenated_function(_exec_info, _signature, _targets)
 
     if isinstance(targets, str) or (aggregator is not None and len(_targets) == 1):
-        out = single_output(concatenated)
+        out = single_output(_concatenated)
     elif aggregator is not None:
-        out = aggregated_output(concatenated, aggregator=aggregator)
+        out = aggregated_output(_concatenated, aggregator=aggregator)
     elif return_type == "list":
-        out = list_output(concatenated)
+        out = list_output(_concatenated)
     elif return_type == "tuple":
-        out = concatenated
+        out = _concatenated
     elif return_type == "dict":
-        out = dict_output(concatenated, keys=_targets)
+        out = dict_output(_concatenated, keys=_targets)
     else:
         raise ValueError(
             f"Invalid return type {return_type}. Must be 'list', 'tuple',  or 'dict'. "
@@ -104,6 +115,16 @@ def _harmonize_targets(targets):
     if isinstance(targets, str):
         targets = [targets]
     return targets
+
+
+def _harmonize_specific_inputs(specific_inputs):
+    if specific_inputs is None:
+        out = {}
+    elif isinstance(specific_inputs, str):
+        out = {specific_inputs}
+    else:
+        out = set(specific_inputs)
+    return out
 
 
 def _fail_if_targets_have_wrong_types(targets):
@@ -197,7 +218,7 @@ def _create_signature_of_concatenated_function(functions, dag):
     return sig
 
 
-def _create_execution_info(functions, dag):
+def _create_execution_info(functions, dag, specific_inputs):
     """Create a dictionary with all information needed to execute relevant functions.
 
     Args:
@@ -212,10 +233,14 @@ def _create_execution_info(functions, dag):
     out = {}
     for node in nx.topological_sort(dag):
         if node in functions:
+            arguments = list(inspect.signature(functions[node]).parameters)
             info = {}
             info["func"] = functions[node]
-            info["arguments"] = list(inspect.signature(functions[node]).parameters)
-
+            info["arguments"] = arguments
+            info["extractors"] = [
+                partial(_extract, key=node) if arg in specific_inputs else _identity
+                for arg in arguments
+            ]
             out[node] = info
     return out
 
@@ -243,8 +268,10 @@ def _create_concatenated_function(
     def concatenated(*args, **kwargs):
         results = {**dict(zip(parameters, args)), **kwargs}
         for name, info in execution_info.items():
-            arguments = _dict_subset(results, info["arguments"])
-            result = info["func"](**arguments)
+            kwargs = {}
+            for arg, extractor in zip(info["arguments"], info["extractors"]):
+                kwargs[arg] = extractor(results[arg])
+            result = info["func"](**kwargs)
             results[name] = result
 
         out = tuple(results[target] for target in targets)
@@ -269,3 +296,11 @@ def _format_list_linewise(list_):
         ]
         """
     ).format(formatted_list=formatted_list)
+
+
+def _extract(obj, key):
+    return obj[key]
+
+
+def _identity(obj):
+    return obj

@@ -119,3 +119,21 @@ def test_aggregate_functions_with_or():
         aggregator=lambda a, b: a or b,
     )
     assert aggregated()
+
+
+def test_concatenate_functions_with_specific_input():
+    def f(params):
+        return params
+
+    def g(f, params):
+        return f, params
+
+    concatenated = concatenate_functions(
+        functions={"f": f, "g": g}, specific_inputs="params", targets="g"
+    )
+
+    calculated = concatenated(params={"f": 1, "g": 2})
+
+    expected = (1, 2)
+
+    assert calculated == expected
