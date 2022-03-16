@@ -1,11 +1,14 @@
-import functools
 import inspect
 import textwrap
 
 import networkx as nx
+from dags.process_output import aggregated_output
+from dags.process_output import dict_output
+from dags.process_output import list_output
+from dags.process_output import single_output
 
 
-def concatenate_functions(functions, targets, return_dict: bool = False):
+def concatenate_functions(functions, targets, return_type="tuple", aggregator=None):
     """Combine functions to one function that generates the targets.
 
     Functions can depend on the output of other functions as inputs, as long as the
@@ -22,54 +25,41 @@ def concatenate_functions(functions, targets, return_dict: bool = False):
             the name of the function is set to the dictionary key.
         targets (str): Name of the function that produces the target or list of such
             function names.
-        return_dict (bool, optional): Whether the function should return a dictionary
-            with node names as keys or just the values as a tuple for multiple outputs.
+        return_type (str): One of "tuple", "list", "dict". This is ignored if the
+            targets are a single string or if an aggregator is provided.
+        aggregator (callable or None): Binary reduction function that is used to
+            aggregate the targets into a single target.
 
     Returns:
-        function: A function that produces target when called with suitable arguments.
+        function: A function that produces targets when called with suitable arguments.
 
     """
-    functions, targets, single_target = _check_and_process_inputs(functions, targets)
+    single_target = isinstance(targets, str)
+    functions, targets = _check_and_process_inputs(functions, targets)
+
     raw_dag = _create_complete_dag(functions)
     dag = _limit_dag_to_targets_and_their_ancestors(raw_dag, targets)
     signature = _get_signature(functions, dag)
     exec_info = _create_execution_info(functions, dag)
-    if single_target:
-        concatenated = _create_concatenated_function_single_target(exec_info, signature)
+    concatenated = _create_concatenated_function(exec_info, signature, targets)
+
+    if single_target or (aggregator is not None and len(targets) == 1):
+        out = single_output(concatenated)
+    elif aggregator is not None:
+        out = aggregated_output(concatenated, aggregator=aggregator)
+    elif return_type == "list":
+        out = list_output(concatenated)
+    elif return_type == "tuple":
+        out = concatenated
+    elif return_type == "dict":
+        out = dict_output(concatenated, keys=targets)
     else:
-        concatenated = _create_concatenated_function_multi_target(
-            exec_info, signature, targets, return_dict
+        raise ValueError(
+            f"Invalid return type {return_type}. Must be 'list', 'tuple',  or 'dict'. "
+            f"You provided {return_type}."
         )
-    return concatenated
 
-
-def aggregate_functions(functions, targets, aggregator=lambda a, b: a and b):
-    """Aggregate the result of targets
-
-    Functions can depend on the output of other functions as inputs, as long as the
-    dependencies can be described by a directed acyclic graph (DAG).
-
-    All functions in targets need to return a scalar bool.
-
-    Functions that are not required to produce the target will simply be ignored.
-
-    The arguments of the combined function are all arguments of relevant functions
-    that are not themselves function names.
-
-    Args:
-        functions (dict or list): Dict or list of functions. If a list, the function
-            name is inferred from the __name__ attribute of the entries. If a dict,
-            the name of the function is set to the dictionary key.
-        targets (str): Name of the function that produces the target or list of such
-            function names.
-
-    Returns:
-        function: A function that produces target when called with suitable arguments.
-
-    """
-    concatenated = concatenate_functions(functions, targets, False)
-    aggregated = _add_aggregation(concatenated, aggregator)
-    return aggregated
+    return out
 
 
 def get_ancestors(functions, targets, include_target=False):
@@ -86,7 +76,7 @@ def get_ancestors(functions, targets, include_target=False):
         set: The ancestors
 
     """
-    functions, targets, _ = _check_and_process_inputs(functions, targets)
+    functions, targets = _check_and_process_inputs(functions, targets)
     raw_dag = _create_complete_dag(functions)
     dag = _limit_dag_to_targets_and_their_ancestors(raw_dag, targets)
 
@@ -102,8 +92,7 @@ def _check_and_process_inputs(functions, targets):
     if isinstance(functions, (list, tuple)):
         functions = {func.__name__: func for func in functions}
 
-    single_target = isinstance(targets, str)
-    if single_target:
+    if isinstance(targets, str):
         targets = [targets]
 
     not_strings = [target for target in targets if not isinstance(target, str)]
@@ -120,7 +109,7 @@ def _check_and_process_inputs(functions, targets):
             f"The following targets have no corresponding function:\n{formatted}"
         )
 
-    return functions, targets, single_target
+    return functions, targets
 
 
 def _create_complete_dag(functions):
@@ -217,38 +206,10 @@ def _create_execution_info(functions, dag):
     return out
 
 
-def _create_concatenated_function_single_target(execution_info, signature):
-    """Create a concatenated function object with correct signature.
-
-    Args:
-        execution_info (dict): Dictionary with functions and their arguments for each
-            node in the dag. The functions are already in topological_sort order.
-        signature (inspect.Signature)): The signature of the concatenated function.
-
-    Returns:
-        callable: The concatenated function
-
-    """
-    parameters = sorted(signature.parameters)
-
-    def concatenated(*args, **kwargs):
-        results = {**dict(zip(parameters, args)), **kwargs}
-        for name, info in execution_info.items():
-            arguments = _dict_subset(results, info["arguments"])
-            result = info["func"](**arguments)
-            results[name] = result
-        return result
-
-    concatenated.__signature__ = signature
-
-    return concatenated
-
-
-def _create_concatenated_function_multi_target(
+def _create_concatenated_function(
     execution_info,
     signature,
     targets,
-    return_dict,
 ):
     """Create a concatenated function object with correct signature.
 
@@ -258,8 +219,6 @@ def _create_concatenated_function_multi_target(
         signature (inspect.Signature)): The signature of the concatenated function.
         targets (list): List that is used to determine what is returned and the
             order of the outputs.
-        return_dict (bool): Whether the function should return a dictionary
-            with node names as keys or just the values as a tuple for multiple outputs.
 
     Returns:
         callable: The concatenated function
@@ -274,40 +233,17 @@ def _create_concatenated_function_multi_target(
             result = info["func"](**arguments)
             results[name] = result
 
-        out = {target: results[target] for target in targets}
+        out = tuple(results[target] for target in targets)
         return out
 
     concatenated.__signature__ = signature
 
-    if not return_dict:
-        concatenated = _convert_dict_output_to_tuple(concatenated)
-
     return concatenated
-
-
-def _add_aggregation(func, aggregator):
-    @functools.wraps(func)
-    def with_aggregation(*args, **kwargs):
-        to_aggregate = func(*args, **kwargs)
-        agg = to_aggregate[0]
-        for entry in to_aggregate[1:]:
-            agg = aggregator(agg, entry)
-        return agg
-
-    return with_aggregation
 
 
 def _dict_subset(dictionary, keys):
     """Reduce dictionary to keys."""
     return {k: dictionary[k] for k in keys}
-
-
-def _convert_dict_output_to_tuple(func):
-    @functools.wraps(func)
-    def wrapped(*args, **kwargs):
-        return tuple(func(*args, **kwargs).values())
-
-    return wrapped
 
 
 def _format_list_linewise(list_):
