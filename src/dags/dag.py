@@ -34,16 +34,18 @@ def concatenate_functions(functions, targets, return_type="tuple", aggregator=No
         function: A function that produces targets when called with suitable arguments.
 
     """
-    single_target = isinstance(targets, str)
-    functions, targets = _check_and_process_inputs(functions, targets)
+    _targets = _harmonize_targets(targets)
+    _functions = _harmonize_functions(functions)
+    _fail_if_targets_have_wrong_types(_targets)
+    _fail_if_functions_are_missing(_functions, _targets)
 
-    raw_dag = _create_complete_dag(functions)
-    dag = _limit_dag_to_targets_and_their_ancestors(raw_dag, targets)
-    signature = _get_signature(functions, dag)
-    exec_info = _create_execution_info(functions, dag)
-    concatenated = _create_concatenated_function(exec_info, signature, targets)
+    raw_dag = _create_complete_dag(_functions)
+    dag = _limit_dag_to_targets_and_their_ancestors(raw_dag, _targets)
+    signature = _create_signature_of_concatenated_function(_functions, dag)
+    exec_info = _create_execution_info(_functions, dag)
+    concatenated = _create_concatenated_function(exec_info, signature, _targets)
 
-    if single_target or (aggregator is not None and len(targets) == 1):
+    if isinstance(targets, str) or (aggregator is not None and len(_targets) == 1):
         out = single_output(concatenated)
     elif aggregator is not None:
         out = aggregated_output(concatenated, aggregator=aggregator)
@@ -52,7 +54,7 @@ def concatenate_functions(functions, targets, return_type="tuple", aggregator=No
     elif return_type == "tuple":
         out = concatenated
     elif return_type == "dict":
-        out = dict_output(concatenated, keys=targets)
+        out = dict_output(concatenated, keys=_targets)
     else:
         raise ValueError(
             f"Invalid return type {return_type}. Must be 'list', 'tuple',  or 'dict'. "
@@ -62,45 +64,57 @@ def concatenate_functions(functions, targets, return_type="tuple", aggregator=No
     return out
 
 
-def get_ancestors(functions, targets, include_target=False):
-    """Build a DAG and extract all ancestors of target.
+def get_ancestors(functions, targets, include_targets=False):
+    """Build a DAG and extract all ancestors of targets.
 
     Args:
         functions (dict or list): Dict or list of functions. If a list, the function
             name is inferred from the __name__ attribute of the entries. If a dict,
             with node names as keys or just the values as a tuple for multiple outputs.
         targets (str): Name of the function that produces the target function.
-        include_target (bool): Whether to include the target as its own ancestor.
+        include_targets (bool): Whether to include the target as its own ancestor.
 
     Returns:
         set: The ancestors
 
     """
-    functions, targets = _check_and_process_inputs(functions, targets)
-    raw_dag = _create_complete_dag(functions)
-    dag = _limit_dag_to_targets_and_their_ancestors(raw_dag, targets)
+    _targets = _harmonize_targets(targets)
+    _functions = _harmonize_functions(functions)
+    _fail_if_targets_have_wrong_types(_targets)
+    _fail_if_functions_are_missing(_functions, _targets)
+
+    raw_dag = _create_complete_dag(_functions)
+    dag = _limit_dag_to_targets_and_their_ancestors(raw_dag, _targets)
 
     ancestors = set()
-    for target in targets:
+    for target in _targets:
         ancestors = ancestors.union(nx.ancestors(dag, target))
-        if include_target:
+        if include_targets:
             ancestors.add(target)
     return ancestors
 
 
-def _check_and_process_inputs(functions, targets):
+def _harmonize_functions(functions):
     if isinstance(functions, (list, tuple)):
         functions = {func.__name__: func for func in functions}
+    return functions
 
+
+def _harmonize_targets(targets):
     if isinstance(targets, str):
         targets = [targets]
+    return targets
 
+
+def _fail_if_targets_have_wrong_types(targets):
     not_strings = [target for target in targets if not isinstance(target, str)]
     if not_strings:
         raise ValueError(
             f"Targets must be strings. The following targets are not: {not_strings}"
         )
 
+
+def _fail_if_functions_are_missing(functions, targets):
     # to-do: add typo suggestions via fuzzywuzzy, see estimagic
     targets_not_in_functions = set(targets) - set(functions)
     if targets_not_in_functions:
@@ -158,7 +172,7 @@ def _limit_dag_to_targets_and_their_ancestors(dag, targets):
     return dag
 
 
-def _get_signature(functions, dag):
+def _create_signature_of_concatenated_function(functions, dag):
     """Create the signature of the concatenated function.
 
     Args:
@@ -224,7 +238,7 @@ def _create_concatenated_function(
         callable: The concatenated function
 
     """
-    parameters = sorted(signature.parameters)
+    parameters = signature.parameters
 
     def concatenated(*args, **kwargs):
         results = {**dict(zip(parameters, args)), **kwargs}
