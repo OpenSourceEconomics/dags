@@ -6,6 +6,7 @@ from dags.output import aggregated_output
 from dags.output import dict_output
 from dags.output import list_output
 from dags.output import single_output
+from dags.signature import with_signature
 
 
 def concatenate_functions(
@@ -13,6 +14,7 @@ def concatenate_functions(
     targets,
     return_type="tuple",
     aggregator=None,
+    enforce_signature=True,
 ):
     """Combine functions to one function that generates targets.
 
@@ -34,6 +36,9 @@ def concatenate_functions(
             targets are a single string or if an aggregator is provided.
         aggregator (callable or None): Binary reduction function that is used to
             aggregate the targets into a single target.
+        enforce_signature (bool): If True, the signature of the concatenated function
+            is enforced. Otherwise it is only provided for introspection purposes.
+            Enforcing the signature has a small runtime overhead.
 
     Returns:
         function: A function that produces targets when called with suitable arguments.
@@ -46,9 +51,11 @@ def concatenate_functions(
 
     _raw_dag = _create_complete_dag(_functions)
     _dag = _limit_dag_to_targets_and_their_ancestors(_raw_dag, _targets)
-    _signature = _create_signature_of_concatenated_function(_functions, _dag)
+    _arglist = _create_arguments_of_concatenated_function(_functions, _dag)
     _exec_info = _create_execution_info(_functions, _dag)
-    _concatenated = _create_concatenated_function(_exec_info, _signature, _targets)
+    _concatenated = _create_concatenated_function(
+        _exec_info, _arglist, _targets, enforce_signature
+    )
 
     if isinstance(targets, str) or (aggregator is not None and len(_targets) == 1):
         out = single_output(_concatenated)
@@ -177,7 +184,7 @@ def _limit_dag_to_targets_and_their_ancestors(dag, targets):
     return dag
 
 
-def _create_signature_of_concatenated_function(functions, dag):
+def _create_arguments_of_concatenated_function(functions, dag):
     """Create the signature of the concatenated function.
 
     Args:
@@ -191,15 +198,7 @@ def _create_signature_of_concatenated_function(functions, dag):
     function_names = set(functions)
     all_nodes = set(dag.nodes)
     arguments = sorted(all_nodes - function_names)
-
-    parameter_objects = []
-    for arg in arguments:
-        parameter_objects.append(
-            inspect.Parameter(name=arg, kind=inspect.Parameter.POSITIONAL_OR_KEYWORD)
-        )
-
-    sig = inspect.Signature(parameters=parameter_objects)
-    return sig
+    return arguments
 
 
 def _create_execution_info(functions, dag):
@@ -227,26 +226,30 @@ def _create_execution_info(functions, dag):
 
 def _create_concatenated_function(
     execution_info,
-    signature,
+    arglist,
     targets,
+    enforce_signature,
 ):
     """Create a concatenated function object with correct signature.
 
     Args:
         execution_info (dict): Dictionary with functions and their arguments for each
             node in the dag. The functions are already in topological_sort order.
-        signature (inspect.Signature)): The signature of the concatenated function.
+        arglist (list): The list of arguments of the concatenated function.
         targets (list): List that is used to determine what is returned and the
             order of the outputs.
+        enforce_signature (bool):If True, the signature of the concatenated function
+            is enforced. Otherwise it is only provided for introspection purposes.
+            Enforcing the signature has a small runtime overhead.
 
     Returns:
         callable: The concatenated function
 
     """
-    parameters = signature.parameters
 
+    @with_signature(args=arglist, enforce=enforce_signature)
     def concatenated(*args, **kwargs):
-        results = {**dict(zip(parameters, args)), **kwargs}
+        results = {**dict(zip(arglist, args)), **kwargs}
         for name, info in execution_info.items():
             kwargs = {arg: results[arg] for arg in info["arguments"]}
             result = info["func"](**kwargs)
@@ -254,8 +257,6 @@ def _create_concatenated_function(
 
         out = tuple(results[target] for target in targets)
         return out
-
-    concatenated.__signature__ = signature
 
     return concatenated
 

@@ -43,6 +43,14 @@ def test_with_signature_direct_call_valid(example_signature):
     assert g(1, 2, c=3) == 6
 
 
+def test_with_signature_args_used_as_kwargs():
+    @with_signature(args=["a", "b"], kwargs="c")
+    def f(*args, **kwargs):
+        return sum(args) + sum(kwargs.values())
+
+    assert f(a=1, b=2, c=3) == 6
+
+
 def test_with_signature_decorator_no_enforcing(example_signature):
     @with_signature(args=["a", "b"], kwargs="c", enforce=False)
     def f(*args, **kwargs):

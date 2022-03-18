@@ -62,7 +62,7 @@ def with_signature(func=None, *, args=None, kwargs=None, enforce=True):
         signature = create_signature(_args, _kwargs)
 
         if enforce:
-            valid_kwargs = set(_kwargs)
+            valid_kwargs = set(_kwargs) | set(_args)
             funcname = getattr(func, "__name__", "function")
 
             @functools.wraps(func)

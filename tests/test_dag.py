@@ -35,7 +35,7 @@ def test_concatenate_functions_single_target():
         targets="_utility",
     )
 
-    calculated_res = concatenated(wage=5, working=8, bla=15)
+    calculated_res = concatenated(wage=5, working=8)
 
     expected_res = _complete_utility(wage=5, working=8)
     assert calculated_res == expected_res
