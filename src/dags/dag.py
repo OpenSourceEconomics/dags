@@ -1,6 +1,5 @@
 import inspect
 import textwrap
-from functools import partial
 
 import networkx as nx
 from dags.output import aggregated_output
@@ -14,7 +13,6 @@ def concatenate_functions(
     targets,
     return_type="tuple",
     aggregator=None,
-    specific_inputs=None,
 ):
     """Combine functions to one function that generates targets.
 
@@ -36,9 +34,6 @@ def concatenate_functions(
             targets are a single string or if an aggregator is provided.
         aggregator (callable or None): Binary reduction function that is used to
             aggregate the targets into a single target.
-        specific_inputs (list): A list of function inputs are specific to each function
-            despite having the same name. Those inputs will be provided as a dict
-            where the keys are function names and the values are the actual argument.
 
     Returns:
         function: A function that produces targets when called with suitable arguments.
@@ -46,14 +41,13 @@ def concatenate_functions(
     """
     _targets = _harmonize_targets(targets)
     _functions = _harmonize_functions(functions)
-    _specific_inputs = _harmonize_specific_inputs(specific_inputs)
     _fail_if_targets_have_wrong_types(_targets)
     _fail_if_functions_are_missing(_functions, _targets)
 
     _raw_dag = _create_complete_dag(_functions)
     _dag = _limit_dag_to_targets_and_their_ancestors(_raw_dag, _targets)
     _signature = _create_signature_of_concatenated_function(_functions, _dag)
-    _exec_info = _create_execution_info(_functions, _dag, _specific_inputs)
+    _exec_info = _create_execution_info(_functions, _dag)
     _concatenated = _create_concatenated_function(_exec_info, _signature, _targets)
 
     if isinstance(targets, str) or (aggregator is not None and len(_targets) == 1):
@@ -115,16 +109,6 @@ def _harmonize_targets(targets):
     if isinstance(targets, str):
         targets = [targets]
     return targets
-
-
-def _harmonize_specific_inputs(specific_inputs):
-    if specific_inputs is None:
-        out = {}
-    elif isinstance(specific_inputs, str):
-        out = {specific_inputs}
-    else:
-        out = set(specific_inputs)
-    return out
 
 
 def _fail_if_targets_have_wrong_types(targets):
@@ -218,7 +202,7 @@ def _create_signature_of_concatenated_function(functions, dag):
     return sig
 
 
-def _create_execution_info(functions, dag, specific_inputs):
+def _create_execution_info(functions, dag):
     """Create a dictionary with all information needed to execute relevant functions.
 
     Args:
@@ -237,10 +221,6 @@ def _create_execution_info(functions, dag, specific_inputs):
             info = {}
             info["func"] = functions[node]
             info["arguments"] = arguments
-            info["extractors"] = [
-                partial(_extract, key=node) if arg in specific_inputs else _identity
-                for arg in arguments
-            ]
             out[node] = info
     return out
 
@@ -268,9 +248,7 @@ def _create_concatenated_function(
     def concatenated(*args, **kwargs):
         results = {**dict(zip(parameters, args)), **kwargs}
         for name, info in execution_info.items():
-            kwargs = {}
-            for arg, extractor in zip(info["arguments"], info["extractors"]):
-                kwargs[arg] = extractor(results[arg])
+            kwargs = {arg: results[arg] for arg in info["arguments"]}
             result = info["func"](**kwargs)
             results[name] = result
 
@@ -291,11 +269,3 @@ def _format_list_linewise(list_):
         ]
         """
     ).format(formatted_list=formatted_list)
-
-
-def _extract(obj, key):
-    return obj[key]
-
-
-def _identity(obj):
-    return obj
