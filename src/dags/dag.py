@@ -3,10 +3,10 @@ import textwrap
 from functools import partial
 
 import networkx as nx
-from dags.process_output import aggregated_output
-from dags.process_output import dict_output
-from dags.process_output import list_output
-from dags.process_output import single_output
+from dags.output import aggregated_output
+from dags.output import dict_output
+from dags.output import list_output
+from dags.output import single_output
 
 
 def concatenate_functions(
