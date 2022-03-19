@@ -1,7 +1,6 @@
 import inspect
 
 import pytest
-from dags.dag import aggregate_functions
 from dags.dag import concatenate_functions
 from dags.dag import get_ancestors
 
@@ -36,7 +35,7 @@ def test_concatenate_functions_single_target():
         targets="_utility",
     )
 
-    calculated_res = concatenated(wage=5, working=8, bla=15)
+    calculated_res = concatenated(wage=5, working=8)
 
     expected_res = _complete_utility(wage=5, working=8)
     assert calculated_res == expected_res
@@ -47,12 +46,12 @@ def test_concatenate_functions_single_target():
     assert calculated_args == expected_args
 
 
-@pytest.mark.parametrize("return_dict", [True, False])
-def test_concatenate_functions_multi_target(return_dict):
+@pytest.mark.parametrize("return_type", ["dict", "tuple"])
+def test_concatenate_functions_multi_target(return_type):
     concatenated = concatenate_functions(
         functions=[_utility, _unrelated, _leisure, _consumption],
         targets=["_utility", "_consumption"],
-        return_dict=return_dict,
+        return_type=return_type,
     )
 
     calculated_res = concatenated(wage=5, working=8)
@@ -61,7 +60,7 @@ def test_concatenate_functions_multi_target(return_dict):
         "_utility": _complete_utility(wage=5, working=8),
         "_consumption": _consumption(wage=5, working=8),
     }
-    if not return_dict:
+    if return_type == "tuple":
         expected_res = tuple(expected_res.values())
     assert calculated_res == expected_res
 
@@ -102,9 +101,9 @@ def test_get_ancestors_multiple_targets():
     assert calculated == expected
 
 
-def test_aggregate_functions_with_and():
+def test_concatenate_functions_with_aggregation_via_and():
     funcs = {"f1": lambda: True, "f2": lambda: False}
-    aggregated = aggregate_functions(
+    aggregated = concatenate_functions(
         functions=funcs,
         targets=["f1", "f2"],
         aggregator=lambda a, b: a and b,
@@ -112,9 +111,9 @@ def test_aggregate_functions_with_and():
     assert not aggregated()
 
 
-def test_aggregate_functions_with_or():
+def test_concatenate_functions_with_aggregation_via_or():
     funcs = {"f1": lambda: True, "f2": lambda: False}
-    aggregated = aggregate_functions(
+    aggregated = concatenate_functions(
         functions=funcs,
         targets=["f1", "f2"],
         aggregator=lambda a, b: a or b,
