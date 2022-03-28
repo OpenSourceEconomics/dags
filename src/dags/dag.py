@@ -25,7 +25,7 @@ def concatenate_functions(
     Functions that are not required to produce the targets will simply be ignored.
 
     The arguments of the combined function are all arguments of relevant functions
-    that are not themselves function names.
+    that are not themselves function names, in alphabetical order.
 
     Args:
         functions (dict or list): Dict or list of functions. If a list, the function
