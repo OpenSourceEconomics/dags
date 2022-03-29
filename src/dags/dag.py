@@ -1,3 +1,4 @@
+import functools
 import inspect
 import textwrap
 
@@ -24,7 +25,7 @@ def concatenate_functions(
     Functions that are not required to produce the targets will simply be ignored.
 
     The arguments of the combined function are all arguments of relevant functions
-    that are not themselves function names.
+    that are not themselves function names, in alphabetical order.
 
     Args:
         functions (dict or list): Dict or list of functions. If a list, the function
@@ -152,12 +153,20 @@ def _create_complete_dag(functions):
 
     """
     functions_arguments_dict = {
-        name: list(inspect.signature(function).parameters)
-        for name, function in functions.items()
+        name: _get_free_arguments(function) for name, function in functions.items()
     }
     dag = nx.DiGraph(functions_arguments_dict).reverse()
 
     return dag
+
+
+def _get_free_arguments(func):
+    arguments = list(inspect.signature(func).parameters)
+    if isinstance(func, functools.partial):
+        non_free = set(func.args) | set(func.keywords)
+        arguments = [arg for arg in arguments if arg not in non_free]
+
+    return arguments
 
 
 def _limit_dag_to_targets_and_their_ancestors(dag, targets):
@@ -216,7 +225,7 @@ def _create_execution_info(functions, dag):
     out = {}
     for node in nx.topological_sort(dag):
         if node in functions:
-            arguments = list(inspect.signature(functions[node]).parameters)
+            arguments = _get_free_arguments(functions[node])
             info = {}
             info["func"] = functions[node]
             info["arguments"] = arguments
