@@ -123,16 +123,16 @@ def test_concatenate_functions_with_aggregation_via_or():
 
 
 def test_partialled_argument_is_ignored():
-    def f(a, b):
-        return a + b
+    def f(a, b, c):
+        return a + b + c
 
-    def g(f, c):
-        return f + c
+    def g(f, d):
+        return f + d
 
     concatenated = concatenate_functions(
-        functions={"f": partial(f, b=2), "g": g},
+        functions={"f": partial(f, 1, b=2), "g": g},
         targets="g",
     )
 
-    assert list(inspect.signature(concatenated).parameters) == ["a", "c"]
-    assert concatenated(1, 3) == 6
+    assert list(inspect.signature(concatenated).parameters) == ["c", "d"]
+    assert concatenated(3, 4) == 10

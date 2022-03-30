@@ -163,7 +163,9 @@ def _create_complete_dag(functions):
 def _get_free_arguments(func):
     arguments = list(inspect.signature(func).parameters)
     if isinstance(func, functools.partial):
-        non_free = set(func.args) | set(func.keywords)
+        # arguments that are partialled by position are not part of the signature
+        # anyways, so they do not need special handling.
+        non_free = set(func.keywords)
         arguments = [arg for arg in arguments if arg not in non_free]
 
     return arguments
