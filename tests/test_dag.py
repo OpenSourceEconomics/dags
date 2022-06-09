@@ -36,10 +36,10 @@ def test_concatenate_functions_single_target():
         targets="_utility",
     )
 
-    calculated_res = concatenated(wage=5, working=8)
+    calculated_result = concatenated(wage=5, working=8)
 
-    expected_res = _complete_utility(wage=5, working=8)
-    assert calculated_res == expected_res
+    expected_result = _complete_utility(wage=5, working=8)
+    assert calculated_result == expected_result
 
     calculated_args = set(inspect.signature(concatenated).parameters)
     expected_args = {"wage", "working"}
@@ -55,15 +55,15 @@ def test_concatenate_functions_multi_target(return_type):
         return_type=return_type,
     )
 
-    calculated_res = concatenated(wage=5, working=8)
+    calculated_result = concatenated(wage=5, working=8)
 
-    expected_res = {
+    expected_result = {
         "_utility": _complete_utility(wage=5, working=8),
         "_consumption": _consumption(wage=5, working=8),
     }
     if return_type == "tuple":
-        expected_res = tuple(expected_res.values())
-    assert calculated_res == expected_res
+        expected_result = tuple(expected_result.values())
+    assert calculated_result == expected_result
 
     calculated_args = set(inspect.signature(concatenated).parameters)
     expected_args = {"wage", "working"}
