@@ -8,6 +8,26 @@ releases are available on `Anaconda.org
 
 
 
+0.2.2
+-----
+
+- :gh:`5` Updates examples used in tests (:ghuser:`janosg`)
+
+
+0.2.1 - 2022-03-29
+------------------
+
+- :gh:`4` Small fix in treatment of partialled arguments (:ghuser:`janosg`)
+
+
+0.2.0 - 2022-03-25
+------------------
+
+- :gh:`3` ignores partialled arguments when reading signatures (:ghuser:`janosg`)
+- :gh:`2` enforces signatures of generated functions, adds support for more output
+  types and adds decorators to work with signatures (:ghuser:`janosg`)
+
+
 0.1.0 - 2022-03-08
 ------------------
 
