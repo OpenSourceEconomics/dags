@@ -6,27 +6,27 @@ from dags.dag import concatenate_functions
 from dags.dag import get_ancestors
 
 
-def _utility(_consumption, _leisure):
-    return _consumption + _leisure
+def _utility(_consumption, _leisure, leisure_weight):
+    return _consumption + leisure_weight * _leisure
 
 
-def _leisure(working):
-    return 24 - working
+def _leisure(working_hours):
+    return 24 - working_hours
 
 
-def _consumption(working, wage):
-    return wage * working
+def _consumption(working_hours, wage):
+    return wage * working_hours
 
 
-def _unrelated(working):  # noqa: U100
+def _unrelated(working_hours):  # noqa: U100
     raise NotImplementedError()
 
 
-def _complete_utility(wage, working):
+def _complete_utility(wage, working_hours, leisure_weight):
     """The function that we try to generate dynamically."""
-    leis = _leisure(working)
-    cons = _consumption(working, wage)
-    util = leis + cons
+    leis = _leisure(working_hours)
+    cons = _consumption(working_hours, wage)
+    util = _utility(cons, leis, leisure_weight)
     return util
 
 
@@ -36,13 +36,13 @@ def test_concatenate_functions_single_target():
         targets="_utility",
     )
 
-    calculated_result = concatenated(wage=5, working=8)
+    calculated_result = concatenated(wage=5, working_hours=8, leisure_weight=2)
 
-    expected_result = _complete_utility(wage=5, working=8)
+    expected_result = _complete_utility(wage=5, working_hours=8, leisure_weight=2)
     assert calculated_result == expected_result
 
     calculated_args = set(inspect.signature(concatenated).parameters)
-    expected_args = {"wage", "working"}
+    expected_args = {"leisure_weight", "wage", "working_hours"}
 
     assert calculated_args == expected_args
 
@@ -55,18 +55,18 @@ def test_concatenate_functions_multi_target(return_type):
         return_type=return_type,
     )
 
-    calculated_result = concatenated(wage=5, working=8)
+    calculated_result = concatenated(wage=5, working_hours=8, leisure_weight=2)
 
     expected_result = {
-        "_utility": _complete_utility(wage=5, working=8),
-        "_consumption": _consumption(wage=5, working=8),
+        "_utility": _complete_utility(wage=5, working_hours=8, leisure_weight=2),
+        "_consumption": _consumption(wage=5, working_hours=8),
     }
     if return_type == "tuple":
         expected_result = tuple(expected_result.values())
     assert calculated_result == expected_result
 
     calculated_args = set(inspect.signature(concatenated).parameters)
-    expected_args = {"wage", "working"}
+    expected_args = {"leisure_weight", "wage", "working_hours"}
 
     assert calculated_args == expected_args
 
@@ -76,7 +76,7 @@ def test_get_ancestors_many_ancestors():
         functions=[_utility, _unrelated, _leisure, _consumption],
         targets="_utility",
     )
-    expected = {"_consumption", "_leisure", "working", "wage"}
+    expected = {"_consumption", "_leisure", "working_hours", "wage", "leisure_weight"}
 
     assert calculated == expected
 
@@ -87,7 +87,7 @@ def test_get_ancestors_few_ancestors():
         targets="_unrelated",
     )
 
-    expected = {"working"}
+    expected = {"working_hours"}
 
     assert calculated == expected
 
@@ -98,7 +98,7 @@ def test_get_ancestors_multiple_targets():
         targets=["_unrelated", "_consumption"],
     )
 
-    expected = {"wage", "working"}
+    expected = {"wage", "working_hours"}
     assert calculated == expected
 
 
