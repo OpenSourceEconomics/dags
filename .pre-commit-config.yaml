@@ -1,17 +1,17 @@
 repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.1.0
+    rev: v4.3.0
     hooks:
     -   id: check-merge-conflict
     -   id: debug-statements
     -   id: end-of-file-fixer
 -   repo: https://github.com/asottile/reorder_python_imports
-    rev: v3.0.1
+    rev: v3.1.0
     hooks:
     -   id: reorder-python-imports
         types: [python]
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.1.0
+    rev: v4.3.0
     hooks:
     -   id: check-added-large-files
         args: ['--maxkb=100']
@@ -71,7 +71,7 @@ repos:
             Pygments,
         ]
 -   repo: https://github.com/PyCQA/doc8
-    rev: 0.10.1
+    rev: 0.11.2
     hooks:
         -   id: doc8
 -   repo: meta
@@ -86,11 +86,11 @@ repos:
         args: [--no-build-isolation]
         additional_dependencies: [setuptools-scm, toml]
 -   repo: https://github.com/PyCQA/doc8
-    rev: 0.10.1
+    rev: 0.11.2
     hooks:
     -   id: doc8
 -   repo: https://github.com/asottile/setup-cfg-fmt
-    rev: v1.20.0
+    rev: v1.20.1
     hooks:
     -   id: setup-cfg-fmt
 -   repo: https://github.com/econchick/interrogate
@@ -104,7 +104,7 @@ repos:
   hooks:
     -   id: codespell
 -   repo: https://github.com/asottile/pyupgrade
-    rev: v2.31.1
+    rev: v2.34.0
     hooks:
     -   id: pyupgrade
         args: [--py37-plus]
