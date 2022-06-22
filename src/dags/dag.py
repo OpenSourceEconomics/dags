@@ -46,21 +46,44 @@ def concatenate_functions(
 
     """
 
-    # # Harmonize and check arguments.
-    _functions, _targets = (
-        functions,
-        targets,
-    )  # harmonize_and_check_functions_targets(functions, targets)
-
     # Create the DAG.
-    dag = create_dag(_functions, _targets)
+    dag = create_dag(functions, targets)
 
     # Build combined function.
     out = create_combined_function_from_dag(
-        dag, _functions, _targets, return_type, aggregator, enforce_signature
+        dag, functions, targets, return_type, aggregator, enforce_signature
     )
 
     return out
+
+
+def create_dag(functions, targets):
+    """Build a directed acyclic graph (DAG) from functions.
+
+    Functions can depend on the output of other functions as inputs, as long as the
+    dependencies can be described by a directed acyclic graph (DAG).
+
+    Functions that are not required to produce the targets will simply be ignored.
+
+    Args:
+        functions (dict or list): Dict or list of functions. If a list, the function
+            name is inferred from the __name__ attribute of the entries. If a dict,
+            the name of the function is set to the dictionary key.
+        targets (str): Name of the function that produces the target or list of such
+            function names.
+
+    Returns:
+        dag: the DAG (as networkx.DiGraph object)
+
+    """
+    # Harmonize and check arguments.
+    _functions, _targets = harmonize_and_check_functions_targets(functions, targets)
+
+    # Create the DAG
+    _raw_dag = _create_complete_dag(_functions)
+    dag = _limit_dag_to_targets_and_their_ancestors(_raw_dag, _targets)
+
+    return dag
 
 
 def create_combined_function_from_dag(
@@ -107,7 +130,7 @@ def create_combined_function_from_dag(
     )
 
     # Return function in specified format.
-    if isinstance(_targets, str) or (aggregator is not None and len(_targets) == 1):
+    if isinstance(targets, str) or (aggregator is not None and len(_targets) == 1):
         out = single_output(_concatenated)
     elif aggregator is not None:
         out = aggregated_output(_concatenated, aggregator=aggregator)
@@ -124,35 +147,6 @@ def create_combined_function_from_dag(
         )
 
     return out
-
-
-def create_dag(functions, targets):
-    """Build a directed acyclic graph (DAG) from functions.
-
-    Functions can depend on the output of other functions as inputs, as long as the
-    dependencies can be described by a directed acyclic graph (DAG).
-
-    Functions that are not required to produce the targets will simply be ignored.
-
-    Args:
-        functions (dict or list): Dict or list of functions. If a list, the function
-            name is inferred from the __name__ attribute of the entries. If a dict,
-            the name of the function is set to the dictionary key.
-        targets (str): Name of the function that produces the target or list of such
-            function names.
-
-    Returns:
-        dag: the DAG (as networkx.DiGraph object)
-
-    """
-    # Harmonize and check arguments.
-    _functions, _targets = harmonize_and_check_functions_targets(functions, targets)
-
-    # Create the DAG
-    _raw_dag = _create_complete_dag(_functions)
-    dag = _limit_dag_to_targets_and_their_ancestors(_raw_dag, _targets)
-
-    return dag
 
 
 def harmonize_and_check_functions_targets(functions, targets):
