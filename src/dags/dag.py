@@ -83,6 +83,9 @@ def create_dag(functions, targets):
     _raw_dag = _create_complete_dag(_functions)
     dag = _limit_dag_to_targets_and_their_ancestors(_raw_dag, _targets)
 
+    # Check if there are cycles in the DAG
+    _fail_if_dag_contains_cycle(dag)
+
     return dag
 
 
@@ -149,6 +152,35 @@ def create_combined_function_from_dag(
     return out
 
 
+def get_ancestors(functions, targets, include_targets=False):
+    """Build a DAG and extract all ancestors of targets.
+
+    Args:
+        functions (dict or list): Dict or list of functions. If a list, the function
+            name is inferred from the __name__ attribute of the entries. If a dict,
+            with node names as keys or just the values as a tuple for multiple outputs.
+        targets (str): Name of the function that produces the target function.
+        include_targets (bool): Whether to include the target as its own ancestor.
+
+    Returns:
+        set: The ancestors
+
+    """
+
+    # Harmonize and check arguments.
+    _functions, _targets = harmonize_and_check_functions_targets(functions, targets)
+
+    # Create the DAG.
+    dag = create_dag(functions, targets)
+
+    ancestors = set()
+    for target in _targets:
+        ancestors = ancestors.union(nx.ancestors(dag, target))
+        if include_targets:
+            ancestors.add(target)
+    return ancestors
+
+
 def harmonize_and_check_functions_targets(functions, targets):
     """Harmonize the type of specified functions and targets and do some checks.
 
@@ -170,36 +202,6 @@ def harmonize_and_check_functions_targets(functions, targets):
     _fail_if_functions_are_missing(functions_harmonized, targets_harmonized)
 
     return functions_harmonized, targets_harmonized
-
-
-def get_ancestors(functions, targets, include_targets=False):
-    """Build a DAG and extract all ancestors of targets.
-
-    Args:
-        functions (dict or list): Dict or list of functions. If a list, the function
-            name is inferred from the __name__ attribute of the entries. If a dict,
-            with node names as keys or just the values as a tuple for multiple outputs.
-        targets (str): Name of the function that produces the target function.
-        include_targets (bool): Whether to include the target as its own ancestor.
-
-    Returns:
-        set: The ancestors
-
-    """
-    _targets = _harmonize_targets(targets)
-    _functions = _harmonize_functions(functions)
-    _fail_if_targets_have_wrong_types(_targets)
-    _fail_if_functions_are_missing(_functions, _targets)
-
-    raw_dag = _create_complete_dag(_functions)
-    dag = _limit_dag_to_targets_and_their_ancestors(raw_dag, _targets)
-
-    ancestors = set()
-    for target in _targets:
-        ancestors = ancestors.union(nx.ancestors(dag, target))
-        if include_targets:
-            ancestors.add(target)
-    return ancestors
 
 
 def _harmonize_functions(functions):
@@ -232,6 +234,15 @@ def _fail_if_functions_are_missing(functions, targets):
         )
 
     return functions, targets
+
+
+def _fail_if_dag_contains_cycle(dag):
+    """Check for cycles in DAG"""
+    cycles = list(nx.simple_cycles(dag))
+
+    if len(cycles) > 0:
+        formatted = _format_list_linewise(cycles)
+        raise ValueError(f"The DAG contains one or more cycles:\n{formatted}")
 
 
 def _create_complete_dag(functions):
@@ -368,7 +379,7 @@ def _create_concatenated_function(
 
 
 def _format_list_linewise(list_):
-    formatted_list = '",\n    "'.join(list_)
+    formatted_list = '",\n    "'.join([str(c) for c in list_])
     return textwrap.dedent(
         """
         [
