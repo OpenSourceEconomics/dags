@@ -7,11 +7,13 @@ releases are available on `Anaconda.org
 <https://anaconda.org/OpenSourceEconomics/dags>`_.
 
 
-
-0.2.2
------
+0.2.2 - 2022-xx-xx
+------------------
 
 - :gh:`5` Updates examples used in tests (:ghuser:`janosg`)
+- :gh:`7` improves the examples in the test cases.
+- :gh:`10` turns `targets` into an optional argument. All variables in the DAG are
+  returned by default.
 
 
 0.2.1 - 2022-03-29
