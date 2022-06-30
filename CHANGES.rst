@@ -12,7 +12,7 @@ releases are available on `Anaconda.org
 
 - :gh:`5` Updates examples used in tests (:ghuser:`janosg`)
 - :gh:`7` improves the examples in the test cases.
-- :gh:`10` turns `targets` into an optional argument. All variables in the DAG are
+- :gh:`10` turns ``targets`` into an optional argument. All variables in the DAG are
   returned by default.
 
 
