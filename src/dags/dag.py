@@ -12,7 +12,7 @@ from dags.signature import with_signature
 
 def concatenate_functions(
     functions,
-    targets,
+    targets=None,
     return_type="tuple",
     aggregator=None,
     enforce_signature=True,
@@ -31,8 +31,8 @@ def concatenate_functions(
         functions (dict or list): Dict or list of functions. If a list, the function
             name is inferred from the __name__ attribute of the entries. If a dict,
             the name of the function is set to the dictionary key.
-        targets (str): Name of the function that produces the target or list of such
-            function names.
+        targets (str | None): Name of the function that produces the target or list of
+            such function names. If the value is `None`, all variables are returned.
         return_type (str): One of "tuple", "list", "dict". This is ignored if the
             targets are a single string or if an aggregator is provided.
         aggregator (callable or None): Binary reduction function that is used to
@@ -196,8 +196,8 @@ def harmonize_and_check_functions_targets(functions, targets):
         targets_harmonized: harmonized targets
 
     """
-    targets_harmonized = _harmonize_targets(targets)
     functions_harmonized = _harmonize_functions(functions)
+    targets_harmonized = _harmonize_targets(targets, list(functions_harmonized))
     _fail_if_targets_have_wrong_types(targets_harmonized)
     _fail_if_functions_are_missing(functions_harmonized, targets_harmonized)
 
@@ -210,8 +210,10 @@ def _harmonize_functions(functions):
     return functions
 
 
-def _harmonize_targets(targets):
-    if isinstance(targets, str):
+def _harmonize_targets(targets, function_names):
+    if targets is None:
+        targets = function_names
+    elif isinstance(targets, str):
         targets = [targets]
     return targets
 

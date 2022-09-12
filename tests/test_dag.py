@@ -39,6 +39,27 @@ def _complete_utility(wage, working_hours, leisure_weight):
     return util
 
 
+def test_concatenate_functions_no_target():
+    concatenated = concatenate_functions(functions=[_utility, _leisure, _consumption])
+
+    calculated_result = concatenated(wage=5, working_hours=8, leisure_weight=2)
+
+    expected_utility = _complete_utility(wage=5, working_hours=8, leisure_weight=2)
+    expected_leisure = _leisure(working_hours=8)
+    expected_consumption = _consumption(working_hours=8, wage=5)
+
+    assert calculated_result == (
+        expected_utility,
+        expected_leisure,
+        expected_consumption,
+    )
+
+    calculated_args = set(inspect.signature(concatenated).parameters)
+    expected_args = {"leisure_weight", "wage", "working_hours"}
+
+    assert calculated_args == expected_args
+
+
 def test_concatenate_functions_single_target():
     concatenated = concatenate_functions(
         functions=[_utility, _unrelated, _leisure, _consumption],
