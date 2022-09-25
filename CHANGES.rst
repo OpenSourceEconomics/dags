@@ -14,7 +14,8 @@ releases are available on `Anaconda.org
 - :gh:`7` improves the examples in the test cases.
 - :gh:`10` turns ``targets`` into an optional argument. All variables in the DAG are
   returned by default.
-
+- :gh:`9` Add function to return the DAG. Check for cycles in DAG.
+  (:ghuser:`ChristianZimpelmann`)
 
 0.2.1 - 2022-03-29
 ------------------
