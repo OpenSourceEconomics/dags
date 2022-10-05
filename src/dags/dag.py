@@ -24,14 +24,15 @@ def concatenate_functions(
 
     Functions that are not required to produce the targets will simply be ignored.
 
-    The arguments of the combined function are all arguments of relevant functions
-    that are not themselves function names, in alphabetical order.
+    The arguments of the combined function are all arguments of relevant functions that
+    are not themselves function names, in alphabetical order.
 
     Args:
         functions (dict or list): Dict or list of functions. If a list, the function
-            name is inferred from the __name__ attribute of the entries. If a dict,
-            the name of the function is set to the dictionary key.
-        targets (str | None): Name of the function that produces the target or list of
+            name is inferred from the __name__ attribute of the entries. If a dict, the
+            name of the function is set to the dictionary key.
+        targets (str or list or None): Name of the function that produces the target or
+        list of
             such function names. If the value is `None`, all variables are returned.
         return_type (str): One of "tuple", "list", "dict". This is ignored if the
             targets are a single string or if an aggregator is provided.
@@ -50,7 +51,7 @@ def concatenate_functions(
     dag = create_dag(functions, targets)
 
     # Build combined function.
-    out = create_combined_function_from_dag(
+    out = _create_combined_function_from_dag(
         dag, functions, targets, return_type, aggregator, enforce_signature
     )
 
@@ -67,17 +68,20 @@ def create_dag(functions, targets):
 
     Args:
         functions (dict or list): Dict or list of functions. If a list, the function
-            name is inferred from the __name__ attribute of the entries. If a dict,
-            the name of the function is set to the dictionary key.
-        targets (str): Name of the function that produces the target or list of such
-            function names.
+            name is inferred from the __name__ attribute of the entries. If a dict, the
+            name of the function is set to the dictionary key.
+        targets (str or list or None): Name of the function that produces the target or
+        list of
+            such function names. If the value is `None`, all variables are returned.
 
     Returns:
         dag: the DAG (as networkx.DiGraph object)
 
     """
     # Harmonize and check arguments.
-    _functions, _targets = harmonize_and_check_functions_targets(functions, targets)
+    _functions, _targets = _harmonize_and_check_functions_and_targets(
+        functions, targets
+    )
 
     # Create the DAG
     _raw_dag = _create_complete_dag(_functions)
@@ -89,7 +93,7 @@ def create_dag(functions, targets):
     return dag
 
 
-def create_combined_function_from_dag(
+def _create_combined_function_from_dag(
     dag,
     functions,
     targets,
@@ -104,12 +108,13 @@ def create_combined_function_from_dag(
     are not themselves function names, in alphabetical order.
 
     Args:
-        dag (networkx.DiGraph): a DAG of functions
-        functions (dict or list): Dict or list of functions. If a list, the function
+        dag (networkx.DiGraph): a DAG of functions functions (dict or list): Dict or
+        list of functions. If a list, the function
             name is inferred from the __name__ attribute of the entries. If a dict, the
             name of the function is set to the dictionary key.
-        targets (str): Name of the function that produces the target or list of such
-            function names.
+        targets (str or list or None): Name of the function that produces the target or
+        list of
+            such function names. If the value is `None`, all variables are returned.
         return_type (str): One of "tuple", "list", "dict". This is ignored if the
             targets are a single string or if an aggregator is provided.
         aggregator (callable or None): Binary reduction function that is used to
@@ -122,9 +127,10 @@ def create_combined_function_from_dag(
         function: A function that produces targets when called with suitable arguments.
 
     """
-
     # Harmonize and check arguments.
-    _functions, _targets = harmonize_and_check_functions_targets(functions, targets)
+    _functions, _targets = _harmonize_and_check_functions_and_targets(
+        functions, targets
+    )
 
     _arglist = _create_arguments_of_concatenated_function(_functions, dag)
     _exec_info = _create_execution_info(_functions, dag)
@@ -145,7 +151,7 @@ def create_combined_function_from_dag(
         out = dict_output(_concatenated, keys=_targets)
     else:
         raise ValueError(
-            f"Invalid return type {return_type}. Must be 'list', 'tuple',  or 'dict'. "
+            f"Invalid return type {return_type}. Must be 'list', 'tuple', or 'dict'. "
             f"You provided {return_type}."
         )
 
@@ -168,7 +174,9 @@ def get_ancestors(functions, targets, include_targets=False):
     """
 
     # Harmonize and check arguments.
-    _functions, _targets = harmonize_and_check_functions_targets(functions, targets)
+    _functions, _targets = _harmonize_and_check_functions_and_targets(
+        functions, targets
+    )
 
     # Create the DAG.
     dag = create_dag(functions, targets)
@@ -181,19 +189,20 @@ def get_ancestors(functions, targets, include_targets=False):
     return ancestors
 
 
-def harmonize_and_check_functions_targets(functions, targets):
+def _harmonize_and_check_functions_and_targets(functions, targets):
     """Harmonize the type of specified functions and targets and do some checks.
 
     Args:
         functions (dict or list): Dict or list of functions. If a list, the function
-            name is inferred from the __name__ attribute of the entries. If a dict,
-            the name of the function is set to the dictionary key.
-        targets (str): Name of the function that produces the target or list of such
+            name is inferred from the __name__ attribute of the entries. If a dict, the
+            name of the function is set to the dictionary key.
+        targets (str or list): Name of the function that produces the target or list of
+        such
             function names.
 
     Returns:
-        functions_harmonized: harmonized functions
-        targets_harmonized: harmonized targets
+        functions_harmonized: harmonized functions targets_harmonized: harmonized
+        targets
 
     """
     functions_harmonized = _harmonize_functions(functions)
