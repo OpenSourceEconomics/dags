@@ -32,8 +32,8 @@ def concatenate_functions(
             name is inferred from the __name__ attribute of the entries. If a dict, the
             name of the function is set to the dictionary key.
         targets (str or list or None): Name of the function that produces the target or
-        list of
-            such function names. If the value is `None`, all variables are returned.
+            list of such function names. If the value is `None`, all variables are
+            returned.
         return_type (str): One of "tuple", "list", "dict". This is ignored if the
             targets are a single string or if an aggregator is provided.
         aggregator (callable or None): Binary reduction function that is used to
@@ -71,8 +71,8 @@ def create_dag(functions, targets):
             name is inferred from the __name__ attribute of the entries. If a dict, the
             name of the function is set to the dictionary key.
         targets (str or list or None): Name of the function that produces the target or
-        list of
-            such function names. If the value is `None`, all variables are returned.
+            list of such function names. If the value is `None`, all variables are
+            returned.
 
     Returns:
         dag: the DAG (as networkx.DiGraph object)
@@ -113,8 +113,8 @@ def _create_combined_function_from_dag(
             name is inferred from the __name__ attribute of the entries. If a dict, the
             name of the function is set to the dictionary key.
         targets (str or list or None): Name of the function that produces the target or
-        list of
-            such function names. If the value is `None`, all variables are returned.
+            list of such function names. If the value is `None`, all variables are
+            returned.
         return_type (str): One of "tuple", "list", "dict". This is ignored if the
             targets are a single string or if an aggregator is provided.
         aggregator (callable or None): Binary reduction function that is used to
@@ -197,12 +197,11 @@ def _harmonize_and_check_functions_and_targets(functions, targets):
             name is inferred from the __name__ attribute of the entries. If a dict, the
             name of the function is set to the dictionary key.
         targets (str or list): Name of the function that produces the target or list of
-        such
-            function names.
+            such function names.
 
     Returns:
-        functions_harmonized: harmonized functions targets_harmonized: harmonized
-        targets
+        functions_harmonized: harmonized functions
+        targets_harmonized: harmonized targets
 
     """
     functions_harmonized = _harmonize_functions(functions)
