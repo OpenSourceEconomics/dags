@@ -108,8 +108,8 @@ def _create_combined_function_from_dag(
     are not themselves function names, in alphabetical order.
 
     Args:
-        dag (networkx.DiGraph): a DAG of functions functions (dict or list): Dict or
-        list of functions. If a list, the function
+        dag (networkx.DiGraph): a DAG of functions
+        functions (dict or list): Dict or list of functions. If a list, the function
             name is inferred from the __name__ attribute of the entries. If a dict, the
             name of the function is set to the dictionary key.
         targets (str or list or None): Name of the function that produces the target or
