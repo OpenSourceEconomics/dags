@@ -3,6 +3,7 @@ from functools import partial
 
 import pytest
 from dags.dag import concatenate_functions
+from dags.dag import create_dag
 from dags.dag import get_ancestors
 
 
@@ -20,6 +21,14 @@ def _consumption(working_hours, wage):
 
 def _unrelated(working_hours):  # noqa: U100
     raise NotImplementedError()
+
+
+def _leisure_cycle(working_hours, _utility):
+    return 24 - working_hours + _utility
+
+
+def _consumption_cycle(working_hours, wage, _utility):
+    return wage * working_hours + _utility
 
 
 def _complete_utility(wage, working_hours, leisure_weight):
@@ -157,3 +166,29 @@ def test_partialled_argument_is_ignored():
 
     assert list(inspect.signature(concatenated).parameters) == ["c", "d"]
     assert concatenated(3, 4) == 10
+
+
+@pytest.mark.parametrize(
+    "funcs",
+    [
+        {
+            "_utility": _utility,
+            "_leisure": _leisure,
+            "_consumption": _consumption_cycle,
+        },
+        {
+            "_utility": _utility,
+            "_leisure": _leisure_cycle,
+            "_consumption": _consumption_cycle,
+        },
+    ],
+)
+def test_fail_if_cycle_in_dag(funcs):
+    with pytest.raises(
+        ValueError,
+        match="The DAG contains one or more cycles:",
+    ):
+        create_dag(
+            functions=funcs,
+            targets=["_utility"],
+        )

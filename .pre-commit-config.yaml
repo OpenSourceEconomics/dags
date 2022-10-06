@@ -6,7 +6,7 @@ repos:
     -   id: debug-statements
     -   id: end-of-file-fixer
 -   repo: https://github.com/asottile/reorder_python_imports
-    rev: v3.1.0
+    rev: v3.8.3
     hooks:
     -   id: reorder-python-imports
         types: [python]
@@ -45,12 +45,12 @@ repos:
         additional_dependencies: [black==22.3.0]
         types: [rst]
 -   repo: https://github.com/psf/black
-    rev: 22.3.0
+    rev: 22.8.0
     hooks:
     -   id: black
         types: [python]
 -   repo: https://github.com/PyCQA/flake8
-    rev: 4.0.1
+    rev: 5.0.4
     hooks:
     -   id: flake8
         types: [python]
@@ -71,7 +71,7 @@ repos:
             Pygments,
         ]
 -   repo: https://github.com/PyCQA/doc8
-    rev: 0.11.2
+    rev: v1.0.0
     hooks:
         -   id: doc8
 -   repo: meta
@@ -86,11 +86,11 @@ repos:
         args: [--no-build-isolation]
         additional_dependencies: [setuptools-scm, toml]
 -   repo: https://github.com/PyCQA/doc8
-    rev: 0.11.2
+    rev: v1.0.0
     hooks:
     -   id: doc8
 -   repo: https://github.com/asottile/setup-cfg-fmt
-    rev: v1.20.1
+    rev: v2.0.0
     hooks:
     -   id: setup-cfg-fmt
 -   repo: https://github.com/econchick/interrogate
@@ -100,11 +100,11 @@ repos:
         args: [-v, --fail-under=20]
         exclude: ^(tests|docs|setup\.py)
 - repo: https://github.com/codespell-project/codespell
-  rev: v2.1.0
+  rev: v2.2.1
   hooks:
     -   id: codespell
 -   repo: https://github.com/asottile/pyupgrade
-    rev: v2.34.0
+    rev: v2.38.2
     hooks:
     -   id: pyupgrade
         args: [--py37-plus]

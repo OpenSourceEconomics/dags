@@ -24,15 +24,16 @@ def concatenate_functions(
 
     Functions that are not required to produce the targets will simply be ignored.
 
-    The arguments of the combined function are all arguments of relevant functions
-    that are not themselves function names, in alphabetical order.
+    The arguments of the combined function are all arguments of relevant functions that
+    are not themselves function names, in alphabetical order.
 
     Args:
         functions (dict or list): Dict or list of functions. If a list, the function
-            name is inferred from the __name__ attribute of the entries. If a dict,
-            the name of the function is set to the dictionary key.
-        targets (str | None): Name of the function that produces the target or list of
-            such function names. If the value is `None`, all variables are returned.
+            name is inferred from the __name__ attribute of the entries. If a dict, the
+            name of the function is set to the dictionary key.
+        targets (str or list or None): Name of the function that produces the target or
+            list of such function names. If the value is `None`, all variables are
+            returned.
         return_type (str): One of "tuple", "list", "dict". This is ignored if the
             targets are a single string or if an aggregator is provided.
         aggregator (callable or None): Binary reduction function that is used to
@@ -45,19 +46,99 @@ def concatenate_functions(
         function: A function that produces targets when called with suitable arguments.
 
     """
-    _functions = _harmonize_functions(functions)
-    _targets = _harmonize_targets(targets, list(_functions))
-    _fail_if_targets_have_wrong_types(_targets)
-    _fail_if_functions_are_missing(_functions, _targets)
 
+    # Create the DAG.
+    dag = create_dag(functions, targets)
+
+    # Build combined function.
+    out = _create_combined_function_from_dag(
+        dag, functions, targets, return_type, aggregator, enforce_signature
+    )
+
+    return out
+
+
+def create_dag(functions, targets):
+    """Build a directed acyclic graph (DAG) from functions.
+
+    Functions can depend on the output of other functions as inputs, as long as the
+    dependencies can be described by a directed acyclic graph (DAG).
+
+    Functions that are not required to produce the targets will simply be ignored.
+
+    Args:
+        functions (dict or list): Dict or list of functions. If a list, the function
+            name is inferred from the __name__ attribute of the entries. If a dict, the
+            name of the function is set to the dictionary key.
+        targets (str or list or None): Name of the function that produces the target or
+            list of such function names. If the value is `None`, all variables are
+            returned.
+
+    Returns:
+        dag: the DAG (as networkx.DiGraph object)
+
+    """
+    # Harmonize and check arguments.
+    _functions, _targets = _harmonize_and_check_functions_and_targets(
+        functions, targets
+    )
+
+    # Create the DAG
     _raw_dag = _create_complete_dag(_functions)
-    _dag = _limit_dag_to_targets_and_their_ancestors(_raw_dag, _targets)
-    _arglist = _create_arguments_of_concatenated_function(_functions, _dag)
-    _exec_info = _create_execution_info(_functions, _dag)
+    dag = _limit_dag_to_targets_and_their_ancestors(_raw_dag, _targets)
+
+    # Check if there are cycles in the DAG
+    _fail_if_dag_contains_cycle(dag)
+
+    return dag
+
+
+def _create_combined_function_from_dag(
+    dag,
+    functions,
+    targets,
+    return_type="tuple",
+    aggregator=None,
+    enforce_signature=True,
+):
+    """Create combined function which allows to execute a complete directed acyclic
+    graph (DAG) in one function call.
+
+    The arguments of the combined function are all arguments of relevant functions that
+    are not themselves function names, in alphabetical order.
+
+    Args:
+        dag (networkx.DiGraph): a DAG of functions
+        functions (dict or list): Dict or list of functions. If a list, the function
+            name is inferred from the __name__ attribute of the entries. If a dict, the
+            name of the function is set to the dictionary key.
+        targets (str or list or None): Name of the function that produces the target or
+            list of such function names. If the value is `None`, all variables are
+            returned.
+        return_type (str): One of "tuple", "list", "dict". This is ignored if the
+            targets are a single string or if an aggregator is provided.
+        aggregator (callable or None): Binary reduction function that is used to
+            aggregate the targets into a single target.
+        enforce_signature (bool): If True, the signature of the concatenated function
+            is enforced. Otherwise it is only provided for introspection purposes.
+            Enforcing the signature has a small runtime overhead.
+
+    Returns:
+        function: A function that produces targets when called with suitable arguments.
+
+    """
+    # Harmonize and check arguments.
+    _functions, _targets = _harmonize_and_check_functions_and_targets(
+        functions, targets
+    )
+
+    _arglist = _create_arguments_of_concatenated_function(_functions, dag)
+    _exec_info = _create_execution_info(_functions, dag)
     _concatenated = _create_concatenated_function(
         _exec_info, _arglist, _targets, enforce_signature
     )
 
+    # Return function in specified format.
     if isinstance(targets, str) or (aggregator is not None and len(_targets) == 1):
         out = single_output(_concatenated)
     elif aggregator is not None:
@@ -70,7 +151,7 @@ def concatenate_functions(
         out = dict_output(_concatenated, keys=_targets)
     else:
         raise ValueError(
-            f"Invalid return type {return_type}. Must be 'list', 'tuple',  or 'dict'. "
+            f"Invalid return type {return_type}. Must be 'list', 'tuple', or 'dict'. "
             f"You provided {return_type}."
         )
 
@@ -91,13 +172,14 @@ def get_ancestors(functions, targets, include_targets=False):
         set: The ancestors
 
     """
-    _functions = _harmonize_functions(functions)
-    _targets = _harmonize_targets(targets, list(_functions))
-    _fail_if_targets_have_wrong_types(_targets)
-    _fail_if_functions_are_missing(_functions, _targets)
 
-    raw_dag = _create_complete_dag(_functions)
-    dag = _limit_dag_to_targets_and_their_ancestors(raw_dag, _targets)
+    # Harmonize and check arguments.
+    _functions, _targets = _harmonize_and_check_functions_and_targets(
+        functions, targets
+    )
+
+    # Create the DAG.
+    dag = create_dag(functions, targets)
 
     ancestors = set()
     for target in _targets:
@@ -105,6 +187,29 @@ def get_ancestors(functions, targets, include_targets=False):
         if include_targets:
             ancestors.add(target)
     return ancestors
+
+
+def _harmonize_and_check_functions_and_targets(functions, targets):
+    """Harmonize the type of specified functions and targets and do some checks.
+
+    Args:
+        functions (dict or list): Dict or list of functions. If a list, the function
+            name is inferred from the __name__ attribute of the entries. If a dict, the
+            name of the function is set to the dictionary key.
+        targets (str or list): Name of the function that produces the target or list of
+            such function names.
+
+    Returns:
+        functions_harmonized: harmonized functions
+        targets_harmonized: harmonized targets
+
+    """
+    functions_harmonized = _harmonize_functions(functions)
+    targets_harmonized = _harmonize_targets(targets, list(functions_harmonized))
+    _fail_if_targets_have_wrong_types(targets_harmonized)
+    _fail_if_functions_are_missing(functions_harmonized, targets_harmonized)
+
+    return functions_harmonized, targets_harmonized
 
 
 def _harmonize_functions(functions):
@@ -139,6 +244,15 @@ def _fail_if_functions_are_missing(functions, targets):
         )
 
     return functions, targets
+
+
+def _fail_if_dag_contains_cycle(dag):
+    """Check for cycles in DAG"""
+    cycles = list(nx.simple_cycles(dag))
+
+    if len(cycles) > 0:
+        formatted = _format_list_linewise(cycles)
+        raise ValueError(f"The DAG contains one or more cycles:\n{formatted}")
 
 
 def _create_complete_dag(functions):
@@ -275,7 +389,7 @@ def _create_concatenated_function(
 
 
 def _format_list_linewise(list_):
-    formatted_list = '",\n    "'.join(list_)
+    formatted_list = '",\n    "'.join([str(c) for c in list_])
     return textwrap.dedent(
         """
         [
