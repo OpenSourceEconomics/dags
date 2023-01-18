@@ -7,11 +7,11 @@
 | Author     | `Hans-Martin von Gaudecker <https://github.com/hmgaudecker>`_    |
 |            | `Janos Gabler <https://github.com/janosg>`_                      |
 +------------+------------------------------------------------------------------+
-| Status     | Accepted                                                         |
+| Status     | Draft                                                            |
 +------------+------------------------------------------------------------------+
 | Type       | Standards Track                                                  |
 +------------+------------------------------------------------------------------+
-| Created    | 2022-01-28                                                       |
+| Created    | 2023-01-13                                                       |
 +------------+------------------------------------------------------------------+
 | Resolution |                                                                  |
 +------------+------------------------------------------------------------------+
@@ -19,21 +19,74 @@
 
 ## Abstract
 
-
-
-
 ## Backwards compatibility
 
 All changes are fully backwards compatible.
 
 ## Motivation
 
-- gettsim motivation
-- panel dags motivation
+dags constructs a graph based on function names, which need to be valid Python
+identifiers. In larger projects, which distribute things across many submodules, this
+will lead to very long and/or cryptic identifiers. Even in smaller projects, this may
+happen if there are multiple similar submodules. E.g., in case of a library depicting a
+taxes and transfers system, two different transfer programs will have many similar
+concepts (eligibility criteria, benefits, ...). In case one wants to process a panel
+dataset with dimensions year × variables, often one will have to do this at a granular
+level for some variables in some years, but at for all years at the same time for other
+variables. In both cases, disambiguation via string manipulations on the user side is
+repetitive and error-prone. As a result, code becomes unmanageable. 
+
+Hence, programming languages such as Python have the concept of namespaces, which allows
+for short identifiers with the scope provided by the broader context. The equivalent for
+dags will be a nested dictionary of functions based on
+[pybaum](https://github.com/OpenSourceEconomics/pybaum), with the scope provided by a 
+branch of the tree. 
+
+Before going into some more detail, 
+
 
 ## Example: Tax and transfer system
 
+
+Say we have the following strucutre
+
+```
+social_insurance
+|-- main.py
+|   |-- monthly_earnings(hours, hourly_wage)
+|   |-- [call of concatenate_functions]
+|-- pensions.py
+|   |-- eligible(benefits_last_period, applied_this_period)
+)
+|-- unemployment_insurance.py
+```
+
+### Content of pensions.py
+```py
+def eligible(
+    benefits_last_period,
+    applied_this_period,
+):
+    return True if benefits_last_period else applied_this_period
+
+
+def benefit(
+    eligible,
+    aime,
+    conversion_factor,
+    monthly_earnings,
+    unemployment_insurance__earnings_limit,
+):
+    cond = eligible and monthly_earnings < unemployment_insurance__earnings_limit
+    return aime * conversion_factor if cond else 0
+
+import pensions
+import unemployment_insurance
+
 - repeat the example system from the test file
+```
+
+## Example: Tax and transfer system
 
 ## The new `functions` argument
 
@@ -46,7 +99,6 @@ All changes are fully backwards compatible.
 
 It is probably not much extra work to do everything fully flexible but the flattening rules will be very different from pybaum. Instead of flattening everything into lists we need to flatten into dictionaries! Could re-use pybaum for that though. Just with different registries.
 
-
 ### Argument names
 
 - When can we use short and long names for arguments
@@ -55,16 +107,13 @@ It is probably not much extra work to do everything fully flexible but the flatt
 
 **Use more abstract examples than tax and transfer here!**
 
-
 ## Inputs of the concatenated function
 
 - Is it necessary to have different input modes (e.g. flat and nested) or is nested always what we want?
 
-
 ## Output of the concatenated function
 
 - Is it necessary to have different output formats (e.g. flat and nested) or should this be done outside of dags?
-
 
 ## Implementation Ideas
 
