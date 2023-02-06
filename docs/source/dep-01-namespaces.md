@@ -34,31 +34,33 @@ concepts (eligibility criteria, benefits, ...). In case one wants to process a p
 dataset with dimensions year × variables, often one will have to do this at a granular
 level for some variables in some years, but at for all years at the same time for other
 variables. In both cases, disambiguation via string manipulations on the user side is
-repetitive and error-prone. As a result, code becomes unmanageable. 
+repetitive and error-prone. As a result, code becomes unmanageable.
 
 Hence, programming languages such as Python have the concept of namespaces, which allows
 for short identifiers with the scope provided by the broader context. The equivalent for
 dags will be a nested dictionary of functions based on
-[pybaum](https://github.com/OpenSourceEconomics/pybaum), with the scope provided by a 
-branch of the tree. 
+[pybaum](https://github.com/OpenSourceEconomics/pybaum), with the scope provided by a
+branch of the tree.
 
-Before going into some more detail, 
-
-
-## Example: Tax and transfer system
+Before going into detail, an example and some terminology are useful.
 
 
-Say we have the following strucutre
+## Example: Taxes and transfers system
+
+Say we have the following structure:
 
 ```
-social_insurance
-|-- main.py
+taxes_transfers
+|-- __init__.py
 |   |-- monthly_earnings(hours, hourly_wage)
 |   |-- [call of concatenate_functions]
 |-- pensions.py
 |   |-- eligible(benefits_last_period, applied_this_period)
-)
+|   |-- benefit(eligible, aime, conversion_factor, monthly_earnings, unemployment_insurance__earnings_limit)
 |-- unemployment_insurance.py
+|   |-- monthly_earnings(hours, hourly_wage, earnings_limit):
+|   |-- eligible(benefits_last_period, applied_this_period, hours, monthly_earnings, hours_limit, earnings_limit)
+|   |-- benefit(eligible, monthly_earnings, fraction)
 ```
 
 ### Content of pensions.py
@@ -86,7 +88,12 @@ import unemployment_insurance
 - repeat the example system from the test file
 ```
 
-## Example: Tax and transfer system
+## Terminology
+
+- **flat**
+- **nested**
+- **short**
+- **registry**
 
 ## The new `functions` argument
 
@@ -107,9 +114,27 @@ It is probably not much extra work to do everything fully flexible but the flatt
 
 **Use more abstract examples than tax and transfer here!**
 
+
+```
+abstract
+|-- __init__.py
+|   |-- a(b, c)
+|   |-- [call of concatenate_functions]
+|-- x.py
+|   |-- f(a, b)
+|   |-- g(f, c)
+|-- y.py
+|   |-- a(b, c)
+|   |-- m(x__f, a, b)
+```
+
+
+
 ## Inputs of the concatenated function
 
 - Is it necessary to have different input modes (e.g. flat and nested) or is nested always what we want?
+- input of `x__c` should inherit behavior of .
+
 
 ## Output of the concatenated function
 

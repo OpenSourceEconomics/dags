@@ -1,3 +1,8 @@
+def monthly_earnings(hours, hourly_wage, earnings_limit):
+    e = hours * 4.3 * hourly_wage
+    return e if e < earnings_limit else earnings_limit
+
+
 def eligible(
     benefits_last_period,
     applied_this_period,
@@ -13,9 +18,5 @@ def eligible(
     return False if cond else applied_this_period
 
 
-def monthly_earnings(x, earnings_limit):
-    return x if x < earnings_limit else earnings_limit
-
-
-def benefit(eligible, monthly_earnings, fraction):
-    return monthly_earnings * fraction if eligible else 0
+def benefit(eligible, baseline_earnings, fraction):
+    return baseline_earnings * fraction if eligible else 0

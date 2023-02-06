@@ -143,6 +143,7 @@ def complete_system(
     unemployment_insurance__applied_this_period,
     unemployment_insurance__hours_limit,
     unemployment_insurance__earnings_limit,
+    unemployment_insurance__baseline_earnings
     hours,
     hourly_wage,
 ):
