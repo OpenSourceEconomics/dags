@@ -70,7 +70,7 @@ def complete_system(
 
 # Expected behavior of concatenate_functions with input_mode="flat"
 # (meaning that long name-style input is expected by the complete system)
-# and output_mode="tree" is to return *targets_flat*
+# and output_mode="flat" is to return *targets_flat*
 #
 # concatenate_functions(
 #   functions=functions,
