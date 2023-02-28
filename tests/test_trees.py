@@ -28,7 +28,7 @@ def monthly_earnings(hours, hourly_wage):
 # Default is to raise an error.
 
 
-# Typical way would be to define functions in a nested dictionary creating namespaces.
+# Functions are defined in a nested dictionary creating namespaces.
 functions = {
     "pensions": {
         "eligible": pensions.eligible,
@@ -42,109 +42,43 @@ functions = {
 }
 
 
-# Typical way to define targets would be in a nested dictionary.
+# Targets are defined in a nested dictionary as well.
 targets = {"pensions": ["benefit"], "unemployment_insurance": ["benefit"]}
 
-# Alternatively, use flat structure.
-targets_flat = {"pensions__benefit", "unemployment_insurance__benefit"}
+inputs = {
+    "pensions": {
+        "aime": None,
+        "conversion_factor": None,
+        "benefits_last_period": None,
+        "applied_this_period": None,
+    },
+    "unemployment_insurance": {
+        "benefits_last_period": None,
+        "applied_this_period": None,
+        "hours_limit": None,
+        "earnings_limit": None,
+    },
+    "hours": None,
+    "hourly_wage": None,
+}
 
-# Expected behavior of concatenate_functions with input_mode="tree"
-# (meaning that a nested dict of inputs is expected by the complete system)
-# and output_mode="tree" is to return *targets*
+# Expected behavior of
 #
 # concatenate_functions(
 #   functions=functions,
 #   targets=targets,
-#   input_mode="tree",
-#   output_mode="tree"
+#   mode="tree",
+#   inputs=inputs,
 # )
-#
+# concatenate_functions with input_mode="tree" (meaning that a
+# nested dict of inputs is expected by the complete system and short-style function
+# names are possible to use) with
+
+
 def complete_system(
     pensions: dict,  # str: float: aime, conversion_factor, benefits_last_period, applied_this_period
     unemployment_insurance: dict,  # benefits_last_period, applied_this_period, hours_limit, earnings_limit,
     hours: float,
     hourly_wage: float,
-):
-    ...
-
-
-# Expected behavior of concatenate_functions with input_mode="flat"
-# (meaning that long name-style input is expected by the complete system)
-# and output_mode="flat" is to return *targets_flat*
-#
-# concatenate_functions(
-#   functions=functions,
-#   targets=targets_flat,
-#   input_mode="flat",
-#   output_mode="flat"
-# )
-
-
-def complete_system(
-    pensions__aime,
-    pensions__conversion_factor,
-    pensions__benefits_last_period,
-    pensions__applied_this_period,
-    unemployment_insurance__benefits_last_period,
-    unemployment_insurance__applied_this_period,
-    unemployment_insurance__hours_limit,
-    unemployment_insurance__earnings_limit,
-    employment__hours,
-    employment__hourly_wage,
-):
-    ...
-
-
-functions = {
-    "pensions": {
-        "eligible": pensions.eligible,
-        "benefit": pensions.benefit,
-    },
-    "unemployment_insurance": {
-        "eligible": unemployment_insurance.eligible,
-        "benefit": unemployment_insurance.benefit,
-    },
-    "monthly_earnings": monthly_earnings,
-}
-
-
-# Specifying functions in a flat manner.
-#
-# (difference to current implementation is that we can still use
-# the short names inside of modules)
-#
-# OTOneH, not sure whether we want to support this, added for completeness.
-# OTOtherH, it's just a matter of calling tree_unflatten (I think)
-
-functions_flat = {
-    "pensions__eligible": pensions.eligible,
-    "pensions__benefit": pensions.benefit,
-    "unemployment_insurance__eligible": unemployment_insurance.eligible,
-    "unemployment_insurance__benefit": unemployment_insurance.benefit,
-    "monthly_earnings": monthly_earnings,
-}
-
-
-# concatenate_functions(
-#   functions=functions_flat,
-#   targets=targets_flat,
-#   functions_mode="flat",
-#   input_mode="flat",
-#   output_mode="flat"
-# )
-
-
-def complete_system(
-    pensions__aime,
-    pensions__conversion_factor,
-    pensions__benefits_last_period,
-    pensions__applied_this_period,
-    unemployment_insurance__benefits_last_period,
-    unemployment_insurance__applied_this_period,
-    unemployment_insurance__hours_limit,
-    unemployment_insurance__earnings_limit,
-    unemployment_insurance__baseline_earnings
-    hours,
-    hourly_wage,
 ):
     ...

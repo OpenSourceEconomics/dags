@@ -99,17 +99,27 @@ import unemployment_insurance
 
 ### Possible Containers
 
-- should we only allow (arbitrarily?) nested dictionaries or everything that works in pybaum?
-- do we need an extensible registry as in pybaum?
-- should it be possible to provide a module directly instead of a dictionary of functions?
-- do we allow unlabeled datastructures as long as the functions have a `__name__` attribute?
+- Registry: We only allow arbitrarily nested dictionaries with functions as leafs
+- Only exception *might* be to enable providing a module directly instead of a
+  dictionary of functions. The module name would be the outermost node of the branch,
+  the functions in it would become leafs. However, it is unclear whether we'd want all
+  functions imported in that module to show up in the graph or only the ones **def**ined
+  in it.
 
-It is probably not much extra work to do everything fully flexible but the flattening rules will be very different from pybaum. Instead of flattening everything into lists we need to flatten into dictionaries! Could re-use pybaum for that though. Just with different registries.
+  In any case, this would only be implemented in a second step, probably easier to put a
+  helper recipe on the website.
+- Hence, no unlabeled datastructures are possible.
+
+It is probably not much extra work to do everything fully flexible but the flattening
+rules will be very different from pybaum. Instead of flattening everything into lists we
+need to flatten into dictionaries! Could re-use pybaum for that though. Just with
+different registries.
 
 ### Argument names
 
 - When can we use short and long names for arguments
-- Are there ever ambiguous cases and if so, how are they handled? How does this relate to pythons resolution of scopes?
+- Are there ever ambiguous cases and if so, how are they handled? How does this relate
+  to Python's resolution of scopes?
 - What should not work (e.g. because it would be error prone)
 
 **Use more abstract examples than tax and transfer here!**
