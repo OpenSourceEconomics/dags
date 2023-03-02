@@ -45,7 +45,7 @@ functions = {
 # Targets are defined in a nested dictionary as well.
 targets = {"pensions": ["benefit"], "unemployment_insurance": ["benefit"]}
 
-inputs = {
+input_structure = {
     "pensions": {
         "aime": None,
         "conversion_factor": None,
@@ -62,17 +62,15 @@ inputs = {
     "hourly_wage": None,
 }
 
-# Expected behavior of
-#
-# concatenate_functions(
-#   functions=functions,
-#   targets=targets,
-#   mode="tree",
-#   inputs=inputs,
-# )
-# concatenate_functions with input_mode="tree" (meaning that a
-# nested dict of inputs is expected by the complete system and short-style function
-# names are possible to use) with
+# Expected behavior of concatenate_functions_tree with mode="tree" (meaning that a
+# nested dict of input_structure is expected by the complete system and short-style
+# function names are possible to use)
+concatenate_functions_tree(
+    functions=functions,
+    targets=targets,
+    mode="tree",
+    input_structure=input_structure,
+)
 
 
 def complete_system(
