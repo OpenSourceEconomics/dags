@@ -1,3 +1,4 @@
+import re
 from typing import Literal, Optional, Callable, Union
 
 NestedFunctionDict = dict[str, Union[Callable, "NestedFunctionDict"]]
@@ -47,5 +48,13 @@ def create_input_structure_tree(
     pass
 
 
-def _is_qualified_name(name: str) -> bool:
-    pass
+_python_identifier = r"[a-zA-Z_][a-zA-Z0-9_]*"
+_qualified_name = f"{_python_identifier}(?:__{_python_identifier})+"
+
+
+def _is_python_identifier(s: str) -> bool:
+    return bool(re.fullmatch(_python_identifier, s))
+
+
+def _is_qualified_name(s: str) -> bool:
+    return bool(re.fullmatch(_qualified_name, s))
