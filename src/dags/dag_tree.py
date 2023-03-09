@@ -1,8 +1,12 @@
 import inspect
 import re
-from typing import Literal, Optional, Callable, Union
+from typing import Callable
+from typing import Literal
+from typing import Optional
+from typing import Union
 
-from flatten_dict import flatten, unflatten
+from flatten_dict import flatten
+from flatten_dict import unflatten
 
 # Type aliases
 
@@ -18,17 +22,20 @@ TopOrNamespace = Literal["top", "namespace"]
 
 _python_identifier = r"[a-zA-Z_][a-zA-Z0-9_]*"
 _qualified_name_delimiter = "__"
-_qualified_name = f"{_python_identifier}(?:{_qualified_name_delimiter}{_python_identifier})+"
+_qualified_name = (
+    f"{_python_identifier}(?:{_qualified_name_delimiter}{_python_identifier})+"
+)
 
 
 # Functions
 
+
 def concatenate_functions_tree(
-        functions: NestedFunctionDict,
-        targets: Optional[NestedTargetDict],
-        input_structure: NestedInputStructureDict,
-        name_clashes: Literal["raise", "warn", "ignore"] = "raise",
-        enforce_signature: bool = True,
+    functions: NestedFunctionDict,
+    targets: Optional[NestedTargetDict],
+    input_structure: NestedInputStructureDict,
+    name_clashes: Literal["raise", "warn", "ignore"] = "raise",
+    enforce_signature: bool = True,
 ) -> Callable:
     """
 
@@ -47,8 +54,8 @@ def concatenate_functions_tree(
 
 
 def create_input_structure_tree(
-        functions: NestedFunctionDict,
-        level_of_inputs: TopOrNamespace = "namespace",
+    functions: NestedFunctionDict,
+    level_of_inputs: TopOrNamespace = "namespace",
 ) -> NestedInputStructureDict:
     """
     Creates a template that represents the structure of the input dictionary that will be
@@ -73,7 +80,9 @@ def create_input_structure_tree(
         parameter_names = dict(inspect.signature(func).parameters).keys()
 
         for parameter_name in parameter_names:
-            parameter_path = _compute_path_for_parameter(flat_functions, namespace_path, parameter_name, level_of_inputs)
+            parameter_path = _compute_path_for_parameter(
+                flat_functions, namespace_path, parameter_name, level_of_inputs
+            )
 
             if parameter_path not in flat_functions:
                 flat_input_structure[parameter_path] = None
@@ -86,10 +95,10 @@ def _flatten_functions(functions: NestedFunctionDict) -> FlatFunctionDict:
 
 
 def _compute_path_for_parameter(
-        flat_functions: FlatFunctionDict,
-        namespace_path: tuple[str],
-        parameter_name: str,
-        level_of_inputs: TopOrNamespace = "namespace",
+    flat_functions: FlatFunctionDict,
+    namespace_path: tuple[str],
+    parameter_name: str,
+    level_of_inputs: TopOrNamespace = "namespace",
 ) -> tuple[str]:
     """
     Returns the path to the function/input that the parameter points to.
