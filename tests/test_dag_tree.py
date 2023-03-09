@@ -1,14 +1,214 @@
 import pytest
 
-from dags.dag_tree import _is_qualified_name, _is_python_identifier
+from dags.dag_tree import (
+    NestedFunctionDict,
+    NestedInputStructureDict,
+    create_input_structure_tree,
+    _is_qualified_name,
+    _is_python_identifier,
+    TopOrNamespace, _flatten_functions, _compute_path_for_parameter
+)
 
+
+# Fixtures & Other Test Inputs
+
+def global__f(
+        g,
+        namespace1__f1,
+        input,
+        namespace1__input
+):
+    """A global function with the same simple name as other functions."""
+
+    return {
+        "name": "global__f",
+        "args": {
+            "g": g,
+            "namespace1__f1": namespace1__f1,
+            "input": input,
+            "namespace1__input": namespace1__input
+        }
+    }
+
+
+def global__g():
+    """A global function with a unique simple name."""
+
+    return {
+        "name": "global__g"
+    }
+
+
+def namespace1__f(
+        g,
+        namespace1__f1,
+        namespace2__f2,
+        namespace1__input,
+        namespace2__input2
+):
+    """A namespaced function with the same simple name as other functions."""
+
+    return {
+        "name": "namespace1__f",
+        "args": {
+            "g": g,
+            "namespace1__f1": namespace1__f1,
+            "namespace2__f2": namespace2__f2,
+            "namespace1__input": namespace1__input,
+            "namespace2__input2": namespace2__input2
+        }
+    }
+
+
+def namespace1__f1():
+    """A namespaced function with a unique simple name."""
+
+    return {
+        "name": "namespace1__f1"
+    }
+
+
+def namespace2__f(
+        f2,
+        input
+):
+    """
+    A namespaced function with the same simple name as other functions. All arguments use
+    simple names.
+    """
+
+    return {
+        "name": "namespace2__f",
+        "args": {
+            "f2": f2,
+            "input": input
+        }
+    }
+
+
+def namespace2__f2():
+    """A namespaced function with a unique simple name."""
+
+    return {
+        "name": "namespace2__f2"
+    }
+
+
+@pytest.fixture
+def functions() -> NestedFunctionDict:
+    return {
+        "f": global__f,
+        "g": global__g,
+        "namespace1": {
+            "f": namespace1__f,
+            "f1": namespace1__f1,
+        },
+        "namespace2": {
+            "f": namespace2__f,
+            "f2": namespace2__f2,
+        },
+    }
+
+
+# Tests
 
 def test_concatenate_functions_tree():
     pass
 
 
-def test_create_input_structure_tree():
-    pass
+@pytest.mark.parametrize(
+    "level_of_inputs, expected",
+    [
+        (
+                "namespace",
+                {
+                    "input": None,
+                    "namespace1": {
+                        "input": None,
+                    },
+                    "namespace2": {
+                        "input": None,
+                        "input2": None,
+                    }
+                }
+        ),
+        (
+                "top",
+                {
+                    "input": None,
+                    "namespace1": {
+                        "input": None,
+                    },
+                    "namespace2": {
+                        "input2": None,
+                    }
+                }
+        )
+    ],
+)
+def test_create_input_structure_tree(
+        functions: NestedFunctionDict,
+        level_of_inputs: TopOrNamespace,
+        expected: NestedInputStructureDict
+):
+    assert create_input_structure_tree(functions, level_of_inputs) == expected
+
+
+def test_flatten_functions(functions):
+    assert _flatten_functions(functions) == {
+        ("f",): global__f,
+        ("g",): global__g,
+        ("namespace1", "f"): namespace1__f,
+        ("namespace1", "f1"): namespace1__f1,
+        ("namespace2", "f"): namespace2__f,
+        ("namespace2", "f2"): namespace2__f2,
+    }
+
+
+@pytest.mark.parametrize(
+    "level_of_inputs, namespace_path, parameter_name, expected",
+    [
+        (
+                "namespace",
+                ("namespace1",),
+                "namespace1__f1",
+                ("namespace1", "f1")
+        ),
+        (
+                "namespace",
+                ("namespace1",),
+                "f1",
+                ("namespace1", "f1")
+        ),
+        (
+                "namespace",
+                ("namespace1",),
+                "g",
+                ("g",)
+        ),
+        (
+                "namespace",
+                ("namespace1",),
+                "input",
+                ("namespace1", "input")
+        ),
+        (
+                "top",
+                ("namespace1",),
+                "input",
+                ("input",)
+        ),
+    ]
+)
+def test_compute_path_for_parameter(
+        functions: NestedFunctionDict,
+        level_of_inputs: TopOrNamespace,
+        namespace_path: tuple[str],
+        parameter_name: str,
+        expected: tuple[str]
+):
+    flat_functions = _flatten_functions(functions)
+    assert _compute_path_for_parameter(flat_functions, namespace_path, parameter_name, level_of_inputs) == expected
 
 
 @pytest.mark.parametrize(
