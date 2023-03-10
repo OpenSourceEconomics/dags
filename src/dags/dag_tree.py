@@ -2,19 +2,19 @@ import functools
 import inspect
 import re
 import warnings
-from typing import Callable, Any
+from typing import Any
+from typing import Callable
 from typing import Literal
 from typing import Optional
 from typing import Union
 
+from dags import concatenate_functions
+from dags.dag import _get_free_arguments
+from dags.signature import rename_arguments
 from flatten_dict import flatten
 from flatten_dict import unflatten
 from flatten_dict.reducers import make_reducer
 from flatten_dict.splitters import make_splitter
-
-from dags import concatenate_functions
-from dags.dag import _get_free_arguments
-from dags.signature import rename_arguments
 
 # Type aliases
 NestedFunctionDict = dict[str, Union[Callable, "NestedFunctionDict"]]
@@ -48,11 +48,11 @@ _qualified_name_splitter = make_splitter(delimiter=_qualified_name_delimiter)
 
 # Functions
 def concatenate_functions_tree(
-        functions: NestedFunctionDict,
-        targets: Optional[NestedTargetDict],
-        input_structure: NestedInputStructureDict,
-        name_clashes: Literal["raise", "warn", "ignore"] = "raise",
-        enforce_signature: bool = True,
+    functions: NestedFunctionDict,
+    targets: Optional[NestedTargetDict],
+    input_structure: NestedInputStructureDict,
+    name_clashes: Literal["raise", "warn", "ignore"] = "raise",
+    enforce_signature: bool = True,
 ) -> Callable:
     """
 
@@ -67,14 +67,16 @@ def concatenate_functions_tree(
 
     """
 
-    flat_functions = _flatten_functions_and_rename_parameters(functions, input_structure, name_clashes)
+    flat_functions = _flatten_functions_and_rename_parameters(
+        functions, input_structure, name_clashes
+    )
     flat_targets = _flatten_targets(targets)
 
     concatenated_function = concatenate_functions(
         flat_functions,
         flat_targets,
         return_type="dict",
-        enforce_signature=enforce_signature
+        enforce_signature=enforce_signature,
     )
 
     @functools.wraps(concatenated_function)
@@ -87,17 +89,21 @@ def concatenate_functions_tree(
 
 
 def _flatten_functions_and_rename_parameters(
-        functions: NestedFunctionDict,
-        input_structure: NestedInputStructureDict,
-        name_clashes: Literal["raise", "warn", "ignore"],
+    functions: NestedFunctionDict,
+    input_structure: NestedInputStructureDict,
+    name_clashes: Literal["raise", "warn", "ignore"],
 ) -> FlatFunctionDict:
     flat_functions = _flatten_str_dict(functions)
     flat_input_structure = _flatten_str_dict(input_structure)
 
-    _check_functions_and_input_overlap(flat_functions, flat_input_structure, name_clashes)
+    _check_functions_and_input_overlap(
+        flat_functions, flat_input_structure, name_clashes
+    )
 
     for name, function in flat_functions.items():
-        namespace = _qualified_name_delimiter.join(name.split(_qualified_name_delimiter)[:-1])
+        namespace = _qualified_name_delimiter.join(
+            name.split(_qualified_name_delimiter)[:-1]
+        )
 
         renamed = rename_arguments(
             function,
@@ -106,7 +112,7 @@ def _flatten_functions_and_rename_parameters(
                 flat_input_structure,
                 namespace,
                 function,
-            )
+            ),
         )
 
         flat_functions[name] = renamed
@@ -115,16 +121,14 @@ def _flatten_functions_and_rename_parameters(
 
 
 def _check_functions_and_input_overlap(
-        flat_functions: FlatFunctionDict,
-        input_structure: FlatInputStructureDict,
-        name_clashes: Literal["raise", "warn", "ignore"],
+    flat_functions: FlatFunctionDict,
+    input_structure: FlatInputStructureDict,
+    name_clashes: Literal["raise", "warn", "ignore"],
 ) -> None:
     overlap = set(flat_functions.keys()) & set(input_structure.keys())
 
     if overlap:
-        message = (
-            f"These names are both functions and inputs: {', '.join(overlap)}."
-        )
+        message = f"These names are both functions and inputs: {', '.join(overlap)}."
 
         if name_clashes == "raise":
             raise ValueError(message)
@@ -135,29 +139,33 @@ def _check_functions_and_input_overlap(
 
 
 def _create_parameter_name_mapper(
-        flat_functions: FlatFunctionDict,
-        flat_input_structure: FlatInputStructureDict,
-        namespace: str,
-        function: Callable,
+    flat_functions: FlatFunctionDict,
+    flat_input_structure: FlatInputStructureDict,
+    namespace: str,
+    function: Callable,
 ) -> dict[str, str]:
     return {
-        old_name: _map_parameter(flat_functions, flat_input_structure, namespace, old_name)
+        old_name: _map_parameter(
+            flat_functions, flat_input_structure, namespace, old_name
+        )
         for old_name in _get_free_arguments(function)
     }
 
 
 def _map_parameter(
-        flat_functions: FlatFunctionDict,
-        flat_input_structure: FlatInputStructureDict,
-        namespace: str,
-        parameter_name: str,
+    flat_functions: FlatFunctionDict,
+    flat_input_structure: FlatInputStructureDict,
+    namespace: str,
+    parameter_name: str,
 ) -> str:
     # Parameter name is definitely a qualified name
     if _is_qualified_name(parameter_name):
         return parameter_name
 
     # (1.1) Look for function in the current namespace
-    namespaced_parameter = f"{namespace}__{parameter_name}" if namespace else parameter_name
+    namespaced_parameter = (
+        f"{namespace}__{parameter_name}" if namespace else parameter_name
+    )
     if namespaced_parameter in flat_functions:
         return namespaced_parameter
 
@@ -178,8 +186,8 @@ def _map_parameter(
 
 
 def create_input_structure_tree(
-        functions: NestedFunctionDict,
-        level_of_inputs: TopOrNamespace = "namespace",
+    functions: NestedFunctionDict,
+    level_of_inputs: TopOrNamespace = "namespace",
 ) -> NestedInputStructureDict:
     """
     Creates a template that represents the structure of the input dictionary that will be
@@ -200,7 +208,9 @@ def create_input_structure_tree(
     flat_input_structure: FlatInputStructureDict = {}
 
     for path, func in flat_functions.items():
-        namespace = _qualified_name_delimiter.join(path.split(_qualified_name_delimiter)[:-1])
+        namespace = _qualified_name_delimiter.join(
+            path.split(_qualified_name_delimiter)[:-1]
+        )
         parameter_names = dict(inspect.signature(func).parameters).keys()
 
         for parameter_name in parameter_names:
@@ -230,10 +240,10 @@ def _flatten_targets(targets: Optional[NestedTargetDict]) -> Optional[FlatTarget
 
 
 def _link_parameter_to_function_or_input(
-        flat_functions: FlatFunctionDict,
-        namespace: str,
-        parameter_name: str,
-        level_of_inputs: TopOrNamespace = "namespace",
+    flat_functions: FlatFunctionDict,
+    namespace: str,
+    parameter_name: str,
+    level_of_inputs: TopOrNamespace = "namespace",
 ) -> str:
     """
     Returns the path to the function/input that the parameter points to.
@@ -269,7 +279,9 @@ def _link_parameter_to_function_or_input(
         return parameter_name
 
     # (1) Look for function in the current namespace
-    namespaced_parameter = f"{namespace}__{parameter_name}" if namespace else parameter_name
+    namespaced_parameter = (
+        f"{namespace}__{parameter_name}" if namespace else parameter_name
+    )
     if namespaced_parameter in flat_functions:
         return namespaced_parameter
 
