@@ -1,6 +1,11 @@
+from typing import Literal, Callable
+
 import pytest
-from dags.dag_tree import _compute_path_for_parameter, concatenate_functions_tree
-from dags.dag_tree import _flatten_functions
+from dags.dag_tree import _link_parameter_to_function_or_input, concatenate_functions_tree, NestedTargetDict, \
+    NestedInputDict, \
+    NestedOutputDict, _flatten_targets, _unflatten_str_dict, _check_functions_and_input_overlap, FlatInputStructureDict, \
+    FlatFunctionDict, _create_parameter_name_mapper, _map_parameter
+from dags.dag_tree import _flatten_str_dict
 from dags.dag_tree import _is_python_identifier
 from dags.dag_tree import _is_qualified_name
 from dags.dag_tree import create_input_structure_tree
@@ -33,7 +38,7 @@ def _global__g():
 
 
 def _namespace1__f(
-    g, namespace1__f1, namespace2__f2, namespace1__input, namespace2__input2
+        g, namespace1__f1, namespace2__f2, namespace1__input, namespace2__input2
 ):
     """A namespaced function with the same simple name as other functions."""
 
@@ -88,83 +93,326 @@ def functions() -> NestedFunctionDict:
 
 # Tests
 
+@pytest.mark.parametrize(
+    "targets, input_, expected",
+    [
+        (
+                None,
+                {
+                    "input_": "namespace1__input",
+                    "namespace1": {
+                        "input": "namespace1__input",
+                    },
+                    "namespace2": {
+                        "input_": "namespace2__input",
+                        "input2": "namespace2__input2",
+                    },
+                },
+                {
+                    "f": {
+                        "name": "global__f",
+                        "args": {
+                            "g": {"name": "global__g"},
+                            "namespace1__f1": {"name": "namespace1__f1"},
+                            "input_": "namespace1__input",
+                            "namespace1__input": "namespace1__input",
+                        },
+                    },
+                    "g": {"name": "global__g"},
+                    "namespace1": {
+                        "f": {
+                            "name": "namespace1__f",
+                            "args": {
+                                "g": {"name": "global__g"},
+                                "namespace1__f1": {"name": "namespace1__f1"},
+                                "namespace2__f2": {"name": "namespace2__f2"},
+                                "namespace1__input": "namespace1__input",
+                                "namespace2__input2": "namespace2__input2",
+                            },
+                        },
+                        "f1": {"name": "namespace1__f1"}
+                    },
+                    "namespace2": {
+                        "f": {
+                            "name": "namespace2__f",
+                            "args": {
+                                "f2": {"name": "namespace2__f2"},
+                                "input_": "namespace2__input"
+                            }
+                        },
+                        "f2": {"name": "namespace2__f2"}
+                    }
+                }
+        ),
+        (
+                {
+                    "namespace1": {
+                        "f": None,
+                    },
+                    "namespace2": {
+                        "f": None
+                    },
+                },
+                {
+                    "input_": "global__input",
+                    "namespace1": {
+                        "input": "namespace1__input",
+                    },
+                    "namespace2": {
+                        "input2": "namespace2__input2",
+                    },
+                },
+                {
+                    "namespace1": {
+                        "f": {
+                            "name": "namespace1__f",
+                            "args": {
+                                "g": {"name": "global__g"},
+                                "namespace1__f1": {"name": "namespace1__f1"},
+                                "namespace2__f2": {"name": "namespace2__f2"},
+                                "namespace1__input": "namespace1__input",
+                                "namespace2__input2": "namespace2__input2",
+                            },
+                        }
+                    },
+                    "namespace2": {
+                        "f": {
+                            "name": "namespace2__f",
+                            "args": {
+                                "f2": {"name": "namespace2__f2"},
+                                "input_": "global__input"
+                            }
+                        }
+                    }
+                }
+        )
+    ],
+)
+def test_concatenate_functions_tree(
+        functions: NestedFunctionDict,
+        targets: NestedTargetDict,
+        input_: NestedInputDict,
+        expected: NestedOutputDict
+):
+    f = concatenate_functions_tree(functions, targets, input_)
+    assert f(input_) == expected
 
-def test_concatenate_functions_tree():
-    pass
 
+@pytest.mark.parametrize(
+    "functions, input_structure, name_clashes",
+    [
+        ({"x": lambda x: x}, {"x": None}, "raise"),
+    ]
+)
+def test_check_functions_and_input_overlap_error(
+        functions: FlatFunctionDict,
+        input_structure: FlatInputStructureDict,
+        name_clashes: Literal["raise"]
+):
+    with pytest.raises(ValueError):
+        _check_functions_and_input_overlap(functions, input_structure, name_clashes)
+
+
+@pytest.mark.parametrize(
+    "functions, input_structure, name_clashes",
+    [
+        ({"x": lambda x: x}, {"x": None}, "ignore"),
+        ({"x": lambda x: x}, {"y": None}, "raise"),
+    ]
+)
+def test_check_functions_and_input_overlap_no_error(
+        functions: FlatFunctionDict,
+        input_structure: FlatInputStructureDict,
+        name_clashes: Literal["raise", "ignore"]
+):
+    _check_functions_and_input_overlap(functions, input_structure, name_clashes)
+
+
+@pytest.mark.parametrize(
+    "input_structure, namespace, function, expected",
+    [
+        (
+                {},
+                "",
+                _global__g,
+                {},
+        ),
+        (
+                {"input_": None},
+                "namespace2",
+                _namespace2__f,
+                {"f2": "namespace2__f2", "input_": "input_"},
+        ),
+        (
+                {"namespace2": {"input_": None}},
+                "namespace2",
+                _namespace2__f,
+                {"f2": "namespace2__f2", "input_": "namespace2__input_"},
+        ),
+        (
+                {
+                    "namespace1": {"input": None},
+                    "namespace2": {"input2": None}
+                },
+                "namespace1",
+                _namespace1__f,
+                {
+                    "g": "g",
+                    "namespace1__f1": "namespace1__f1",
+                    "namespace2__f2": "namespace2__f2",
+                    "namespace1__input": "namespace1__input",
+                    "namespace2__input2": "namespace2__input2",
+                },
+        ),
+        (
+                {
+                    "input_": None,
+                    "namespace1": {"input_": None}
+                },
+                "",
+                _global__f,
+                {
+                    "g": "g",
+                    "namespace1__f1": "namespace1__f1",
+                    "input_": "input_",
+                    "namespace1__input": "namespace1__input",
+                },
+        ),
+    ]
+)
+def test_create_parameter_name_mapper(
+        functions: NestedFunctionDict,
+        input_structure: NestedInputStructureDict,
+        namespace: str,
+        function: Callable,
+        expected: dict[str, str]
+):
+    flat_functions = _flatten_str_dict(functions)
+    flat_input_structure = _flatten_str_dict(input_structure)
+
+    assert _create_parameter_name_mapper(flat_functions, flat_input_structure, namespace, function) == expected
+
+
+def test_map_parameter_raises():
+    with pytest.raises(ValueError):
+        _map_parameter({}, {}, "x", "x")
 
 @pytest.mark.parametrize(
     "level_of_inputs, expected",
     [
         (
-            "namespace",
-            {
-                "input_": None,
-                "namespace1": {
-                    "input": None,
-                },
-                "namespace2": {
+                "namespace",
+                {
                     "input_": None,
-                    "input2": None,
+                    "namespace1": {
+                        "input": None,
+                    },
+                    "namespace2": {
+                        "input_": None,
+                        "input2": None,
+                    },
                 },
-            },
         ),
         (
-            "top",
-            {
-                "input_": None,
-                "namespace1": {
-                    "input": None,
+                "top",
+                {
+                    "input_": None,
+                    "namespace1": {
+                        "input": None,
+                    },
+                    "namespace2": {
+                        "input2": None,
+                    },
                 },
-                "namespace2": {
-                    "input2": None,
-                },
-            },
         ),
     ],
 )
 def test_create_input_structure_tree(
-    functions: NestedFunctionDict,
-    level_of_inputs: TopOrNamespace,
-    expected: NestedInputStructureDict,
+        functions: NestedFunctionDict,
+        level_of_inputs: TopOrNamespace,
+        expected: NestedInputStructureDict,
 ):
     assert create_input_structure_tree(functions, level_of_inputs) == expected
 
 
-def test_flatten_functions(functions):
-    assert _flatten_functions(functions) == {
-        ("f",): _global__f,
-        ("g",): _global__g,
-        ("namespace1", "f"): _namespace1__f,
-        ("namespace1", "f1"): _namespace1__f1,
-        ("namespace2", "f"): _namespace2__f,
-        ("namespace2", "f2"): _namespace2__f2,
+def test_flatten_str_dict(functions: NestedFunctionDict):
+    assert _flatten_str_dict(functions) == {
+        "f": _global__f,
+        "g": _global__g,
+        "namespace1__f": _namespace1__f,
+        "namespace1__f1": _namespace1__f1,
+        "namespace2__f": _namespace2__f,
+        "namespace2__f2": _namespace2__f2,
     }
 
 
+def test_unflatten_str_dict(functions: NestedFunctionDict):
+    assert _unflatten_str_dict({
+        "f": _global__f,
+        "g": _global__g,
+        "namespace1__f": _namespace1__f,
+        "namespace1__f1": _namespace1__f1,
+        "namespace2__f": _namespace2__f,
+        "namespace2__f2": _namespace2__f2,
+    }) == functions
+
+
 @pytest.mark.parametrize(
-    "level_of_inputs, namespace_path, parameter_name, expected",
+    "targets, expected",
     [
-        ("namespace", ("namespace1",), "namespace1__f1", ("namespace1", "f1")),
-        ("namespace", ("namespace1",), "f1", ("namespace1", "f1")),
-        ("namespace", ("namespace1",), "g", ("g",)),
-        ("namespace", ("namespace1",), "input", ("namespace1", "input")),
-        ("top", ("namespace1",), "input", ("input",)),
+        (
+                None,
+                None
+        ),
+        (
+                {
+                    "namespace1": {
+                        "f": None,
+                        "namespace11": {
+                            "f": None
+                        }
+                    },
+                    "namespace2": {
+                        "f": None
+                    },
+                },
+                [
+                    "namespace1__f",
+                    "namespace1__namespace11__f",
+                    "namespace2__f",
+                ]
+        )
     ],
 )
-def test_compute_path_for_parameter(
-    functions: NestedFunctionDict,
-    level_of_inputs: TopOrNamespace,
-    namespace_path: tuple[str],
-    parameter_name: str,
-    expected: tuple[str],
+def test_flatten_targets(targets, expected):
+    assert _flatten_targets(targets) == expected
+
+
+@pytest.mark.parametrize(
+    "level_of_inputs, namespace, parameter_name, expected",
+    [
+        ("namespace", "namespace1", "namespace1__f1", "namespace1__f1"),
+        ("namespace", "namespace1", "f1", "namespace1__f1"),
+        ("namespace", "namespace1", "g", "g",),
+        ("namespace", "namespace1", "input", "namespace1__input"),
+        ("namespace", "", "input", "input"),
+        ("top", "namespace1", "input", "input"),
+        ("top", "", "input", "input"),
+    ],
+)
+def test_link_parameter_to_function_or_input(
+        functions: NestedFunctionDict,
+        level_of_inputs: TopOrNamespace,
+        namespace: str,
+        parameter_name: str,
+        expected: tuple[str],
 ):
-    flat_functions = _flatten_functions(functions)
+    flat_functions = _flatten_str_dict(functions)
     assert (
-        _compute_path_for_parameter(
-            flat_functions, namespace_path, parameter_name, level_of_inputs
-        )
-        == expected
+            _link_parameter_to_function_or_input(
+                flat_functions, namespace, parameter_name, level_of_inputs
+            )
+            == expected
     )
 
 
@@ -190,7 +438,7 @@ def test_compute_path_for_parameter(
         ("AB", True),
     ],
 )
-def test_is_python_identifier(s, expected):
+def test_is_python_identifier(s: str, expected: bool):
     assert _is_python_identifier(s) == expected
 
 
@@ -204,5 +452,5 @@ def test_is_python_identifier(s, expected):
         ("a__b", True),
     ],
 )
-def test_is_qualified_name(s, expected):
+def test_is_qualified_name(s: str, expected: bool):
     assert _is_qualified_name(s) == expected
