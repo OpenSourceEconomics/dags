@@ -1,5 +1,5 @@
 import pytest
-from dags.dag_tree import _compute_path_for_parameter
+from dags.dag_tree import _compute_path_for_parameter, concatenate_functions_tree
 from dags.dag_tree import _flatten_functions
 from dags.dag_tree import _is_python_identifier
 from dags.dag_tree import _is_qualified_name
@@ -12,7 +12,7 @@ from dags.dag_tree import TopOrNamespace
 # Fixtures & Other Test Inputs
 
 
-def global__f(g, namespace1__f1, input, namespace1__input):
+def _global__f(g, namespace1__f1, input_, namespace1__input):
     """A global function with the same simple name as other functions."""
 
     return {
@@ -20,19 +20,19 @@ def global__f(g, namespace1__f1, input, namespace1__input):
         "args": {
             "g": g,
             "namespace1__f1": namespace1__f1,
-            "input": input,
+            "input_": input_,
             "namespace1__input": namespace1__input,
         },
     }
 
 
-def global__g():
+def _global__g():
     """A global function with a unique simple name."""
 
     return {"name": "global__g"}
 
 
-def namespace1__f(
+def _namespace1__f(
     g, namespace1__f1, namespace2__f2, namespace1__input, namespace2__input2
 ):
     """A namespaced function with the same simple name as other functions."""
@@ -49,22 +49,22 @@ def namespace1__f(
     }
 
 
-def namespace1__f1():
+def _namespace1__f1():
     """A namespaced function with a unique simple name."""
 
     return {"name": "namespace1__f1"}
 
 
-def namespace2__f(f2, input):
+def _namespace2__f(f2, input_):
     """
     A namespaced function with the same simple name as other functions. All arguments use
     simple names.
     """
 
-    return {"name": "namespace2__f", "args": {"f2": f2, "input": input}}
+    return {"name": "namespace2__f", "args": {"f2": f2, "input_": input_}}
 
 
-def namespace2__f2():
+def _namespace2__f2():
     """A namespaced function with a unique simple name."""
 
     return {"name": "namespace2__f2"}
@@ -73,15 +73,15 @@ def namespace2__f2():
 @pytest.fixture
 def functions() -> NestedFunctionDict:
     return {
-        "f": global__f,
-        "g": global__g,
+        "f": _global__f,
+        "g": _global__g,
         "namespace1": {
-            "f": namespace1__f,
-            "f1": namespace1__f1,
+            "f": _namespace1__f,
+            "f1": _namespace1__f1,
         },
         "namespace2": {
-            "f": namespace2__f,
-            "f2": namespace2__f2,
+            "f": _namespace2__f,
+            "f2": _namespace2__f2,
         },
     }
 
@@ -99,12 +99,12 @@ def test_concatenate_functions_tree():
         (
             "namespace",
             {
-                "input": None,
+                "input_": None,
                 "namespace1": {
                     "input": None,
                 },
                 "namespace2": {
-                    "input": None,
+                    "input_": None,
                     "input2": None,
                 },
             },
@@ -112,7 +112,7 @@ def test_concatenate_functions_tree():
         (
             "top",
             {
-                "input": None,
+                "input_": None,
                 "namespace1": {
                     "input": None,
                 },
@@ -133,12 +133,12 @@ def test_create_input_structure_tree(
 
 def test_flatten_functions(functions):
     assert _flatten_functions(functions) == {
-        ("f",): global__f,
-        ("g",): global__g,
-        ("namespace1", "f"): namespace1__f,
-        ("namespace1", "f1"): namespace1__f1,
-        ("namespace2", "f"): namespace2__f,
-        ("namespace2", "f2"): namespace2__f2,
+        ("f",): _global__f,
+        ("g",): _global__g,
+        ("namespace1", "f"): _namespace1__f,
+        ("namespace1", "f1"): _namespace1__f1,
+        ("namespace2", "f"): _namespace2__f,
+        ("namespace2", "f2"): _namespace2__f2,
     }
 
 
