@@ -9,7 +9,7 @@ from typing import Optional
 from typing import Union
 
 from dags import concatenate_functions
-from dags.dag import _get_free_arguments
+from dags.dag import _get_free_arguments, create_dag, _create_arguments_of_concatenated_function
 from dags.signature import rename_arguments
 from flatten_dict import flatten
 from flatten_dict import unflatten
@@ -48,11 +48,11 @@ _qualified_name_splitter = make_splitter(delimiter=_qualified_name_delimiter)
 
 # Functions
 def concatenate_functions_tree(
-    functions: NestedFunctionDict,
-    targets: Optional[NestedTargetDict],
-    input_structure: NestedInputStructureDict,
-    name_clashes: Literal["raise", "warn", "ignore"] = "raise",
-    enforce_signature: bool = True,
+        functions: NestedFunctionDict,
+        targets: Optional[NestedTargetDict],
+        input_structure: NestedInputStructureDict,
+        name_clashes: Literal["raise", "warn", "ignore"] = "raise",
+        enforce_signature: bool = True,
 ) -> Callable:
     """
 
@@ -89,9 +89,9 @@ def concatenate_functions_tree(
 
 
 def _flatten_functions_and_rename_parameters(
-    functions: NestedFunctionDict,
-    input_structure: NestedInputStructureDict,
-    name_clashes: Literal["raise", "warn", "ignore"],
+        functions: NestedFunctionDict,
+        input_structure: NestedInputStructureDict,
+        name_clashes: Literal["raise", "warn", "ignore"] = "raise",
 ) -> FlatFunctionDict:
     flat_functions = _flatten_str_dict(functions)
     flat_input_structure = _flatten_str_dict(input_structure)
@@ -121,9 +121,9 @@ def _flatten_functions_and_rename_parameters(
 
 
 def _check_functions_and_input_overlap(
-    flat_functions: FlatFunctionDict,
-    input_structure: FlatInputStructureDict,
-    name_clashes: Literal["raise", "warn", "ignore"],
+        flat_functions: FlatFunctionDict,
+        input_structure: FlatInputStructureDict,
+        name_clashes: Literal["raise", "warn", "ignore"],
 ) -> None:
     overlap = set(flat_functions.keys()) & set(input_structure.keys())
 
@@ -139,10 +139,10 @@ def _check_functions_and_input_overlap(
 
 
 def _create_parameter_name_mapper(
-    flat_functions: FlatFunctionDict,
-    flat_input_structure: FlatInputStructureDict,
-    namespace: str,
-    function: Callable,
+        flat_functions: FlatFunctionDict,
+        flat_input_structure: FlatInputStructureDict,
+        namespace: str,
+        function: Callable,
 ) -> dict[str, str]:
     return {
         old_name: _map_parameter(
@@ -153,10 +153,10 @@ def _create_parameter_name_mapper(
 
 
 def _map_parameter(
-    flat_functions: FlatFunctionDict,
-    flat_input_structure: FlatInputStructureDict,
-    namespace: str,
-    parameter_name: str,
+        flat_functions: FlatFunctionDict,
+        flat_input_structure: FlatInputStructureDict,
+        namespace: str,
+        parameter_name: str,
 ) -> str:
     # Parameter name is definitely a qualified name
     if _is_qualified_name(parameter_name):
@@ -186,8 +186,9 @@ def _map_parameter(
 
 
 def create_input_structure_tree(
-    functions: NestedFunctionDict,
-    level_of_inputs: TopOrNamespace = "namespace",
+        functions: NestedFunctionDict,
+        targets: Optional[NestedTargetDict] = None,
+        level_of_inputs: TopOrNamespace = "namespace",
 ) -> NestedInputStructureDict:
     """
     Creates a template that represents the structure of the input dictionary that will be
@@ -196,6 +197,8 @@ def create_input_structure_tree(
     Args:
         functions:
             The nested dictionary of functions that will be concatenated.
+        targets:
+            The nested dictionary of targets that will later be computed.
         level_of_inputs:
             Controls where the inputs are added to the template, if the parameter name
             does not uniquely identify its location. If "namespace", the inputs are added
@@ -221,7 +224,22 @@ def create_input_structure_tree(
             if parameter_path not in flat_functions:
                 flat_input_structure[parameter_path] = None
 
-    return _unflatten_str_dict(flat_input_structure)
+    nested_input_structure = _unflatten_str_dict(flat_input_structure)
+
+    # If no targets are specified, all inputs are needed
+    if targets is None:
+        return nested_input_structure
+
+    # Compute transitive hull of inputs needed for given targets
+    flat_renamed_functions = _flatten_functions_and_rename_parameters(functions, nested_input_structure)
+    flat_targets = _flatten_targets(targets)
+    dag = create_dag(flat_renamed_functions, flat_targets)
+    parameters = _create_arguments_of_concatenated_function(flat_renamed_functions, dag)
+
+    return _unflatten_str_dict({
+        parameter: None
+        for parameter in parameters
+    })
 
 
 def _flatten_str_dict(str_dict: NestedStrDict) -> FlatStrDict:
@@ -240,10 +258,10 @@ def _flatten_targets(targets: Optional[NestedTargetDict]) -> Optional[FlatTarget
 
 
 def _link_parameter_to_function_or_input(
-    flat_functions: FlatFunctionDict,
-    namespace: str,
-    parameter_name: str,
-    level_of_inputs: TopOrNamespace = "namespace",
+        flat_functions: FlatFunctionDict,
+        namespace: str,
+        parameter_name: str,
+        level_of_inputs: TopOrNamespace = "namespace",
 ) -> str:
     """
     Returns the path to the function/input that the parameter points to.
