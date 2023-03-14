@@ -72,8 +72,8 @@ def _namespace1__f1():
 
 def _namespace2__f(f2, input_):
     """
-    A namespaced function with the same simple name as other functions. All arguments use
-    simple names.
+    A namespaced function with the same simple name as other functions. All arguments
+    use simple names.
     """
 
     return {"name": "namespace2__f", "args": {"f2": f2, "input_": input_}}
@@ -218,7 +218,7 @@ def test_check_functions_and_input_overlap_error(
     input_structure: FlatInputStructureDict,
     name_clashes: Literal["raise"],
 ):
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="These names are both functions and inputs:"):
         _check_functions_and_input_overlap(functions, input_structure, name_clashes)
 
 
@@ -302,7 +302,7 @@ def test_create_parameter_name_mapper(
 
 
 def test_map_parameter_raises():
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Cannot resolve parameter"):
         _map_parameter({}, {}, "x", "x")
 
 

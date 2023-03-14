@@ -43,7 +43,7 @@ _qualified_name = (
     f"{_python_identifier}(?:{_qualified_name_delimiter}{_python_identifier})+"
 )
 
-# Reducers and splitters to flatten and unflatten dictionaries with qualified names as keys
+# Reducers and splitters to flatten/unflatten dicts with qualified names as keys
 _qualified_name_reducer = make_reducer(delimiter=_qualified_name_delimiter)
 _qualified_name_splitter = make_splitter(delimiter=_qualified_name_delimiter)
 
@@ -135,7 +135,7 @@ def _check_functions_and_input_overlap(
         if name_clashes == "raise":
             raise ValueError(message)
         elif name_clashes == "warn":
-            warnings.warn(message)
+            warnings.warn(message, stacklevel=2)
         elif name_clashes == "ignore":
             pass
 
@@ -193,8 +193,8 @@ def create_input_structure_tree(
     level_of_inputs: GlobalOrLocal = "local",
 ) -> NestedInputStructureDict:
     """
-    Creates a template that represents the structure of the input dictionary that will be
-    passed to the function created by `concatenate_functions_tree`.
+    Creates a template that represents the structure of the input dictionary that will
+    be passed to the function created by `concatenate_functions_tree`.
 
     Args:
         functions:
@@ -204,7 +204,8 @@ def create_input_structure_tree(
         level_of_inputs:
             Controls where the inputs are added to the template, if the parameter name
             does not uniquely identify its location. If "local", the inputs are added
-            to the current namespace. If "global", the inputs are added to the top level.
+            to the current namespace. If "global", the inputs are added to the top
+            level.
     Returns:
         A template that represents the structure of the input dictionary.
     """
