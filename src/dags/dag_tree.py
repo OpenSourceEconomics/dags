@@ -57,16 +57,37 @@ def concatenate_functions_tree(
     enforce_signature: bool = True,
 ) -> Callable:
     """
+    Combine functions to one function that generates targets.
+
+    Functions can depend on the output of other functions as inputs, as long as the
+    dependencies can be described by a directed acyclic graph (DAG). Functions that are
+    not required to produce the `targets` will simply be ignored.
+
+    The combined function must be called with a dictionary that matches the given
+    `input_structure`.
 
     Args:
         functions:
+            The nested dictionary of functions that will be concatenated.
+            **Example:** `{ "f1": f1, "namespace": {"f2": f2, "f3": f3 } }`
         targets:
+            The nested dictionary of targets that will later be computed. If `None`,
+            all variables are returned.
+            **Example:** `{ "f1": None, "namespace": {"f2": None } }`
         input_structure:
+            A nested dictionary that describes the structure of the inputs.
+            **Example:** `{ "i1": None, "namespace": {"i2": None, "i3": None } }`
         name_clashes:
+            How to handle name clashes between functions and input_structure. If
+            `"raise"`, a ValueError is raised. If `"warn"`, a warning is raised. If
+            `"ignore"`, the issue is ignored.
         enforce_signature:
+            If `True`, the signature of the concatenated function is enforced.
+            Otherwise, it is only provided for introspection purposes. Enforcing the
+            signature has a small runtime overhead.
 
     Returns:
-
+        A function that produces targets when called with suitable arguments.
     """
 
     flat_functions = _flatten_functions_and_rename_parameters(
@@ -160,6 +181,30 @@ def _map_parameter(
     namespace: str,
     parameter_name: str,
 ) -> str:
+    """
+    Maps a parameter name to a qualified name that uniquely identifies the requested
+    function or input.
+
+    If the parameter is already a qualified name, it is returned as is. Otherwise,
+    we look for a function or input with the same name in the current namespace. If
+    it is not found, we look for a function or input with the same name in the top
+    level. If it is still not found, we raise an error.
+
+    Args:
+        flat_functions:
+            The flattened functions.
+        flat_input_structure:
+            The flattened input structure.
+        namespace:
+            The current namespace.
+        parameter_name:
+            The name of the parameter to map.
+
+    Returns:
+        The qualified name of the requested function or input.
+
+    """
+
     # Parameter name is definitely a qualified name
     if _is_qualified_name(parameter_name):
         return parameter_name
@@ -199,8 +244,10 @@ def create_input_structure_tree(
     Args:
         functions:
             The nested dictionary of functions that will be concatenated.
+            **Example:** `{ "f1": f1, "namespace": {"f2": f2, "f3": f3 } }`
         targets:
             The nested dictionary of targets that will later be computed.
+            **Example:** `{ "f1": None, "namespace": {"f2": None } }`
         level_of_inputs:
             Controls where the inputs are added to the template, if the parameter name
             does not uniquely identify its location. If "local", the inputs are added
