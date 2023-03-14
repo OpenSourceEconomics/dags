@@ -87,7 +87,7 @@ def concatenate_functions_tree(
             signature has a small runtime overhead.
 
     Returns:
-        A function that produces targets when called with suitable arguments.
+        A function that produces `targets` when called with suitable arguments.
     """
 
     flat_functions = _flatten_functions_and_rename_parameters(
