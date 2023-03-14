@@ -76,7 +76,7 @@ def concatenate_functions_tree(
             **Example:** `{ "f1": None, "namespace": {"f2": None } }`
         input_structure:
             A nested dictionary that describes the structure of the inputs.
-            **Example:** `{ "i1": None, "namespace": {"i2": None, "i3": None } }`
+            **Example:** `{ "a": None, "b": None, "nested": {"c": None } }`
         name_clashes:
             How to handle name clashes between functions and input_structure. If
             `"raise"`, a ValueError is raised. If `"warn"`, a warning is raised. If
