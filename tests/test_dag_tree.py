@@ -105,7 +105,7 @@ def functions() -> NestedFunctionDict:
 
 
 @pytest.mark.parametrize(
-    "targets, input_, expected",
+    ("targets", "input_", "expected"),
     [
         (
             None,
@@ -208,7 +208,7 @@ def test_concatenate_functions_tree(
 
 
 @pytest.mark.parametrize(
-    "functions, input_structure, name_clashes",
+    ("functions", "input_structure", "name_clashes"),
     [
         ({"x": lambda x: x}, {"x": None}, "raise"),
     ],
@@ -223,7 +223,7 @@ def test_check_functions_and_input_overlap_error(
 
 
 @pytest.mark.parametrize(
-    "functions, input_structure, name_clashes",
+    ("functions", "input_structure", "name_clashes"),
     [
         ({"x": lambda x: x}, {"x": None}, "ignore"),
         ({"x": lambda x: x}, {"y": None}, "raise"),
@@ -238,7 +238,7 @@ def test_check_functions_and_input_overlap_no_error(
 
 
 @pytest.mark.parametrize(
-    "input_structure, namespace, function, expected",
+    ("input_structure", "namespace", "function", "expected"),
     [
         (
             {},
@@ -307,7 +307,7 @@ def test_map_parameter_raises():
 
 
 @pytest.mark.parametrize(
-    "targets, level_of_inputs, expected",
+    ("targets", "level_of_inputs", "expected"),
     [
         (
             None,
@@ -398,7 +398,7 @@ def test_unflatten_str_dict(functions: NestedFunctionDict):
 
 
 @pytest.mark.parametrize(
-    "targets, expected",
+    ("targets", "expected"),
     [
         (None, None),
         (
@@ -419,7 +419,7 @@ def test_flatten_targets(targets, expected):
 
 
 @pytest.mark.parametrize(
-    "level_of_inputs, namespace, parameter_name, expected",
+    ("level_of_inputs", "namespace", "parameter_name", "expected"),
     [
         ("local", "namespace1", "namespace1__f1", "namespace1__f1"),
         ("local", "namespace1", "f1", "namespace1__f1"),
@@ -452,7 +452,7 @@ def test_link_parameter_to_function_or_input(
 
 
 @pytest.mark.parametrize(
-    "s, expected",
+    ("s", "expected"),
     [
         ("", False),
         ("1", False),
@@ -478,7 +478,7 @@ def test_is_python_identifier(s: str, expected: bool):
 
 
 @pytest.mark.parametrize(
-    "s, expected",
+    ("s", "expected"),
     [
         ("a", False),
         ("__", False),
