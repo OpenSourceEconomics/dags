@@ -31,10 +31,10 @@ FlatInputStructureDict = dict[str, None]
 NestedInputDict = dict[str, Union[Any, "NestedInputDict"]]
 NestedOutputDict = dict[str, Union[Any, "NestedOutputDict"]]
 
-NestedStrDict = dict[str, Union[Any, "NestedDict"]]
+NestedStrDict = dict[str, Union[Any, "NestedStrDict"]]
 FlatStrDict = dict[str, Any]
 
-TopOrNamespace = Literal["top", "namespace"]
+GlobalOrLocal = Literal["global", "local"]
 
 # Constants
 _python_identifier = r"[a-zA-Z_][a-zA-Z0-9_]*"
@@ -190,7 +190,7 @@ def _map_parameter(
 def create_input_structure_tree(
     functions: NestedFunctionDict,
     targets: Optional[NestedTargetDict] = None,
-    level_of_inputs: TopOrNamespace = "namespace",
+    level_of_inputs: GlobalOrLocal = "local",
 ) -> NestedInputStructureDict:
     """
     Creates a template that represents the structure of the input dictionary that will be
@@ -203,8 +203,8 @@ def create_input_structure_tree(
             The nested dictionary of targets that will later be computed.
         level_of_inputs:
             Controls where the inputs are added to the template, if the parameter name
-            does not uniquely identify its location. If "namespace", the inputs are added
-            to the current namespace. If "top", the inputs are added to the top level.
+            does not uniquely identify its location. If "local", the inputs are added
+            to the current namespace. If "global", the inputs are added to the top level.
     Returns:
         A template that represents the structure of the input dictionary.
     """
@@ -262,7 +262,7 @@ def _link_parameter_to_function_or_input(
     flat_functions: FlatFunctionDict,
     namespace: str,
     parameter_name: str,
-    level_of_inputs: TopOrNamespace = "namespace",
+    level_of_inputs: GlobalOrLocal = "local",
 ) -> str:
     """
     Returns the path to the function/input that the parameter points to.
@@ -277,7 +277,7 @@ def _link_parameter_to_function_or_input(
         (2) look for a function with that name in the top level, and
         (3) assume the parameter points to an input.
     In the third case, `level_of_inputs` determines whether the parameter points to an
-    input of the current namespace ("namespace") or an input of the top level ("top").
+    input of the current namespace ("local") or an input of the top level ("global").
 
     Args:
         flat_functions:
@@ -309,7 +309,7 @@ def _link_parameter_to_function_or_input(
         return parameter_name
 
     # (3) Assume parameter points to an unknown input
-    if level_of_inputs == "top":
+    if level_of_inputs == "global":
         return parameter_name
     else:
         return namespaced_parameter

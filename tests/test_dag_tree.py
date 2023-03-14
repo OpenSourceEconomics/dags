@@ -21,7 +21,7 @@ from dags.dag_tree import NestedInputDict
 from dags.dag_tree import NestedInputStructureDict
 from dags.dag_tree import NestedOutputDict
 from dags.dag_tree import NestedTargetDict
-from dags.dag_tree import TopOrNamespace
+from dags.dag_tree import GlobalOrLocal
 
 
 # Fixtures & Other Test Inputs
@@ -311,7 +311,7 @@ def test_map_parameter_raises():
     [
         (
             None,
-            "namespace",
+            "local",
             {
                 "input_": None,
                 "namespace1": {
@@ -325,7 +325,7 @@ def test_map_parameter_raises():
         ),
         (
             None,
-            "top",
+            "global",
             {
                 "input_": None,
                 "namespace1": {
@@ -338,7 +338,7 @@ def test_map_parameter_raises():
         ),
         (
             {"f": None, "namespace2": {"f": None}},
-            "namespace",
+            "local",
             {
                 "input_": None,
                 "namespace1": {
@@ -351,7 +351,7 @@ def test_map_parameter_raises():
         ),
         (
             {"f": None, "namespace2": {"f": None}},
-            "top",
+            "global",
             {
                 "input_": None,
                 "namespace1": {
@@ -364,7 +364,7 @@ def test_map_parameter_raises():
 def test_create_input_structure_tree(
     functions: NestedFunctionDict,
     targets: Optional[NestedTargetDict],
-    level_of_inputs: TopOrNamespace,
+    level_of_inputs: GlobalOrLocal,
     expected: NestedInputStructureDict,
 ):
     assert create_input_structure_tree(functions, targets, level_of_inputs) == expected
@@ -421,23 +421,23 @@ def test_flatten_targets(targets, expected):
 @pytest.mark.parametrize(
     "level_of_inputs, namespace, parameter_name, expected",
     [
-        ("namespace", "namespace1", "namespace1__f1", "namespace1__f1"),
-        ("namespace", "namespace1", "f1", "namespace1__f1"),
+        ("local", "namespace1", "namespace1__f1", "namespace1__f1"),
+        ("local", "namespace1", "f1", "namespace1__f1"),
         (
-            "namespace",
+            "local",
             "namespace1",
             "g",
             "g",
         ),
-        ("namespace", "namespace1", "input", "namespace1__input"),
-        ("namespace", "", "input", "input"),
-        ("top", "namespace1", "input", "input"),
-        ("top", "", "input", "input"),
+        ("local", "namespace1", "input", "namespace1__input"),
+        ("local", "", "input", "input"),
+        ("global", "namespace1", "input", "input"),
+        ("global", "", "input", "input"),
     ],
 )
 def test_link_parameter_to_function_or_input(
     functions: NestedFunctionDict,
-    level_of_inputs: TopOrNamespace,
+    level_of_inputs: GlobalOrLocal,
     namespace: str,
     parameter_name: str,
     expected: tuple[str],
