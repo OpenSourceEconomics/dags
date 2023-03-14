@@ -16,12 +16,12 @@ from dags.dag_tree import concatenate_functions_tree
 from dags.dag_tree import create_input_structure_tree
 from dags.dag_tree import FlatFunctionDict
 from dags.dag_tree import FlatInputStructureDict
+from dags.dag_tree import GlobalOrLocal
 from dags.dag_tree import NestedFunctionDict
 from dags.dag_tree import NestedInputDict
 from dags.dag_tree import NestedInputStructureDict
 from dags.dag_tree import NestedOutputDict
 from dags.dag_tree import NestedTargetDict
-from dags.dag_tree import GlobalOrLocal
 
 
 # Fixtures & Other Test Inputs
