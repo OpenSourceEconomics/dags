@@ -69,7 +69,7 @@ def concatenate_functions_tree(
     Args:
         functions:
             The nested dictionary of functions that will be concatenated.
-            **Example:** `{ "f1": f1, "namespace": {"f2": f2, "f3": f3 } }`
+            **Example:** `{ "f1": f1, "nested": {"f2": f2, "f3": f3 } }`
         targets:
             The nested dictionary of targets that will later be computed. If `None`,
             all variables are returned.
