@@ -73,7 +73,7 @@ def concatenate_functions_tree(
         targets:
             The nested dictionary of targets that will later be computed. If `None`,
             all variables are returned.
-            **Example:** `{ "f1": None, "namespace": {"f2": None } }`
+            **Example:** `{ "f1": None, "nested": {"f2": None } }`
         input_structure:
             A nested dictionary that describes the structure of the inputs.
             **Example:** `{ "a": None, "b": None, "nested": {"c": None } }`
@@ -244,10 +244,10 @@ def create_input_structure_tree(
     Args:
         functions:
             The nested dictionary of functions that will be concatenated.
-            **Example:** `{ "f1": f1, "namespace": {"f2": f2, "f3": f3 } }`
+            **Example:** `{ "f1": f1, "nested": {"f2": f2, "f3": f3 } }`
         targets:
             The nested dictionary of targets that will later be computed.
-            **Example:** `{ "f1": None, "namespace": {"f2": None } }`
+            **Example:** `{ "f1": None, "nested": {"f2": None } }`
         namespace_of_inputs:
             Controls where the inputs are added to the template, if the parameter name
             does not uniquely identify its location. If "local", the inputs are added
