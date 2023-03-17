@@ -2,6 +2,8 @@ import functools
 import inspect
 import re
 import warnings
+from itertools import groupby, combinations
+from operator import itemgetter
 from typing import Any
 from typing import Callable
 from typing import Literal
@@ -50,11 +52,11 @@ _qualified_name_splitter = make_splitter(delimiter=_qualified_name_delimiter)
 
 # Functions
 def concatenate_functions_tree(
-    functions: NestedFunctionDict,
-    targets: Optional[NestedTargetDict],
-    input_structure: NestedInputStructureDict,
-    name_clashes: Literal["raise", "warn", "ignore"] = "raise",
-    enforce_signature: bool = True,
+        functions: NestedFunctionDict,
+        targets: Optional[NestedTargetDict],
+        input_structure: NestedInputStructureDict,
+        name_clashes: Literal["raise", "warn", "ignore"] = "raise",
+        enforce_signature: bool = True,
 ) -> Callable:
     """
     Combine functions to one function that generates targets.
@@ -78,7 +80,8 @@ def concatenate_functions_tree(
             A nested dictionary that describes the structure of the inputs.
             **Example:** `{ "a": None, "b": None, "nested": {"c": None } }`
         name_clashes:
-            How to handle name clashes between functions and input_structure. If
+            How to handle name clashes where two functions/inputs have the same simple
+            name and reside in namespaces that are nested into each other. If
             `"raise"`, a ValueError is raised. If `"warn"`, a warning is raised. If
             `"ignore"`, the issue is ignored.
         enforce_signature:
@@ -112,14 +115,14 @@ def concatenate_functions_tree(
 
 
 def _flatten_functions_and_rename_parameters(
-    functions: NestedFunctionDict,
-    input_structure: NestedInputStructureDict,
-    name_clashes: Literal["raise", "warn", "ignore"] = "raise",
+        functions: NestedFunctionDict,
+        input_structure: NestedInputStructureDict,
+        name_clashes: Literal["raise", "warn", "ignore"] = "raise",
 ) -> FlatFunctionDict:
     flat_functions = _flatten_str_dict(functions)
     flat_input_structure = _flatten_str_dict(input_structure)
 
-    _check_functions_and_input_overlap(
+    _check_for_parent_child_name_clashes(
         flat_functions, flat_input_structure, name_clashes
     )
 
@@ -143,29 +146,104 @@ def _flatten_functions_and_rename_parameters(
     return flat_functions
 
 
-def _check_functions_and_input_overlap(
-    flat_functions: FlatFunctionDict,
-    input_structure: FlatInputStructureDict,
-    name_clashes: Literal["raise", "warn", "ignore"],
+def _check_for_parent_child_name_clashes(
+        flat_functions: FlatFunctionDict,
+        flat_input_structure: FlatInputStructureDict,
+        name_clashes_resolution: Literal["raise", "warn", "ignore"],
 ) -> None:
-    overlap = set(flat_functions.keys()) & set(input_structure.keys())
+    if name_clashes_resolution == "ignore":
+        return
 
-    if overlap:
-        message = f"These names are both functions and inputs: {', '.join(overlap)}."
+    name_clashes = _find_parent_child_name_clashes(flat_functions, flat_input_structure)
 
-        if name_clashes == "raise":
+    if len(name_clashes) > 0:
+        message = f"There are name clashes: {name_clashes}."
+
+        if name_clashes_resolution == "raise":
             raise ValueError(message)
-        elif name_clashes == "warn":
+        elif name_clashes_resolution == "warn":
             warnings.warn(message, stacklevel=2)
-        elif name_clashes == "ignore":
-            pass
+
+
+def _find_parent_child_name_clashes(
+        flat_functions: FlatFunctionDict,
+        flat_input_structure: FlatInputStructureDict,
+) -> list[tuple[str, str]]:
+    _qualified_names = set(flat_functions.keys()) | set(flat_input_structure.keys())
+    namespace_and_simple_names = [
+        _get_namespace_and_simple_name(_qualified_name)
+        for _qualified_name in _qualified_names
+    ]
+
+    # Group by simple name since only functions/inputs with the same simple name can clash
+    namespace_and_simple_names.sort(key=itemgetter(1))
+    grouped_by_simple_name = groupby(namespace_and_simple_names, key=itemgetter(1))
+
+    # Find all pairs of functions/inputs with the same simple name where one namespace
+    # is a parent of the other
+    result = []
+
+    for _, group in grouped_by_simple_name:
+        for pair in combinations(list(group), 2):
+            namespace_1: str = pair[0][0]
+            simple_name_1: str = pair[0][1]
+            namespace_2: str = pair[1][0]
+            simple_name_2: str = pair[1][1]
+
+            if namespace_1.startswith(namespace_2) or namespace_2.startswith(namespace_1):
+                result.append(
+                    (
+                        _get_qualified_name(namespace_1, simple_name_1),
+                        _get_qualified_name(namespace_2, simple_name_2),
+                    )
+                )
+
+    print(result)
+
+    return result
+
+
+def _get_namespace_and_simple_name(qualified_name: str) -> tuple[str, str]:
+    """
+    Splits a qualified name into namespace and simple name (last segment).
+
+    Args:
+        qualified_name: The name to split.
+    Returns:
+        A tuple of namespace and simple name.
+    """
+
+    segments = qualified_name.rsplit(_qualified_name_delimiter, maxsplit=1)
+    if len(segments) == 1:
+        return "", segments[0]
+    else:
+        return segments[0], segments[1]
+
+
+def _get_qualified_name(namespace: str, simple_name: str) -> str:
+    """
+    Combines a namespace and a simple name into a qualified name.
+
+    Args:
+        namespace:
+            The namespace.
+        simple_name:
+            The simple name.
+    Returns:
+        The qualified name.
+    """
+
+    if namespace:
+        return f"{namespace}{_qualified_name_delimiter}{simple_name}"
+    else:
+        return simple_name
 
 
 def _create_parameter_name_mapper(
-    flat_functions: FlatFunctionDict,
-    flat_input_structure: FlatInputStructureDict,
-    namespace: str,
-    function: Callable,
+        flat_functions: FlatFunctionDict,
+        flat_input_structure: FlatInputStructureDict,
+        namespace: str,
+        function: Callable,
 ) -> dict[str, str]:
     return {
         old_name: _map_parameter(
@@ -176,10 +254,10 @@ def _create_parameter_name_mapper(
 
 
 def _map_parameter(
-    flat_functions: FlatFunctionDict,
-    flat_input_structure: FlatInputStructureDict,
-    namespace: str,
-    parameter_name: str,
+        flat_functions: FlatFunctionDict,
+        flat_input_structure: FlatInputStructureDict,
+        namespace: str,
+        parameter_name: str,
 ) -> str:
     """
     Maps a parameter name to a qualified name that uniquely identifies the requested
@@ -233,9 +311,9 @@ def _map_parameter(
 
 
 def create_input_structure_tree(
-    functions: NestedFunctionDict,
-    targets: Optional[NestedTargetDict] = None,
-    namespace_of_inputs: GlobalOrLocal = "local",
+        functions: NestedFunctionDict,
+        targets: Optional[NestedTargetDict] = None,
+        namespace_of_inputs: GlobalOrLocal = "local",
 ) -> NestedInputStructureDict:
     """
     Creates a template that represents the structure of the input dictionary that will
@@ -282,7 +360,9 @@ def create_input_structure_tree(
 
     # Compute transitive hull of inputs needed for given targets
     flat_renamed_functions = _flatten_functions_and_rename_parameters(
-        functions, nested_input_structure
+        functions,
+        nested_input_structure,
+        name_clashes="ignore"
     )
     flat_targets = _flatten_targets(targets)
     dag = create_dag(flat_renamed_functions, flat_targets)
@@ -307,10 +387,10 @@ def _flatten_targets(targets: Optional[NestedTargetDict]) -> Optional[FlatTarget
 
 
 def _link_parameter_to_function_or_input(
-    flat_functions: FlatFunctionDict,
-    namespace: str,
-    parameter_name: str,
-    namespace_of_inputs: GlobalOrLocal = "local",
+        flat_functions: FlatFunctionDict,
+        namespace: str,
+        parameter_name: str,
+        namespace_of_inputs: GlobalOrLocal = "local",
 ) -> str:
     """
     Returns the path to the function/input that the parameter points to.
