@@ -2,7 +2,8 @@ import functools
 import inspect
 import re
 import warnings
-from itertools import groupby, combinations
+from itertools import combinations
+from itertools import groupby
 from operator import itemgetter
 from typing import Any
 from typing import Callable
@@ -52,11 +53,11 @@ _qualified_name_splitter = make_splitter(delimiter=_qualified_name_delimiter)
 
 # Functions
 def concatenate_functions_tree(
-        functions: NestedFunctionDict,
-        targets: Optional[NestedTargetDict],
-        input_structure: NestedInputStructureDict,
-        name_clashes: Literal["raise", "warn", "ignore"] = "raise",
-        enforce_signature: bool = True,
+    functions: NestedFunctionDict,
+    targets: Optional[NestedTargetDict],
+    input_structure: NestedInputStructureDict,
+    name_clashes: Literal["raise", "warn", "ignore"] = "raise",
+    enforce_signature: bool = True,
 ) -> Callable:
     """
     Combine functions to one function that generates targets.
@@ -115,9 +116,9 @@ def concatenate_functions_tree(
 
 
 def _flatten_functions_and_rename_parameters(
-        functions: NestedFunctionDict,
-        input_structure: NestedInputStructureDict,
-        name_clashes: Literal["raise", "warn", "ignore"] = "raise",
+    functions: NestedFunctionDict,
+    input_structure: NestedInputStructureDict,
+    name_clashes: Literal["raise", "warn", "ignore"] = "raise",
 ) -> FlatFunctionDict:
     flat_functions = _flatten_str_dict(functions)
     flat_input_structure = _flatten_str_dict(input_structure)
@@ -147,9 +148,9 @@ def _flatten_functions_and_rename_parameters(
 
 
 def _check_for_parent_child_name_clashes(
-        flat_functions: FlatFunctionDict,
-        flat_input_structure: FlatInputStructureDict,
-        name_clashes_resolution: Literal["raise", "warn", "ignore"],
+    flat_functions: FlatFunctionDict,
+    flat_input_structure: FlatInputStructureDict,
+    name_clashes_resolution: Literal["raise", "warn", "ignore"],
 ) -> None:
     if name_clashes_resolution == "ignore":
         return
@@ -166,8 +167,8 @@ def _check_for_parent_child_name_clashes(
 
 
 def _find_parent_child_name_clashes(
-        flat_functions: FlatFunctionDict,
-        flat_input_structure: FlatInputStructureDict,
+    flat_functions: FlatFunctionDict,
+    flat_input_structure: FlatInputStructureDict,
 ) -> list[tuple[str, str]]:
     _qualified_names = set(flat_functions.keys()) | set(flat_input_structure.keys())
     namespace_and_simple_names = [
@@ -190,7 +191,9 @@ def _find_parent_child_name_clashes(
             namespace_2: str = pair[1][0]
             simple_name_2: str = pair[1][1]
 
-            if namespace_1.startswith(namespace_2) or namespace_2.startswith(namespace_1):
+            if namespace_1.startswith(namespace_2) or namespace_2.startswith(
+                namespace_1
+            ):
                 result.append(
                     (
                         _get_qualified_name(namespace_1, simple_name_1),
@@ -238,10 +241,10 @@ def _get_qualified_name(namespace: str, simple_name: str) -> str:
 
 
 def _create_parameter_name_mapper(
-        flat_functions: FlatFunctionDict,
-        flat_input_structure: FlatInputStructureDict,
-        namespace: str,
-        function: Callable,
+    flat_functions: FlatFunctionDict,
+    flat_input_structure: FlatInputStructureDict,
+    namespace: str,
+    function: Callable,
 ) -> dict[str, str]:
     return {
         old_name: _map_parameter(
@@ -252,10 +255,10 @@ def _create_parameter_name_mapper(
 
 
 def _map_parameter(
-        flat_functions: FlatFunctionDict,
-        flat_input_structure: FlatInputStructureDict,
-        namespace: str,
-        parameter_name: str,
+    flat_functions: FlatFunctionDict,
+    flat_input_structure: FlatInputStructureDict,
+    namespace: str,
+    parameter_name: str,
 ) -> str:
     """
     Maps a parameter name to a qualified name that uniquely identifies the requested
@@ -309,9 +312,9 @@ def _map_parameter(
 
 
 def create_input_structure_tree(
-        functions: NestedFunctionDict,
-        targets: Optional[NestedTargetDict] = None,
-        namespace_of_inputs: GlobalOrLocal = "local",
+    functions: NestedFunctionDict,
+    targets: Optional[NestedTargetDict] = None,
+    namespace_of_inputs: GlobalOrLocal = "local",
 ) -> NestedInputStructureDict:
     """
     Creates a template that represents the structure of the input dictionary that will
@@ -358,9 +361,7 @@ def create_input_structure_tree(
 
     # Compute transitive hull of inputs needed for given targets
     flat_renamed_functions = _flatten_functions_and_rename_parameters(
-        functions,
-        nested_input_structure,
-        name_clashes="ignore"
+        functions, nested_input_structure, name_clashes="ignore"
     )
     flat_targets = _flatten_targets(targets)
     dag = create_dag(flat_renamed_functions, flat_targets)
@@ -385,10 +386,10 @@ def _flatten_targets(targets: Optional[NestedTargetDict]) -> Optional[FlatTarget
 
 
 def _link_parameter_to_function_or_input(
-        flat_functions: FlatFunctionDict,
-        namespace: str,
-        parameter_name: str,
-        namespace_of_inputs: GlobalOrLocal = "local",
+    flat_functions: FlatFunctionDict,
+    namespace: str,
+    parameter_name: str,
+    namespace_of_inputs: GlobalOrLocal = "local",
 ) -> str:
     """
     Returns the path to the function/input that the parameter points to.
