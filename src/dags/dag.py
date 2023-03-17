@@ -319,7 +319,7 @@ def _create_arguments_of_concatenated_function(functions, dag):
         dag (networkx.DiGraph): The complete DAG.
 
     Returns:
-        inspect.Signature: The signature of the concatenated function.
+        list: The arguments of the concatenated function.
 
     """
     function_names = set(functions)
