@@ -3,7 +3,8 @@ from typing import Literal
 from typing import Optional
 
 import pytest
-from dags.dag_tree import _check_for_parent_child_name_clashes, _get_namespace_and_simple_name, _get_qualified_name
+from dags.dag_tree import _check_for_parent_child_name_clashes, _get_namespace_and_simple_name, _get_qualified_name, \
+    _find_parent_child_name_clashes
 from dags.dag_tree import _create_parameter_name_mapper
 from dags.dag_tree import _flatten_str_dict
 from dags.dag_tree import _flatten_targets
@@ -269,6 +270,29 @@ def test_check_for_parent_child_name_clashes_no_error(
         name_clashes: Literal["raise", "ignore"],
 ):
     _check_for_parent_child_name_clashes(functions, input_structure, name_clashes)
+
+
+@pytest.mark.parametrize(
+    ("functions", "input_structure", "expected"),
+    [
+        ({"x": lambda x: x, "nested__x": lambda x: x}, {}, [("nested__x", "x")]),
+        ({"nested__x": lambda x: x, "nested__deep__x": lambda x: x}, {}, [("nested__x", "nested__deep__x")]),
+        ({"x": lambda x: x}, {"nested__x": None}, [("nested__x", "x")]),
+        ({}, {"x": None, "nested__x": None}, [("nested__x", "x")]),
+        ({"x": lambda x: x}, {"y": None}, []),
+    ],
+)
+def test_find_parent_child_name_clashes(
+        functions: FlatFunctionDict,
+        input_structure: FlatInputStructureDict,
+        expected: list[tuple[str, str]],
+):
+    actual = _find_parent_child_name_clashes(functions, input_structure)
+
+    unordered_expected = [set(pair) for pair in expected]
+    unordered_actual = [set(pair) for pair in actual]
+
+    assert unordered_actual == unordered_expected
 
 
 @pytest.mark.parametrize(

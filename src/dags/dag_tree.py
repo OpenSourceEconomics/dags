@@ -175,7 +175,7 @@ def _find_parent_child_name_clashes(
         for _qualified_name in _qualified_names
     ]
 
-    # Group by simple name since only functions/inputs with the same simple name can clash
+    # Group by simple name (only functions/inputs with the same simple name can clash)
     namespace_and_simple_names.sort(key=itemgetter(1))
     grouped_by_simple_name = groupby(namespace_and_simple_names, key=itemgetter(1))
 
@@ -197,8 +197,6 @@ def _find_parent_child_name_clashes(
                         _get_qualified_name(namespace_2, simple_name_2),
                     )
                 )
-
-    print(result)
 
     return result
 
