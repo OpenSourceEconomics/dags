@@ -85,6 +85,12 @@ def _namespace2__f2():
     return {"name": "namespace2__f2"}
 
 
+def _namespace1__deep__f():
+    """A deeply nested function."""
+
+    return {"name": "namespace1_deep__f"}
+
+
 @pytest.fixture
 def functions() -> NestedFunctionDict:
     return {
@@ -93,6 +99,9 @@ def functions() -> NestedFunctionDict:
         "namespace1": {
             "f": _namespace1__f,
             "f1": _namespace1__f1,
+            "deep": {
+                "f": _namespace1__deep__f
+            },
         },
         "namespace2": {
             "f": _namespace2__f,
@@ -142,6 +151,9 @@ def functions() -> NestedFunctionDict:
                         },
                     },
                     "f1": {"name": "namespace1__f1"},
+                    "deep": {
+                        "f": {"name": "namespace1_deep__f"},
+                    },
                 },
                 "namespace2": {
                     "f": {
@@ -391,6 +403,7 @@ def test_flatten_str_dict(functions: NestedFunctionDict):
         "g": _global__g,
         "namespace1__f": _namespace1__f,
         "namespace1__f1": _namespace1__f1,
+        "namespace1__deep__f": _namespace1__deep__f,
         "namespace2__f": _namespace2__f,
         "namespace2__f2": _namespace2__f2,
     }
@@ -404,6 +417,7 @@ def test_unflatten_str_dict(functions: NestedFunctionDict):
                 "g": _global__g,
                 "namespace1__f": _namespace1__f,
                 "namespace1__f1": _namespace1__f1,
+                "namespace1__deep__f": _namespace1__deep__f,
                 "namespace2__f": _namespace2__f,
                 "namespace2__f2": _namespace2__f2,
             }
