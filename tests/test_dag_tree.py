@@ -225,6 +225,21 @@ def test_check_functions_and_input_overlap_error(
 @pytest.mark.parametrize(
     ("functions", "input_structure", "name_clashes"),
     [
+        ({"x": lambda x: x}, {"x": None}, "warn"),
+    ],
+)
+def test_check_functions_and_input_overlap_warn(
+    functions: FlatFunctionDict,
+    input_structure: FlatInputStructureDict,
+    name_clashes: Literal["warn"],
+):
+    with pytest.warns(UserWarning, match="These names are both functions and inputs:"):
+        _check_functions_and_input_overlap(functions, input_structure, name_clashes)
+
+
+@pytest.mark.parametrize(
+    ("functions", "input_structure", "name_clashes"),
+    [
         ({"x": lambda x: x}, {"x": None}, "ignore"),
         ({"x": lambda x: x}, {"y": None}, "raise"),
     ],
