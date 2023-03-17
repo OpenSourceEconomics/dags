@@ -99,9 +99,7 @@ def functions() -> NestedFunctionDict:
         "namespace1": {
             "f": _namespace1__f,
             "f1": _namespace1__f1,
-            "deep": {
-                "f": _namespace1__deep__f
-            },
+            "deep": {"f": _namespace1__deep__f},
         },
         "namespace2": {
             "f": _namespace2__f,
