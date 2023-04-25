@@ -30,3 +30,7 @@ dependencies:
   # Development
   - jupyterlab
   - nbsphinx
+
+  # Pip
+  - pip:
+    - flatten-dict
