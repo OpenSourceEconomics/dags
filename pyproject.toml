@@ -27,7 +27,7 @@ pyupgrade = ["--py37-plus"]
 [tool.ruff]
 target-version = "py37"
 select = ["ALL"]
-fix = false
+fix = true
 extend-ignore = [
     "TRY",  # ignore tryceratops.
     "TCH",  # ignore non-guarded type imports.
