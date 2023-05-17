@@ -247,7 +247,7 @@ def _fail_if_functions_are_missing(functions, targets):
 
 
 def _fail_if_dag_contains_cycle(dag):
-    """Check for cycles in DAG"""
+    """Check for cycles in DAG."""
     cycles = list(nx.simple_cycles(dag))
 
     if len(cycles) > 0:
