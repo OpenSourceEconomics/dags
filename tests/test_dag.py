@@ -19,8 +19,8 @@ def _consumption(working_hours, wage):
     return wage * working_hours
 
 
-def _unrelated(working_hours):  # noqa: U100
-    raise NotImplementedError()
+def _unrelated(working_hours):  # noqa: ARG001
+    raise NotImplementedError("This should not be called.")
 
 
 def _leisure_cycle(working_hours, _utility):
