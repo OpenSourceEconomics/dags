@@ -30,3 +30,6 @@ dependencies:
   # Development
   - jupyterlab
   - nbsphinx
+
+  - pip:
+    - -e .
