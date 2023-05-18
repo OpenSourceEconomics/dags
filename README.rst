@@ -48,7 +48,7 @@ a dag that is constructed from the function signatures. You can specify which of
 function results will be returned in the combined function.
 
 dags is a tiny library, all the hard work is done by the great
-[NetworkX](https://networkx.org/documentation/stable/tutorial.html)
+`NetworkX <https://networkx.org/documentation/stable/tutorial.html>`_
 
 Example
 -------
@@ -102,7 +102,7 @@ Instead, we can use dags to construct the same function:
 
     0.6
 
-More examples can be found in the [documentation](https://dags.readthedocs.io/en/latest/#)
+More examples can be found in the `documentation <https://dags.readthedocs.io/en/latest/#>`_
 
 
 Notable features
@@ -136,4 +136,4 @@ dags is available on `PyPI <https://pypi.org/project/dags>`_ and `Anaconda.org
 Documentation
 -------------
 
-The [documentation](https://dags.readthedocs.io/en/latest/#) is hosted on Read the Docs.
+The `documentation <https://dags.readthedocs.io/en/latest/#>`_ is hosted on Read the Docs.
