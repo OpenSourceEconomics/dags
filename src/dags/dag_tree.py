@@ -11,6 +11,7 @@ from typing import Literal
 from typing import Optional
 from typing import Union
 
+import networkx as nx
 from dags import concatenate_functions
 from dags.dag import _create_arguments_of_concatenated_function
 from dags.dag import _get_free_arguments
@@ -368,6 +369,48 @@ def create_input_structure_tree(
     parameters = _create_arguments_of_concatenated_function(flat_renamed_functions, dag)
 
     return _unflatten_str_dict({parameter: None for parameter in parameters})
+
+
+def create_dag_tree(
+    functions: NestedFunctionDict,
+    targets: Optional[NestedTargetDict],
+    input_structure: NestedInputStructureDict,
+    name_clashes: Literal["raise", "warn", "ignore"] = "raise",
+) -> nx.DiGraph:
+    """
+    Build a directed acyclic graph (DAG) from functions.
+
+    Functions can depend on the output of other functions as inputs, as long as the
+    dependencies can be described by a directed acyclic graph (DAG).
+
+    Functions that are not required to produce the targets will simply be ignored.
+
+    Args:
+        functions:
+            The nested dictionary of functions.
+            **Example:** `{ "f1": f1, "nested": {"f2": f2, "f3": f3 } }`
+        targets:
+            The nested dictionary of targets that will later be computed. If `None`,
+            all variables are returned.
+            **Example:** `{ "f1": None, "nested": {"f2": None } }`
+        input_structure:
+            A nested dictionary that describes the structure of the inputs.
+            **Example:** `{ "a": None, "b": None, "nested": {"c": None } }`
+        name_clashes:
+            How to handle name clashes where two functions/inputs have the same simple
+            name and reside in namespaces that are nested into each other. If
+            `"raise"`, a ValueError is raised. If `"warn"`, a warning is raised. If
+            `"ignore"`, the issue is ignored.
+
+    Returns:
+        dag: the DAG (as networkx.DiGraph object)
+    """
+    flat_functions = _flatten_functions_and_rename_parameters(
+        functions, input_structure, name_clashes
+    )
+    flat_targets = _flatten_targets(targets)
+
+    return create_dag(flat_functions, flat_targets)
 
 
 def _flatten_str_dict(str_dict: NestedStrDict) -> FlatStrDict:
