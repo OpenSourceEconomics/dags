@@ -307,6 +307,7 @@ def test_find_parent_child_name_clashes(
         ("", ("", "")),
         ("a", ("", "a")),
         ("a__b", ("a", "b")),
+        ("a___b", ("a", "_b")),
     ],
 )
 def test_get_namespace_and_simple_name(qualified_name: str, expected: tuple[str, str]):
