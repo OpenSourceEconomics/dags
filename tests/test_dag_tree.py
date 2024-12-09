@@ -1,3 +1,4 @@
+import functools
 from typing import Callable
 from typing import Literal
 from typing import Optional
@@ -308,7 +309,7 @@ def test_find_parent_child_name_clashes(
         ("a", ("", "a")),
         ("a__b", ("a", "b")),
         ("a___b", ("a", "_b")),
-        ("c___d"), ("c_", "d"),
+        ("c___d", ("c_", "d")),
     ],
 )
 def test_get_namespace_and_simple_name(qualified_name: str, expected: tuple[str, str]):
@@ -581,3 +582,16 @@ def test_is_python_identifier(s: str, expected: bool):
 )
 def test_is_qualified_name(s: str, expected: bool):
     assert _is_qualified_name(s) == expected
+
+
+def test_partialled_function_argument():
+    def f(a, b):
+        return a + b
+
+    f_partial = functools.partial(f, b=1)
+    tree = {"f": f_partial}
+    input_structure = {"a": None}
+    targets = {"f": None}
+
+    concatenated_func = concatenate_functions_tree(tree, targets, input_structure)
+    concatenated_func({"a": 1})
