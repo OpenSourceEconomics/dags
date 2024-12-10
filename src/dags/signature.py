@@ -158,7 +158,15 @@ def rename_arguments(func=None, *, mapper=None):
 
         wrapper_rename_arguments.__signature__ = signature
 
-        return wrapper_rename_arguments
+        # Preserve function type
+        if isinstance(func, functools.partial):
+            out = functools.partial(
+                wrapper_rename_arguments, *func.args, **func.keywords
+            )
+        else:
+            out = wrapper_rename_arguments
+
+        return out
 
     if callable(func):
         return decorator_rename_arguments(func)
