@@ -7,27 +7,17 @@ build-backend = "setuptools.build_meta"
 write_to = "src/dags/_version.py"
 
 
-[tool.nbqa.config]
-isort = "setup.cfg"
-black = "pyproject.toml"
-
-
-[tool.nbqa.mutate]
-isort = 1
-black = 1
-pyupgrade = 1
-
-
-[tool.nbqa.addopts]
-isort = ["--treat-comment-as-code", "# %%", "--profile=black"]
-pyupgrade = ["--py37-plus"]
-
-
+# ======================================================================================
+# Ruff configuration
+# ======================================================================================
 
 [tool.ruff]
-target-version = "py37"
-select = ["ALL"]
+target-version = "py311" # Replace by [project] requires-python = ">=3.11" above
 fix = true
+unsafe-fixes = false
+
+[tool.ruff.lint]
+select = ["ALL"]
 extend-ignore = [
     "TRY",  # ignore tryceratops.
     "TCH",  # ignore non-guarded type imports.
@@ -58,5 +48,8 @@ extend-ignore = [
     "D415",
 ]
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "docs/source/conf.py" = ["INP001", "ERA001", "RUF100"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
