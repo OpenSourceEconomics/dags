@@ -133,7 +133,6 @@ def rename_arguments(func=None, *, mapper=None):
     """
 
     def decorator_rename_arguments(func):
-
         old_parameters = dict(inspect.signature(func).parameters)
         parameters = []
         for name, param in old_parameters.items():

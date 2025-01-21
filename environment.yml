@@ -34,3 +34,4 @@ dependencies:
   # Pip
   - pip:
     - flatten-dict
+    - -e .
