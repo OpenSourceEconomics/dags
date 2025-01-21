@@ -60,8 +60,7 @@ def concatenate_functions_tree(
     name_clashes: Literal["raise", "warn", "ignore"] = "raise",
     enforce_signature: bool = True,
 ) -> Callable:
-    """
-    Combine functions to one function that generates targets.
+    """Combine functions to one function that generates targets.
 
     Functions can depend on the output of other functions as inputs, as long as the
     dependencies can be described by a directed acyclic graph (DAG). Functions that are
@@ -93,6 +92,7 @@ def concatenate_functions_tree(
 
     Returns:
         A function that produces `targets` when called with suitable arguments.
+
     """
 
     flat_functions = _flatten_functions_and_rename_parameters(
@@ -163,7 +163,7 @@ def _check_for_parent_child_name_clashes(
 
         if name_clashes_resolution == "raise":
             raise ValueError(message)
-        elif name_clashes_resolution == "warn":
+        if name_clashes_resolution == "warn":
             warnings.warn(message, stacklevel=2)
 
 
@@ -206,13 +206,14 @@ def _find_parent_child_name_clashes(
 
 
 def _get_namespace_and_simple_name(qualified_name: str) -> tuple[str, str]:
-    """
-    Splits a qualified name into namespace and simple name (last segment).
+    """Splits a qualified name into namespace and simple name (last segment).
 
     Args:
         qualified_name: The name to split.
+
     Returns:
         A tuple of namespace and simple name.
+
     """
 
     segments = qualified_name.split(_qualified_name_delimiter)
@@ -225,16 +226,17 @@ def _get_namespace_and_simple_name(qualified_name: str) -> tuple[str, str]:
 
 
 def _get_qualified_name(namespace: str, simple_name: str) -> str:
-    """
-    Combines a namespace and a simple name into a qualified name.
+    """Combines a namespace and a simple name into a qualified name.
 
     Args:
         namespace:
             The namespace.
         simple_name:
             The simple name.
+
     Returns:
         The qualified name.
+
     """
 
     if namespace:
@@ -263,8 +265,7 @@ def _map_parameter(
     namespace: str,
     parameter_name: str,
 ) -> str:
-    """
-    Maps a parameter name to a qualified name that uniquely identifies the requested
+    """Maps a parameter name to a qualified name that uniquely identifies the requested
     function or input.
 
     If the parameter is already a qualified name, it is returned as is. Otherwise,
@@ -319,8 +320,7 @@ def create_input_structure_tree(
     targets: Optional[NestedTargetDict] = None,
     namespace_of_inputs: GlobalOrLocal = "local",
 ) -> NestedInputStructureDict:
-    """
-    Creates a template that represents the structure of the input dictionary that will
+    """Creates a template that represents the structure of the input dictionary that will
     be passed to the function created by `concatenate_functions_tree`.
 
     Args:
@@ -335,8 +335,10 @@ def create_input_structure_tree(
             does not uniquely identify its location. If "local", the inputs are added
             to the current namespace. If "global", the inputs are added to the top
             level.
+
     Returns:
         A template that represents the structure of the input dictionary.
+
     """
 
     flat_functions = _flatten_str_dict(functions)
@@ -379,8 +381,7 @@ def create_dag_tree(
     input_structure: NestedInputStructureDict,
     name_clashes: Literal["raise", "warn", "ignore"] = "raise",
 ) -> nx.DiGraph:
-    """
-    Build a directed acyclic graph (DAG) from functions.
+    """Build a directed acyclic graph (DAG) from functions.
 
     Functions can depend on the output of other functions as inputs, as long as the
     dependencies can be described by a directed acyclic graph (DAG).
@@ -406,6 +407,7 @@ def create_dag_tree(
 
     Returns:
         dag: the DAG (as networkx.DiGraph object)
+
     """
     flat_functions = _flatten_functions_and_rename_parameters(
         functions, input_structure, name_clashes
@@ -436,8 +438,7 @@ def _link_parameter_to_function_or_input(
     parameter_name: str,
     namespace_of_inputs: GlobalOrLocal = "local",
 ) -> str:
-    """
-    Returns the path to the function/input that the parameter points to.
+    """Returns the path to the function/input that the parameter points to.
 
     If the parameter name has double underscores (e.g. "namespace1__f"), we know it
     represents a qualified name and the path simply consists of the segments of the
@@ -462,8 +463,10 @@ def _link_parameter_to_function_or_input(
         namespace_of_inputs:
             The level of inputs to assume if the parameter name does not represent a
             function.
+
     Returns:
         The path to the function/input that the parameter points to.
+
     """
 
     # Parameter name is definitely a qualified name

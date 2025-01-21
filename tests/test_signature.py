@@ -6,7 +6,7 @@ from dags.signature import rename_arguments
 from dags.signature import with_signature
 
 
-@pytest.fixture()
+@pytest.fixture
 def example_signature():
     parameters = [
         inspect.Parameter(name="a", kind=inspect.Parameter.POSITIONAL_OR_KEYWORD),

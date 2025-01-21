@@ -75,8 +75,7 @@ def _namespace1__f1():
 
 
 def _namespace2__f(f2, input_):
-    """
-    A namespaced function with the same simple name as other functions. All arguments
+    """A namespaced function with the same simple name as other functions. All arguments
     use simple names.
     """
 

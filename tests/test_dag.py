@@ -19,7 +19,7 @@ def _consumption(working_hours, wage):
     return wage * working_hours
 
 
-def _unrelated(working_hours):  # noqa: ARG001
+def _unrelated(working_hours):
     raise NotImplementedError("This should not be called.")
 
 
