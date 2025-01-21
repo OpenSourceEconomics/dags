@@ -215,21 +215,13 @@ def _get_namespace_and_simple_name(qualified_name: str) -> tuple[str, str]:
         A tuple of namespace and simple name.
     """
 
-    split_index_double_underscore = qualified_name.rfind("__")
-    split_index_tripple_underscore = qualified_name.rfind("___")
-    triple_underscore_at_last_segment = (
-        split_index_double_underscore - 1
-    ) == split_index_tripple_underscore and "___" in qualified_name
-
-    if triple_underscore_at_last_segment:
-        segments = qualified_name.rsplit("___", maxsplit=1)
-        segments[1] = "_" + segments[1]
-    else:
-        segments = qualified_name.rsplit(_qualified_name_delimiter, maxsplit=1)
+    segments = qualified_name.split(_qualified_name_delimiter)
     if len(segments) == 1:
         return "", segments[0]
     else:
-        return segments[0], segments[1]
+        namespace = _qualified_name_delimiter.join(segments[:-1])
+        simple_name = segments[-1]
+        return namespace, simple_name
 
 
 def _get_qualified_name(namespace: str, simple_name: str) -> str:
