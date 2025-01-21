@@ -83,6 +83,91 @@ outputs. And we would like to have them as a dictionary. We can do this as follo
     {"h": 0.6, "f": 5, "g": 3.0}
 
 
+Functions from different namespaces
+-----------------------------------
+
+In large projects, function names can become lengthy when they share the same namespace.
+Using dags, we can concatenate functions from different namespaces.
+
+Suppose we define the following function in the module `linear_functions.py`:
+
+.. code-block:: python
+
+    def f(x):
+        return 0.5 * x
+
+In another module, called `parabolic_functions.py`, we define two more functions. Note,
+that there is a function `f` in this module as well.
+
+.. code-block:: python
+
+    def f(x):
+        return x**2
+
+    def h(f, linear_functions__f):
+        return (f + linear_functions__f) ** 2
+
+The function `h` takes two inputs:
+- `f` from `parabolic_functions.py`, referenced directly as f within the current
+namespace.
+- `f` from `linear_functions.py`, referenced using its namespace with a double
+underscore separator (`linear_functions__f`).
+
+Using `concatenate_functions_tree`, we are able to combine the functions from both
+modules.
+
+First, we need to define the functions tree, which maps functions to their namespace.
+The functions tree can be nested to an arbitrary depth.
+
+.. code-block:: python
+    from linear_functions import f as linear_functions__f
+    from parabolic_functions import f as parabolic_functions__f
+    from parabolic_functions import h as parabolic_functions__h
+
+    # Define functions tree
+    functions = {
+        "linear_functions": {"f": linear_functions__f},
+        "parabolic_functions": {
+            "f": parabolic_functions__f,
+            "h": parabolic_functions__h
+        },
+    }
+
+Next, we define the input structure, which maps the parameters of the functions to their
+namespace. The input structure can also be created via the
+`create_input_structure_tree` function.
+
+.. code-block:: python
+    # Define input structure
+    input_structure = {
+        "linear_functions": {"x": None},
+        "parabolic_functions": {"x": None},
+    }
+
+
+Finally, we combine the functions using `concatenate_functions_tree`.
+
+.. code-block:: python
+    # Get combined function
+    combined = concatenate_functions_tree(
+        functions,
+        input_structure=input_structure,
+        targets={"parabolic_functions": {"h": None}},
+    )
+
+    # Call combined function
+    combined(inputs={
+        "linear_functions": {"x": 2},
+        "parabolic_functions": {"x": 1},
+    })
+
+.. code-block:: python
+
+    {"h": 4.0}
+
+Importantly, dags does not allow for branches with trailing underscores in the
+definition of the functions tree.
+
 Renaming the output of a function
 ---------------------------------
 
