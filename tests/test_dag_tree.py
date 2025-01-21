@@ -15,6 +15,7 @@ from dags.dag_tree import _is_qualified_name
 from dags.dag_tree import _link_parameter_to_function_or_input
 from dags.dag_tree import _map_parameter
 from dags.dag_tree import _unflatten_str_dict
+from dags.dag_tree import _flatten_functions_and_rename_parameters
 from dags.dag_tree import concatenate_functions_tree
 from dags.dag_tree import create_input_structure_tree
 from dags.dag_tree import FlatFunctionDict
@@ -217,6 +218,18 @@ def test_concatenate_functions_tree(
 ):
     f = concatenate_functions_tree(functions, targets, input_, name_clashes="ignore")
     assert f(input_) == expected
+
+
+@pytest.mark.parametrize(
+    "functions",
+    [
+        {"x_": {"x": lambda x: x}},
+        {"x": {"x_": {"x": lambda x: x}}, "y": lambda y: y},
+    ],
+)
+def test_fail_if_branches_have_trailing_underscores(functions: NestedFunctionDict):
+    with pytest.raises(ValueError, match="Branches of the functions tree cannot end"):
+        _flatten_functions_and_rename_parameters(functions, {})
 
 
 @pytest.mark.parametrize(

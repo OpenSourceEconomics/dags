@@ -120,6 +120,8 @@ def _flatten_functions_and_rename_parameters(
     input_structure: NestedInputStructureDict,
     name_clashes: Literal["raise", "warn", "ignore"] = "raise",
 ) -> FlatFunctionDict:
+    _fail_if_branches_have_trailing_undersores(functions)
+
     flat_functions = _flatten_str_dict(functions)
     flat_input_structure = _flatten_str_dict(input_structure)
 
@@ -339,6 +341,7 @@ def create_input_structure_tree(
         A template that represents the structure of the input dictionary.
 
     """
+    _fail_if_branches_have_trailing_undersores(functions)
 
     flat_functions = _flatten_str_dict(functions)
     flat_input_structure: FlatInputStructureDict = {}
@@ -496,3 +499,20 @@ def _is_python_identifier(s: str) -> bool:
 
 def _is_qualified_name(s: str) -> bool:
     return bool(re.fullmatch(_qualified_name, s))
+
+
+def _fail_if_branches_have_trailing_undersores(functions: FlatStrDict) -> None:
+    """Raises an ValueError if any branch of the functions tree ends with an underscore.
+
+    Args:
+        functions:
+            The functions tree.
+
+    Raises
+        ValueError: If any branch of the functions tree ends with an underscore.
+    """
+    flattened_functions_tree = flatten(functions)
+    for path in flattened_functions_tree:
+        if len(path) > 1 and any(name.endswith("_") for name in path[:-1]):
+            msg = "Branches of the functions tree cannot end with an underscore."
+            raise ValueError(msg)
