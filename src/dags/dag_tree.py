@@ -6,9 +6,8 @@ from itertools import combinations
 from itertools import groupby
 from operator import itemgetter
 from typing import Any
-from typing import Callable
+from collections.abc import Callable
 from typing import Literal
-from typing import Optional
 from typing import Union
 
 import networkx as nx
@@ -55,7 +54,7 @@ _qualified_name_splitter = make_splitter(delimiter=_qualified_name_delimiter)
 # Functions
 def concatenate_functions_tree(
     functions: NestedFunctionDict,
-    targets: Optional[NestedTargetDict],
+    targets: NestedTargetDict | None,
     input_structure: NestedInputStructureDict,
     name_clashes: Literal["raise", "warn", "ignore"] = "raise",
     enforce_signature: bool = True,
@@ -90,7 +89,7 @@ def concatenate_functions_tree(
             Otherwise, it is only provided for introspection purposes. Enforcing the
             signature has a small runtime overhead.
 
-    Returns:
+    Returns
         A function that produces `targets` when called with suitable arguments.
 
     """
@@ -211,7 +210,7 @@ def _get_namespace_and_simple_name(qualified_name: str) -> tuple[str, str]:
     Args:
         qualified_name: The name to split.
 
-    Returns:
+    Returns
         A tuple of namespace and simple name.
 
     """
@@ -234,7 +233,7 @@ def _get_qualified_name(namespace: str, simple_name: str) -> str:
         simple_name:
             The simple name.
 
-    Returns:
+    Returns
         The qualified name.
 
     """
@@ -283,7 +282,7 @@ def _map_parameter(
         parameter_name:
             The name of the parameter to map.
 
-    Returns:
+    Returns
         The qualified name of the requested function or input.
 
     """
@@ -317,7 +316,7 @@ def _map_parameter(
 
 def create_input_structure_tree(
     functions: NestedFunctionDict,
-    targets: Optional[NestedTargetDict] = None,
+    targets: NestedTargetDict | None = None,
     namespace_of_inputs: GlobalOrLocal = "local",
 ) -> NestedInputStructureDict:
     """Creates a template that represents the structure of the input dictionary that will
@@ -336,7 +335,7 @@ def create_input_structure_tree(
             to the current namespace. If "global", the inputs are added to the top
             level.
 
-    Returns:
+    Returns
         A template that represents the structure of the input dictionary.
 
     """
@@ -377,7 +376,7 @@ def create_input_structure_tree(
 
 def create_dag_tree(
     functions: NestedFunctionDict,
-    targets: Optional[NestedTargetDict],
+    targets: NestedTargetDict | None,
     input_structure: NestedInputStructureDict,
     name_clashes: Literal["raise", "warn", "ignore"] = "raise",
 ) -> nx.DiGraph:
@@ -405,7 +404,7 @@ def create_dag_tree(
             `"raise"`, a ValueError is raised. If `"warn"`, a warning is raised. If
             `"ignore"`, the issue is ignored.
 
-    Returns:
+    Returns
         dag: the DAG (as networkx.DiGraph object)
 
     """
@@ -425,7 +424,7 @@ def _unflatten_str_dict(str_dict: FlatStrDict) -> NestedStrDict:
     return unflatten(str_dict, splitter=_qualified_name_splitter)
 
 
-def _flatten_targets(targets: Optional[NestedTargetDict]) -> Optional[FlatTargetList]:
+def _flatten_targets(targets: NestedTargetDict | None) -> FlatTargetList | None:
     if targets is None:
         return None
 
@@ -464,7 +463,7 @@ def _link_parameter_to_function_or_input(
             The level of inputs to assume if the parameter name does not represent a
             function.
 
-    Returns:
+    Returns
         The path to the function/input that the parameter points to.
 
     """

@@ -1,7 +1,6 @@
 import functools
-from typing import Callable
+from collections.abc import Callable
 from typing import Literal
-from typing import Optional
 
 import pytest
 from dags.dag_tree import _check_for_parent_child_name_clashes
@@ -452,7 +451,7 @@ def test_map_parameter_raises():
 )
 def test_create_input_structure_tree(
     functions: NestedFunctionDict,
-    targets: Optional[NestedTargetDict],
+    targets: NestedTargetDict | None,
     level_of_inputs: GlobalOrLocal,
     expected: NestedInputStructureDict,
 ):

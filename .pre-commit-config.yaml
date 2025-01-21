@@ -47,27 +47,6 @@ repos:
       # Run the formatter.
       - id: ruff-format
         types_or: [python, jupyter]
-  - repo: https://github.com/kynan/nbstripout
-    rev: 0.8.0
-    hooks:
-      - id: nbstripout
-        args:
-          - --extra-keys
-          - metadata.kernelspec metadata.language_info.version metadata.vscode
-  - repo: https://github.com/executablebooks/mdformat
-    rev: 0.7.18
-    hooks:
-      - id: mdformat
-        additional_dependencies: [mdformat-gfm, mdformat-ruff]
-        args: [--wrap, '88']
-        files: (README\.md)
-  - repo: https://github.com/executablebooks/mdformat
-    rev: 0.7.18
-    hooks:
-      - id: mdformat
-        additional_dependencies: [mdformat-myst, mdformat-ruff]
-        args: [--wrap, '88']
-        files: (docs/.|CHANGES.md|CODE_OF_CONDUCT.md)
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.13.0
     hooks:

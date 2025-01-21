@@ -42,7 +42,7 @@ def concatenate_functions(
             is enforced. Otherwise it is only provided for introspection purposes.
             Enforcing the signature has a small runtime overhead.
 
-    Returns:
+    Returns
         function: A function that produces targets when called with suitable arguments.
 
     """
@@ -74,7 +74,7 @@ def create_dag(functions, targets):
             list of such function names. If the value is `None`, all variables are
             returned.
 
-    Returns:
+    Returns
         dag: the DAG (as networkx.DiGraph object)
 
     """
@@ -123,7 +123,7 @@ def _create_combined_function_from_dag(
             is enforced. Otherwise it is only provided for introspection purposes.
             Enforcing the signature has a small runtime overhead.
 
-    Returns:
+    Returns
         function: A function that produces targets when called with suitable arguments.
 
     """
@@ -168,7 +168,7 @@ def get_ancestors(functions, targets, include_targets=False):
         targets (str): Name of the function that produces the target function.
         include_targets (bool): Whether to include the target as its own ancestor.
 
-    Returns:
+    Returns
         set: The ancestors
 
     """
@@ -199,7 +199,7 @@ def _harmonize_and_check_functions_and_targets(functions, targets):
         targets (str or list): Name of the function that produces the target or list of
             such function names.
 
-    Returns:
+    Returns
         functions_harmonized: harmonized functions
         targets_harmonized: harmonized targets
 
@@ -264,7 +264,7 @@ def _create_complete_dag(functions):
     Args:
         functions (dict): Dictionary containing functions to build the DAG.
 
-    Returns:
+    Returns
         networkx.DiGraph: The complete DAG
 
     """
@@ -294,7 +294,7 @@ def _limit_dag_to_targets_and_their_ancestors(dag, targets):
         dag (networkx.DiGraph): The complete DAG.
         targets (str): Variable of interest.
 
-    Returns:
+    Returns
         networkx.DiGraph: The pruned DAG.
 
     """
@@ -318,7 +318,7 @@ def _create_arguments_of_concatenated_function(functions, dag):
         functions (dict): Dictionary containing functions to build the DAG.
         dag (networkx.DiGraph): The complete DAG.
 
-    Returns:
+    Returns
         list: The arguments of the concatenated function.
 
     """
@@ -335,7 +335,7 @@ def _create_execution_info(functions, dag):
         functions (dict): Dictionary containing functions to build the DAG.
         dag (networkx.DiGraph): The complete DAG.
 
-    Returns:
+    Returns
         dict: Dictionary with functions and their arguments for each node in the dag.
             The functions are already in topological_sort order.
 
@@ -369,7 +369,7 @@ def _create_concatenated_function(
             is enforced. Otherwise it is only provided for introspection purposes.
             Enforcing the signature has a small runtime overhead.
 
-    Returns:
+    Returns
         callable: The concatenated function
 
     """
