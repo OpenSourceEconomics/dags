@@ -213,7 +213,7 @@ def _harmonize_and_check_functions_and_targets(functions, targets):
 
 
 def _harmonize_functions(functions):
-    if isinstance(functions, (list, tuple)):
+    if isinstance(functions, list | tuple):
         functions = {func.__name__: func for func in functions}
     return functions
 

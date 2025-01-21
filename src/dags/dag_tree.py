@@ -319,8 +319,8 @@ def create_input_structure_tree(
     targets: NestedTargetDict | None = None,
     namespace_of_inputs: GlobalOrLocal = "local",
 ) -> NestedInputStructureDict:
-    """Creates a template that represents the structure of the input dictionary that will
-    be passed to the function created by `concatenate_functions_tree`.
+    """Creates a template that represents the structure of the input dictionary that
+    will be passed to the function created by `concatenate_functions_tree`.
 
     Args:
         functions:
