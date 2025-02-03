@@ -5,7 +5,7 @@ repos:
       - id: check-useless-excludes
         # - id: identity  # Prints all files passed to pre-commits. Debugging.
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: v5.0.0
     hooks:
       - id: check-added-large-files
         args:
@@ -35,16 +35,16 @@ repos:
       - id: check-ast
       - id: check-docstring-first
   - repo: https://github.com/psf/black
-    rev: 23.3.0
+    rev: 25.1.0
     hooks:
       - id: black
         language_version: python3.10
   - repo: https://github.com/asottile/blacken-docs
-    rev: 1.13.0
+    rev: 1.19.1
     hooks:
       - id: blacken-docs
   - repo: https://github.com/PyCQA/docformatter
-    rev: v1.5.1
+    rev: v1.7.5
     hooks:
       - id: docformatter
         args:
@@ -54,21 +54,21 @@ repos:
           - --wrap-descriptions
           - '88'
           - --blank
-  - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.0.261
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.4
     hooks:
       - id: ruff
   - repo: https://github.com/nbQA-dev/nbQA
-    rev: 1.7.0
+    rev: 1.9.1
     hooks:
       - id: nbqa-black
       - id: nbqa-ruff
   - repo: https://github.com/asottile/setup-cfg-fmt
-    rev: v2.2.0
+    rev: v2.7.0
     hooks:
       - id: setup-cfg-fmt
   - repo: https://github.com/mgedmin/check-manifest
-    rev: '0.49'
+    rev: '0.50'
     hooks:
       - id: check-manifest
         args:
