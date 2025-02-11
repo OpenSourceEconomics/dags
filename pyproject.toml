@@ -149,9 +149,8 @@ convention = "numpy"
 markers = [
     "wip: Tests that are work-in-progress.",
     "slow: Tests that take a long time to run and are skipped in continuous integration.",
-    "illustrative: Tests are designed for illustrative purposes",
 ]
-norecursedirs = ["docs", ".envs"]
+norecursedirs = ["docs"]
 addopts = ["--pdbcls=pdbp:Pdb"]
 
 
