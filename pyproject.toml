@@ -70,40 +70,69 @@ allow-direct-references = true
 # ======================================================================================
 
 [tool.ruff]
-target-version = "py311" # Replace by [project] requires-python = ">=3.11" above
+target-version = "py37"
 fix = true
-unsafe-fixes = false
+unsafe-fixes = true
 
 [tool.ruff.lint]
 select = ["ALL"]
 extend-ignore = [
-    "TRY",  # ignore tryceratops.
-    "TCH",  # ignore non-guarded type imports.
-    "D407",  # Missing dashed underline after section.
-    # Others.
-    "RET504",  # unnecessary variable assignment before return.
-    "S101",  # raise errors for asserts.
-    "B905",  # strict parameter for zip that was implemented in py310.
-    "I",  # ignore isort
-    "ANN",  # type annotating self
-    "FBT",  # flake8-boolean-trap
-    "EM",  # flake8-errmsg
-    "ANN401",  # flake8-annotate typing.Any
-    "COM812",  # trailing comma missing, but black takes care of that
-    "D401",  # imperative mood for first line. too many false-positives.
-    "SLF001",  # access private members.
-    "RET505", # unnecessary else after return.
-    "PLR2004", # macgic value used in comparison.
-    "INP001", # implicit namespace packages.
-    "PLR0913", # too many arguments to function call
-    # Temporary
-    "D100", # missing docstring in public module
-    "D103", # missing docstring in public function
-    "D104", # missing docstring in public package
-    "D202",
+    # missing type annotation
+    "ANN001",
+
+    # missing type annotation for `*args`
+    "ANN002",
+
+    # missing type annotation for `**kwargs`
+    "ANN003",
+
+    # missing return type annotation for public function
+    "ANN201",
+
+    # missing return type annotation for private function
+    "ANN202",
+
+    # Missing docstring in public module
+    "D100",
+
+    # missing docstring in public function
+    "D103",
+
+    # missing docstring in public package
+    "D104",
+
+    # exception must not use a string literal
+    "EM101",
+
+    # exception must not use an f-string literal
+    "EM102",
+
+    # line contains a todo
+    "FIX002",
+
+    # Too many arguments to function call
+    "PLR0913",
+
+    # Magic value used in comparison
+    "PLR2004",
+
+    # use of `assert` detected
+    "S101",
+
+    # Rules to be fixed in the future
+    # ----------------------------------------------------------------------------------
+
+    "PLR0913",
+    "FBT001",
+    "FBT002",
     "D205",
-    "D400",
-    "D415",
+    "D401",
+    "INP001",
+
+    # Rules ignored to avoid conflict with formatter
+    # ----------------------------------------------------------------------------------
+    "COM812",
+    "ISC001",
 ]
 
 [tool.ruff.lint.per-file-ignores]
@@ -111,3 +140,26 @@ extend-ignore = [
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
+
+# ======================================================================================
+# Pytest configuration
+# ======================================================================================
+
+[tool.pytest.ini_options]
+markers = [
+    "wip: Tests that are work-in-progress.",
+    "slow: Tests that take a long time to run and are skipped in continuous integration.",
+    "illustrative: Tests are designed for illustrative purposes",
+]
+norecursedirs = ["docs", ".envs"]
+addopts = ["--pdbcls=pdbp:Pdb"]
+
+
+# ======================================================================================
+# yamlfix configuration
+# ======================================================================================
+
+[tool.yamlfix]
+line_length = 88
+sequence_style = "block_style"
+none_representation = "null"

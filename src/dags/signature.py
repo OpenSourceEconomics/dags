@@ -10,6 +10,7 @@ def create_signature(args=None, kwargs=None):
         kwargs (list or None): The keyword only arguments.
 
     Returns
+    -------
         inspect.Signature
 
     """
@@ -31,12 +32,11 @@ def create_signature(args=None, kwargs=None):
         )
         parameter_objects.append(param)
 
-    sig = inspect.Signature(parameters=parameter_objects)
-    return sig
+    return inspect.Signature(parameters=parameter_objects)
 
 
 def with_signature(func=None, *, args=None, kwargs=None, enforce=True):
-    """Decorator that adds a signature to a function of type ``f(*args, **kwargs)``
+    """Decorator that adds a signature to a function of type ``f(*args, **kwargs)``.
 
     Caveats: The created signature only contains the names of arguments and whether
     they are keyword only. There is no way of setting default values, type hints
@@ -52,6 +52,7 @@ def with_signature(func=None, *, args=None, kwargs=None, enforce=True):
             overhead.
 
     Returns
+    -------
         function: The function with signature.
 
     """
@@ -72,7 +73,9 @@ def with_signature(func=None, *, args=None, kwargs=None, enforce=True):
                 present_kwargs = set(kwargs)
                 _fail_if_duplicated_arguments(present_args, present_kwargs, funcname)
                 _fail_if_invalid_keyword_arguments(
-                    present_kwargs, valid_kwargs, funcname
+                    present_kwargs,
+                    valid_kwargs,
+                    funcname,
                 )
                 return func(*args, **kwargs)
 
@@ -87,16 +90,16 @@ def with_signature(func=None, *, args=None, kwargs=None, enforce=True):
 
     if callable(func):
         return decorator_with_signature(func)
-    else:
-        return decorator_with_signature
+    return decorator_with_signature
 
 
 def _fail_if_too_many_positional_arguments(present_args, argnames, funcname):
     if len(present_args) > len(argnames):
-        raise TypeError(
+        msg = (
             f"{funcname}() takes {len(argnames)} positional arguments "
             f"but {len(present_args)} were given"
         )
+        raise TypeError(msg)
 
 
 def _fail_if_duplicated_arguments(present_args, present_kwargs, funcname):
@@ -104,9 +107,8 @@ def _fail_if_duplicated_arguments(present_args, present_kwargs, funcname):
     if problematic:
         s = "s" if len(problematic) >= 2 else ""
         problem_str = ", ".join(list(problematic))
-        raise TypeError(
-            f"{funcname}() got multiple values for argument{s} {problem_str}"
-        )
+        msg = f"{funcname}() got multiple values for argument{s} {problem_str}"
+        raise TypeError(msg)
 
 
 def _fail_if_invalid_keyword_arguments(present_kwargs, valid_kwargs, funcname):
@@ -114,9 +116,8 @@ def _fail_if_invalid_keyword_arguments(present_kwargs, valid_kwargs, funcname):
     if problematic:
         s = "s" if len(problematic) >= 2 else ""
         problem_str = ", ".join(list(problematic))
-        raise TypeError(
-            f"{funcname}() got unexpected keyword argument{s} {problem_str}"
-        )
+        msg = f"{funcname}() got unexpected keyword argument{s} {problem_str}"
+        raise TypeError(msg)
 
 
 def rename_arguments(func=None, *, mapper=None):
@@ -128,6 +129,7 @@ def rename_arguments(func=None, *, mapper=None):
             of arguments.
 
     Returns
+    -------
         function: The function with renamed arguments.
 
     """
@@ -160,7 +162,9 @@ def rename_arguments(func=None, *, mapper=None):
         # Preserve function type
         if isinstance(func, functools.partial):
             out = functools.partial(
-                wrapper_rename_arguments, *func.args, **func.keywords
+                wrapper_rename_arguments,
+                *func.args,
+                **func.keywords,
             )
         else:
             out = wrapper_rename_arguments
@@ -169,5 +173,4 @@ def rename_arguments(func=None, *, mapper=None):
 
     if callable(func):
         return decorator_rename_arguments(func)
-    else:
-        return decorator_rename_arguments
+    return decorator_rename_arguments

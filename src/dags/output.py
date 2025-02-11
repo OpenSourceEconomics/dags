@@ -7,8 +7,7 @@ def single_output(func):
     @functools.wraps(func)
     def wrapper_single_output(*args, **kwargs):
         raw = func(*args, **kwargs)
-        out = raw[0]
-        return out
+        return raw[0]
 
     return wrapper_single_output
 
@@ -20,15 +19,13 @@ def dict_output(func=None, *, keys=None):
         @functools.wraps(func)
         def wrapper_dict_output(*args, **kwargs):
             raw = func(*args, **kwargs)
-            out = dict(zip(keys, raw))
-            return out
+            return dict(zip(keys, raw))
 
         return wrapper_dict_output
 
     if callable(func):
         return decorator_dict_output(func)
-    else:
-        return decorator_dict_output
+    return decorator_dict_output
 
 
 def list_output(func):
@@ -37,8 +34,7 @@ def list_output(func):
     @functools.wraps(func)
     def wrapper_list_output(*args, **kwargs):
         raw = func(*args, **kwargs)
-        out = list(raw)
-        return out
+        return list(raw)
 
     return wrapper_list_output
 
@@ -59,5 +55,4 @@ def aggregated_output(func=None, *, aggregator=None):
 
     if callable(func):
         return decorator_aggregated_output(func)
-    else:
-        return decorator_aggregated_output
+    return decorator_aggregated_output

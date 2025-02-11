@@ -1,7 +1,4 @@
-from dags.output import aggregated_output
-from dags.output import dict_output
-from dags.output import list_output
-from dags.output import single_output
+from dags.output import aggregated_output, dict_output, list_output, single_output
 
 
 def test_single_output_decorator():

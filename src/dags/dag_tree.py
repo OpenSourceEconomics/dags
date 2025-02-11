@@ -1,25 +1,28 @@
+from __future__ import annotations
+
 import functools
 import inspect
 import re
 import warnings
-from itertools import combinations
-from itertools import groupby
-from operator import itemgetter
-from typing import Any
 from collections.abc import Callable
-from typing import Literal
-from typing import Union
+from itertools import combinations, groupby
+from operator import itemgetter
+from typing import TYPE_CHECKING, Any, Literal, Union
 
-import networkx as nx
-from dags import concatenate_functions
-from dags.dag import _create_arguments_of_concatenated_function
-from dags.dag import _get_free_arguments
-from dags.dag import create_dag
-from dags.signature import rename_arguments
-from flatten_dict import flatten
-from flatten_dict import unflatten
+from flatten_dict import flatten, unflatten
 from flatten_dict.reducers import make_reducer
 from flatten_dict.splitters import make_splitter
+
+from dags import concatenate_functions
+from dags.dag import (
+    _create_arguments_of_concatenated_function,
+    _get_free_arguments,
+    create_dag,
+)
+from dags.signature import rename_arguments
+
+if TYPE_CHECKING:
+    import networkx as nx
 
 # Type aliases
 NestedFunctionDict = dict[str, Union[Callable, "NestedFunctionDict"]]
@@ -90,12 +93,14 @@ def concatenate_functions_tree(
             signature has a small runtime overhead.
 
     Returns
+    -------
         A function that produces `targets` when called with suitable arguments.
 
     """
-
     flat_functions = _flatten_functions_and_rename_parameters(
-        functions, input_structure, name_clashes
+        functions,
+        input_structure,
+        name_clashes,
     )
     flat_targets = _flatten_targets(targets)
 
@@ -126,12 +131,14 @@ def _flatten_functions_and_rename_parameters(
     flat_input_structure = _flatten_str_dict(input_structure)
 
     _check_for_parent_child_name_clashes(
-        flat_functions, flat_input_structure, name_clashes
+        flat_functions,
+        flat_input_structure,
+        name_clashes,
     )
 
     for name, function in flat_functions.items():
         namespace = _qualified_name_delimiter.join(
-            name.split(_qualified_name_delimiter)[:-1]
+            name.split(_qualified_name_delimiter)[:-1],
         )
 
         renamed = rename_arguments(
@@ -194,13 +201,13 @@ def _find_parent_child_name_clashes(
             simple_name_2: str = pair[1][1]
 
             if namespace_1.startswith(namespace_2) or namespace_2.startswith(
-                namespace_1
+                namespace_1,
             ):
                 result.append(
                     (
                         _get_qualified_name(namespace_1, simple_name_1),
                         _get_qualified_name(namespace_2, simple_name_2),
-                    )
+                    ),
                 )
 
     return result
@@ -213,17 +220,16 @@ def _get_namespace_and_simple_name(qualified_name: str) -> tuple[str, str]:
         qualified_name: The name to split.
 
     Returns
+    -------
         A tuple of namespace and simple name.
 
     """
-
     segments = qualified_name.split(_qualified_name_delimiter)
     if len(segments) == 1:
         return "", segments[0]
-    else:
-        namespace = _qualified_name_delimiter.join(segments[:-1])
-        simple_name = segments[-1]
-        return namespace, simple_name
+    namespace = _qualified_name_delimiter.join(segments[:-1])
+    simple_name = segments[-1]
+    return namespace, simple_name
 
 
 def _get_qualified_name(namespace: str, simple_name: str) -> str:
@@ -236,14 +242,13 @@ def _get_qualified_name(namespace: str, simple_name: str) -> str:
             The simple name.
 
     Returns
+    -------
         The qualified name.
 
     """
-
     if namespace:
         return f"{namespace}{_qualified_name_delimiter}{simple_name}"
-    else:
-        return simple_name
+    return simple_name
 
 
 def _create_parameter_name_mapper(
@@ -254,7 +259,10 @@ def _create_parameter_name_mapper(
 ) -> dict[str, str]:
     return {
         old_name: _map_parameter(
-            flat_functions, flat_input_structure, namespace, old_name
+            flat_functions,
+            flat_input_structure,
+            namespace,
+            old_name,
         )
         for old_name in _get_free_arguments(function)
     }
@@ -285,10 +293,10 @@ def _map_parameter(
             The name of the parameter to map.
 
     Returns
+    -------
         The qualified name of the requested function or input.
 
     """
-
     # Parameter name is definitely a qualified name
     if _is_qualified_name(parameter_name):
         return parameter_name
@@ -313,7 +321,8 @@ def _map_parameter(
         return parameter_name
 
     # (3) Raise error
-    raise ValueError(f"Cannot resolve parameter {parameter_name}")
+    msg = f"Cannot resolve parameter {parameter_name}"
+    raise ValueError(msg)
 
 
 def create_input_structure_tree(
@@ -338,6 +347,7 @@ def create_input_structure_tree(
             level.
 
     Returns
+    -------
         A template that represents the structure of the input dictionary.
 
     """
@@ -348,13 +358,16 @@ def create_input_structure_tree(
 
     for path, func in flat_functions.items():
         namespace = _qualified_name_delimiter.join(
-            path.split(_qualified_name_delimiter)[:-1]
+            path.split(_qualified_name_delimiter)[:-1],
         )
         parameter_names = dict(inspect.signature(func).parameters).keys()
 
         for parameter_name in parameter_names:
             parameter_path = _link_parameter_to_function_or_input(
-                flat_functions, namespace, parameter_name, namespace_of_inputs
+                flat_functions,
+                namespace,
+                parameter_name,
+                namespace_of_inputs,
             )
 
             if parameter_path not in flat_functions:
@@ -368,7 +381,9 @@ def create_input_structure_tree(
 
     # Compute transitive hull of inputs needed for given targets
     flat_renamed_functions = _flatten_functions_and_rename_parameters(
-        functions, nested_input_structure, name_clashes="ignore"
+        functions,
+        nested_input_structure,
+        name_clashes="ignore",
     )
     flat_targets = _flatten_targets(targets)
     dag = create_dag(flat_renamed_functions, flat_targets)
@@ -408,11 +423,14 @@ def create_dag_tree(
             `"ignore"`, the issue is ignored.
 
     Returns
+    -------
         dag: the DAG (as networkx.DiGraph object)
 
     """
     flat_functions = _flatten_functions_and_rename_parameters(
-        functions, input_structure, name_clashes
+        functions,
+        input_structure,
+        name_clashes,
     )
     flat_targets = _flatten_targets(targets)
 
@@ -467,10 +485,10 @@ def _link_parameter_to_function_or_input(
             function.
 
     Returns
+    -------
         The path to the function/input that the parameter points to.
 
     """
-
     # Parameter name is definitely a qualified name
     if _is_qualified_name(parameter_name):
         return parameter_name
@@ -489,8 +507,7 @@ def _link_parameter_to_function_or_input(
     # (3) Assume parameter points to an unknown input
     if namespace_of_inputs == "global":
         return parameter_name
-    else:
-        return namespaced_parameter
+    return namespaced_parameter
 
 
 def _is_python_identifier(s: str) -> bool:
@@ -509,6 +526,7 @@ def _fail_if_branches_have_trailing_undersores(functions: FlatStrDict) -> None:
             The functions tree.
 
     Raises
+    ------
         ValueError: If any branch of the functions tree ends with an underscore.
     """
     flattened_functions_tree = flatten(functions)

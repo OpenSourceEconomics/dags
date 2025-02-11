@@ -1,7 +1,6 @@
 import os
 from importlib.metadata import version
 
-
 author = "Janoś Gabler, Tobias Raabe"
 
 # Set variable so that todos are shown in local build
@@ -136,5 +135,5 @@ html_sidebars = {
     "**": [
         "relations.html",  # needs 'show_related': True theme option to display
         "searchbox.html",
-    ]
+    ],
 }

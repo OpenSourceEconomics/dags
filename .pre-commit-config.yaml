@@ -13,7 +13,8 @@ repos:
     rev: v5.0.0
     hooks:
       - id: check-added-large-files
-        args: [--maxkb=10000]
+        args:
+          - --maxkb=10000
       - id: check-case-conflict
       - id: check-merge-conflict
       - id: check-vcs-permalinks
@@ -22,13 +23,17 @@ repos:
       - id: debug-statements
       - id: end-of-file-fixer
       - id: fix-byte-order-marker
-        types: [text]
+        types:
+          - text
       - id: forbid-submodules
       - id: mixed-line-ending
-        args: [--fix=lf]
+        args:
+          - --fix=lf
         description: Forces to replace line ending by the UNIX 'lf' character.
       - id: no-commit-to-branch
-        args: [--branch, main]
+        args:
+          - --branch
+          - main
       - id: trailing-whitespace
       - id: check-ast
       - id: check-docstring-first
@@ -41,11 +46,15 @@ repos:
     hooks:
       # Run the linter.
       - id: ruff
-        types_or: [python, jupyter]
+        types_or:
+          - python
+          - jupyter
         args:
           - --fix
       # Run the formatter.
       - id: ruff-format
-        types_or: [python, jupyter]
+        types_or:
+          - python
+          - jupyter
 ci:
   autoupdate_schedule: monthly

@@ -1,9 +1,8 @@
 import inspect
 
 import pytest
-from dags.signature import create_signature
-from dags.signature import rename_arguments
-from dags.signature import with_signature
+
+from dags.signature import create_signature, rename_arguments, with_signature
 
 
 @pytest.fixture
@@ -13,8 +12,7 @@ def example_signature():
         inspect.Parameter(name="b", kind=inspect.Parameter.POSITIONAL_OR_KEYWORD),
         inspect.Parameter(name="c", kind=inspect.Parameter.KEYWORD_ONLY),
     ]
-    signature = inspect.Signature(parameters=parameters)
-    return signature
+    return inspect.Signature(parameters=parameters)
 
 
 def test_create_signature(example_signature):

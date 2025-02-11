@@ -1,5 +1,7 @@
 ---
-channels: [conda-forge, nodefaults]
+channels:
+  - conda-forge
+  - nodefaults
 dependencies:
   - python=3.9
   - pip
@@ -15,4 +17,5 @@ dependencies:
   - sphinx-copybutton
   - sphinx-panels
   - pydata-sphinx-theme>=0.3.0
-  - pip: [../]
+  - pip:
+      - ../
