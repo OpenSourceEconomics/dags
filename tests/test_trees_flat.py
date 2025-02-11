@@ -1,12 +1,3 @@
-import inspect
-from functools import partial
-
-import pytest
-from dags.dag import concatenate_functions
-from dags.dag import create_dag
-from dags.dag import get_ancestors
-
-
 def pensions__eligible(pensions__benefits_last_period, pensions__applied_this_period):
     if pensions__benefits_last_period:
         out = True

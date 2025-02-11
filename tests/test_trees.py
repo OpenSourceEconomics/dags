@@ -1,11 +1,5 @@
-import inspect
-from functools import partial
-
 import pensions
 import unemployment_insurance
-from dags.dag import concatenate_functions
-from dags.dag import create_dag
-from dags.dag import get_ancestors
 
 
 # Define a function in the "global" namespace
@@ -78,5 +72,4 @@ def complete_system(
     unemployment_insurance: dict,  # benefits_last_period, applied_this_period, hours_limit, earnings_limit,
     hours: float,
     hourly_wage: float,
-):
-    ...
+): ...

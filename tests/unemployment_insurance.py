@@ -1,6 +1,6 @@
 def monthly_earnings(hours, hourly_wage, earnings_limit):
     e = hours * 4.3 * hourly_wage
-    return e if e < earnings_limit else earnings_limit
+    return min(earnings_limit, e)
 
 
 def eligible(
