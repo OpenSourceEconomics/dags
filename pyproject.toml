@@ -1,10 +1,68 @@
+[project]
+name = "dags"
+description = "Tools to create executable dags from interdependent functions."
+requires-python = ">=3.7"
+dynamic = ["version"]
+dependencies = [
+    "networkx",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX",
+    "Operating System :: Unix",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Utilities"
+]
+authors = [
+    {name = "Janoś Gabler", email = "janos.gabler@gmail.com"},
+    {name = "Tobias Raabe"}
+]
+maintainers = [
+    {name = "Hans-Martin von Gaudecker", email = "hmgaudecker@uni-bonn.de" }
+]
+
+
+[project.readme]
+file = "README.md"
+content-type = "text/markdown"
+
+[project.license]
+file = "LICENSE"
+
+[project.urls]
+Repository = "https://github.com/OpenSourceEconomics/dags"
+Github = "https://github.com/OpenSourceEconomics/dags"
+Tracker = "https://github.com/OpenSourceEconomics/dags/issues"
+
+
+# ======================================================================================
+# Build system configuration
+# ======================================================================================
+
 [build-system]
-requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.0"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling", "hatch_vcs"]
+build-backend = "hatchling.build"
 
+[tool.hatch.build.hooks.vcs]
+version-file = "src/dags/_version.py"
 
-[tool.setuptools_scm]
-write_to = "src/dags/_version.py"
+[tool.hatch.build.targets.sdist]
+exclude = ["tests"]
+only-packages = true
+
+[tool.hatch.build.targets.wheel]
+only-include = ["src"]
+sources = ["src"]
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.metadata]
+allow-direct-references = true
 
 
 # ======================================================================================
