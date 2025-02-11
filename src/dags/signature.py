@@ -9,7 +9,7 @@ def create_signature(args=None, kwargs=None):
         args (list or None): The names of positional or keyword arguments.
         kwargs (list or None): The keyword only arguments.
 
-    Returns:
+    Returns
         inspect.Signature
 
     """
@@ -51,7 +51,7 @@ def with_signature(func=None, *, args=None, kwargs=None, enforce=True):
             added to the function for introspection. This creates runtime
             overhead.
 
-    Returns:
+    Returns
         function: The function with signature.
 
     """
@@ -127,7 +127,7 @@ def rename_arguments(func=None, *, mapper=None):
         mapper (dict): Dict of strings where keys are old names and values are new
             of arguments.
 
-    Returns:
+    Returns
         function: The function with renamed arguments.
 
     """
@@ -157,7 +157,15 @@ def rename_arguments(func=None, *, mapper=None):
 
         wrapper_rename_arguments.__signature__ = signature
 
-        return wrapper_rename_arguments
+        # Preserve function type
+        if isinstance(func, functools.partial):
+            out = functools.partial(
+                wrapper_rename_arguments, *func.args, **func.keywords
+            )
+        else:
+            out = wrapper_rename_arguments
+
+        return out
 
     if callable(func):
         return decorator_rename_arguments(func)
