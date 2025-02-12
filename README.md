@@ -9,9 +9,8 @@
 [![PyPI - License](https://img.shields.io/pypi/l/dags)](https://pypi.org/project/dags)
 [![Documentation Status](https://readthedocs.org/projects/dags/badge/?version=latest)](https://dags.readthedocs.io/en/latest)
 [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/OpenSourceEconomics/dags/main/main)](https://github.com/OpenSourceEconomics/dags/actions?query=branch%3Amain)
-[![codecov](https://codecov.io/gh/OpenSourceEconomics/dags/branch/main/graph/badge.svg)](https://codecov.io/gh/OpenSourceEconomics/dags)
+[![codecov](https://codecov.io/gh/OpenSourceEconomics/dags/graph/badge.svg?token=jKu3vvz98M)](https://codecov.io/gh/OpenSourceEconomics/dags)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/OpenSourceEconomics/dags/main.svg)](https://results.pre-commit.ci/latest/github/OpenSourceEconomics/dags/main)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 <!-- end-badges -->
 
