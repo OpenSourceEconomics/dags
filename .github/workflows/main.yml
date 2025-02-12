@@ -24,16 +24,10 @@ jobs:
           - macos-latest  # arm
           - windows-latest
         environment:
-          - py37
-          - py38
-          - py39
           - py310
           - py311
           - py312
           - py313
-        exclude:
-          - os: macos-latest
-            environment: py37
     steps:
       - uses: actions/checkout@v4
       - uses: prefix-dev/setup-pixi@v0.8.2
