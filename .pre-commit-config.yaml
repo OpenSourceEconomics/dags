@@ -30,6 +30,9 @@ repos:
         args:
           - --fix=lf
         description: Forces to replace line ending by the UNIX 'lf' character.
+      - id: name-tests-test
+        args:
+          - --pytest-test-first
       - id: no-commit-to-branch
         args:
           - --branch
@@ -42,12 +45,13 @@ repos:
     hooks:
       - id: yamllint
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.7.2
+    rev: v0.9.6
     hooks:
       # Run the linter.
       - id: ruff
         types_or:
           - python
+          - pyi
           - jupyter
         args:
           - --fix
@@ -55,6 +59,19 @@ repos:
       - id: ruff-format
         types_or:
           - python
+          - pyi
           - jupyter
+  - repo: https://github.com/executablebooks/mdformat
+    rev: 0.7.22
+    hooks:
+      - id: mdformat
+        additional_dependencies:
+          - mdformat-gfm
+          - mdformat-gfm-alerts
+          - mdformat-ruff
+        args:
+          - --wrap
+          - '88'
+        files: (README\.md)
 ci:
   autoupdate_schedule: monthly

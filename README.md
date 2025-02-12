@@ -17,10 +17,10 @@
 
 ## About
 
-dags provides tools to combine several interrelated functions into one function.
-The order in which the functions are called is determined by a topological sort on
-a dag that is constructed from the function signatures. You can specify which of the
-function results will be returned in the combined function.
+dags provides tools to combine several interrelated functions into one function. The
+order in which the functions are called is determined by a topological sort on a dag
+that is constructed from the function signatures. You can specify which of the function
+results will be returned in the combined function.
 
 dags is a tiny library, all the hard work is done by the great
 [NetworkX](https://networkx.org/documentation/stable/tutorial.html).
@@ -53,6 +53,7 @@ def hardcoded_combined(x, y, z):
     _g = g(y, z)
     return h(_f, _g)
 
+
 hardcoded_combined(x=1, y=2, z=3)
 ```
 
@@ -74,15 +75,17 @@ combined(x=1, y=2, z=3)
 0.6
 ```
 
-More examples can be found in the [documentation](https://dags.readthedocs.io/en/latest/#)
+More examples can be found in the
+[documentation](https://dags.readthedocs.io/en/latest/#)
 
 ## Notable features
 
 - The dag is constructed while the combined function is created and does not cause too
   much overhead when the function is called.
-- If all individual functions are jax compatible, the combined function is jax compatible.
-- When jitted or vmapped with jax, we havenot seen any performance loss compared to
-  hard coding the combined function.
+- If all individual functions are jax compatible, the combined function is jax
+  compatible.
+- When jitted or vmapped with jax, we havenot seen any performance loss compared to hard
+  coding the combined function.
 - Whene there is more than one target, you can determine whether the result is returned
   as tuple, list or dict or pass in an aggregator to combine the multiple outputs.
 - Since the relationships are discoverd from function signatures, dags provides
@@ -90,7 +93,8 @@ More examples can be found in the [documentation](https://dags.readthedocs.io/en
 
 ## Installation
 
-dags is available on [PyPI](https://pypi.org/project/dags) and [Anaconda.org](https://anaconda.org/conda-forge/dags). Install it with
+dags is available on [PyPI](https://pypi.org/project/dags) and
+[Anaconda.org](https://anaconda.org/conda-forge/dags). Install it with
 
 ```console
 $ pip install dags
