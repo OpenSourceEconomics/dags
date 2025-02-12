@@ -1,7 +1,7 @@
 [project]
 name = "dags"
 description = "Tools to create executable dags from interdependent functions."
-requires-python = ">=3.7"
+requires-python = ">=3.10"
 dynamic = ["version"]
 dependencies = [
     "networkx",
