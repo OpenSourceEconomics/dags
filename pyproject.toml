@@ -78,9 +78,12 @@ platforms = ["linux-64", "osx-64", "osx-arm64", "win-64"]
 # --------------------------------------------------------------------------------------
 
 [tool.pixi.dependencies]
-python = ">=3.12,<3.13"
+python = ">=3.7,<3.14"
 jupyterlab = "*"
 pre-commit = "*"
+pytest = "*"
+pytest-cov = "*"
+pytest-xdist = "*"
 
 [tool.pixi.pypi-dependencies]
 dags = {path = ".", editable = true}
@@ -89,20 +92,47 @@ pdbp = "*"
 # Features and Tasks
 # --------------------------------------------------------------------------------------
 
-[tool.pixi.feature.test.dependencies]
-pytest = "*"
-pytest-cov = "*"
-pytest-xdist = "*"
-
 [tool.pixi.feature.test.tasks]
 tests = "pytest tests"
 tests-with-cov = "pytest tests --cov-report=xml --cov=./"
+
+# Python versions for testing
+# --------------------------------------------------------------------------------------
+
+[tool.pixi.feature.py37]
+# osx-arm64 does not support py37
+platforms = ["linux-64", "osx-64", "win-64"]
+dependencies = {python = "~=3.7.0"}
+
+[tool.pixi.feature.py38.dependencies]
+python = "~=3.8.0"
+
+[tool.pixi.feature.py39.dependencies]
+python = "~=3.9.0"
+
+[tool.pixi.feature.py310.dependencies]
+python = "~=3.10.0"
+
+[tool.pixi.feature.py311.dependencies]
+python = "~=3.11.0"
+
+[tool.pixi.feature.py312.dependencies]
+python = "~=3.12.0"
+
+[tool.pixi.feature.py313.dependencies]
+python = "~=3.13.0"
 
 # Environments
 # --------------------------------------------------------------------------------------
 
 [tool.pixi.environments]
-test = {features = ["test"], solve-group = "default"}
+py37 = ["test", "py37"]
+py38 = ["test", "py38"]
+py39 = ["test", "py39"]
+py310 = ["test", "py310"]
+py311 = ["test", "py311"]
+py312 = ["test", "py312"]
+py313 = ["test", "py313"]
 
 
 # ======================================================================================
