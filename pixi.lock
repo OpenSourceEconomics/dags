@@ -4557,12 +4557,12 @@ packages:
   timestamp: 1736761414276
 - pypi: .
   name: dags
-  version: 0.2.4.dev17+g442730f.d20250212
-  sha256: 8e16250314952e0ecd5f23c2280a9d47248eeb263313b41e5c934b43ade84dc1
+  version: 0.2.4.dev20+ge3d3e54.d20250212
+  sha256: 5d86fb4fe4ce19f708dc25b9416b9a22d36382d3765b3d7e59af9ad5b229d20a
   requires_dist:
   - flatten-dict
   - networkx
-  requires_python: '>=3.7'
+  requires_python: '>=3.10'
   editable: true
 - conda: https://conda.anaconda.org/conda-forge/linux-64/debugpy-1.8.12-py310hf71b8c6_0.conda
   sha256: 1de0f06d106d89355977e859320fb0412d757f62114597f9bd1c4f1b377440c3
