@@ -13,6 +13,3 @@ coverage:
     project:
       default:
         target: 80%
-ignore:
-  - .tox/**/*
-  - setup.py
