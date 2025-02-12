@@ -101,6 +101,10 @@ $ pip install dags
 
 # or
 
+$ pixi add dags
+
+# or
+
 $ conda install -c conda-forge dags
 ```
 

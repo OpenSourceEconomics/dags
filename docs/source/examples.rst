@@ -120,6 +120,7 @@ First, we need to define the functions tree, which maps functions to their names
 The functions tree can be nested to an arbitrary depth.
 
 .. code-block:: python
+
     from linear_functions import f as linear_functions__f
     from parabolic_functions import f as parabolic_functions__f
     from parabolic_functions import h as parabolic_functions__h
@@ -138,6 +139,7 @@ namespace. The input structure can also be created via the
 `create_input_structure_tree` function.
 
 .. code-block:: python
+
     # Define input structure
     input_structure = {
         "linear_functions": {"x": None},
@@ -148,6 +150,7 @@ namespace. The input structure can also be created via the
 Finally, we combine the functions using `concatenate_functions_tree`.
 
 .. code-block:: python
+
     # Get combined function
     combined = concatenate_functions_tree(
         functions,

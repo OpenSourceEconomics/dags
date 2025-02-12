@@ -1,19 +1,16 @@
 ---
+name: dags-docs
 channels:
   - conda-forge
   - nodefaults
 dependencies:
-  - python=3.9
+  - python=3.10
   - pip
   - setuptools_scm
   - toml
 
-  # Package
-  - networkx
-
   # Documentation
   - sphinx
-  - sphinx-autoapi
   - sphinx-copybutton
   - sphinx-panels
   - pydata-sphinx-theme>=0.3.0

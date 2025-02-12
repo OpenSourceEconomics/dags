@@ -10,4 +10,8 @@ dags is available on `PyPI <https://pypi.org/project/dags>`_ and `Anaconda.org
 
     # or
 
+    $ pixi add dags
+
+    # or
+
     $ conda install -c conda-forge dags
