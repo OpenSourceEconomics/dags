@@ -388,7 +388,7 @@ def _create_concatenated_function(
 
     @with_signature(args=arglist, enforce=enforce_signature)
     def concatenated(*args, **kwargs):
-        results = {**dict(zip(arglist, args)), **kwargs}
+        results = {**dict(zip(arglist, args, strict=False)), **kwargs}
         for name, info in execution_info.items():
             kwargs = {arg: results[arg] for arg in info["arguments"]}
             result = info["func"](**kwargs)

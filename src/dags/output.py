@@ -19,7 +19,7 @@ def dict_output(func=None, *, keys=None):
         @functools.wraps(func)
         def wrapper_dict_output(*args, **kwargs):
             raw = func(*args, **kwargs)
-            return dict(zip(keys, raw))
+            return dict(zip(keys, raw, strict=True))
 
         return wrapper_dict_output
 
