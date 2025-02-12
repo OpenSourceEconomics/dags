@@ -83,17 +83,18 @@ More examples can be found in the
   much overhead when the function is called.
 - If all individual functions are jax compatible, the combined function is jax
   compatible.
-- When jitted or vmapped with jax, we havenot seen any performance loss compared to hard
-  coding the combined function.
-- Whene there is more than one target, you can determine whether the result is returned
+- When jitted or vmapped with jax, we have not seen any performance loss compared to
+  hard coding the combined function.
+- When there is more than one target, you can determine whether the result is returned
   as tuple, list or dict or pass in an aggregator to combine the multiple outputs.
 - Since the relationships are discoverd from function signatures, dags provides
-  decorators to rename arguments.
+  decorators to rename arguments in order to make it easy to wrap functions you do not
+  control yourself.
 
 ## Installation
 
 dags is available on [PyPI](https://pypi.org/project/dags) and
-[Anaconda.org](https://anaconda.org/conda-forge/dags). Install it with
+[conda-forge](https://anaconda.org/conda-forge/dags). Install it with
 
 ```console
 $ pip install dags

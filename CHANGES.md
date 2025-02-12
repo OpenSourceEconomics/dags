@@ -2,7 +2,12 @@
 
 This is a record of all past dags releases and what went into them in reverse
 chronological order. We follow [semantic versioning](https://semver.org/) and all
-releases are available on [Anaconda.org](https://anaconda.org/OpenSourceEconomics/dags).
+releases are available on [conda-forge](https://anaconda.org/conda-forge/dags).
+
+## 0.???
+
+- :gh:`19` Update infrastructure, move to Pixi (:ghuser:`timmens`).
+- :gh:`17` Add possibility to use namespaces (:ghuser:`lars-reimann`, :ghuser:`MImmesberger`).
 
 ## 0.2.3
 

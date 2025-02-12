@@ -78,7 +78,7 @@ platforms = ["linux-64", "osx-64", "osx-arm64", "win-64"]
 # --------------------------------------------------------------------------------------
 
 [tool.pixi.dependencies]
-python = ">=3.7,<3.14"
+python = ">=3.10,<3.14"
 jupyterlab = "*"
 pre-commit = "*"
 pytest = "*"
@@ -128,52 +128,25 @@ py313 = ["test", "py313"]
 [tool.ruff]
 target-version = "py310"
 fix = true
-unsafe-fixes = true
+unsafe-fixes = false
 
 [tool.ruff.lint]
 select = ["ALL"]
 extend-ignore = [
-    # missing type annotation
-    "ANN001",
-
-    # missing type annotation for `*args`
-    "ANN002",
-
-    # missing type annotation for `**kwargs`
-    "ANN003",
-
-    # missing return type annotation for public function
-    "ANN201",
-
-    # missing return type annotation for private function
-    "ANN202",
-
-    # Missing docstring in public module
-    "D100",
-
-    # missing docstring in public function
-    "D103",
-
-    # missing docstring in public package
-    "D104",
-
-    # exception must not use a string literal
-    "EM101",
-
-    # exception must not use an f-string literal
-    "EM102",
-
-    # line contains a todo
-    "FIX002",
-
-    # Too many arguments to function call
-    "PLR0913",
-
-    # Magic value used in comparison
-    "PLR2004",
-
-    # use of `assert` detected
-    "S101",
+    "ANN001",  # missing type annotation
+    "ANN002",  # missing type annotation for `*args`
+    "ANN003",  # missing type annotation for `**kwargs`
+    "ANN201",  # missing return type annotation for public function
+    "ANN202",  # missing return type annotation for private function
+    "D100",  # missing docstring in public module
+    "D103",  # missing docstring in public function
+    "D104",  # missing docstring in public package
+    "EM101",  # exception must not use a string literal
+    "EM102",  # exception must not use an f-string literal
+    "FIX002",  # line contains a todo
+    "PLR0913",  # too many arguments to function call
+    "PLR2004",  # magic value used in comparison
+    "S101",  # use of `assert` detected
 
     # Rules to be fixed in the future
     # ----------------------------------------------------------------------------------

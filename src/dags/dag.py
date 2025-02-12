@@ -347,7 +347,7 @@ def _create_execution_info(functions, dag):
 
     Returns
     -------
-        dict: Dictionary with functions and their arguments for each node in the dag.
+        dict: Dictionary with functions and their arguments for each node in the DAG.
             The functions are already in topological_sort order.
 
     """
@@ -372,7 +372,7 @@ def _create_concatenated_function(
 
     Args:
         execution_info (dict): Dictionary with functions and their arguments for each
-            node in the dag. The functions are already in topological_sort order.
+            node in the DAG. The functions are already in topological_sort order.
         arglist (list): The list of arguments of the concatenated function.
         targets (list): List that is used to determine what is returned and the
             order of the outputs.

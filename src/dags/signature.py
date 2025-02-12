@@ -36,15 +36,15 @@ def create_signature(args=None, kwargs=None):
 
 
 def with_signature(func=None, *, args=None, kwargs=None, enforce=True):
-    """Decorator that adds a signature to a function of type ``f(*args, **kwargs)``.
+    """Decorator that adds a signature to a function of type `f(*args, **kwargs)`.
 
     Caveats: The created signature only contains the names of arguments and whether
     they are keyword only. There is no way of setting default values, type hints
     or other things.
 
     Args:
-        func (callable): The function to be decorated. Should take ``*args``
-            and ``**kwargs`` as only arguments.
+        func (callable): The function to be decorated. Should take `*args`
+            and `**kwargs` as only arguments.
         args (list or None): The names of positional or keyword arguments.
         kwargs (list or None): The keyword only arguments.
         enforce (bool): Whether the signature should be enforced or just
