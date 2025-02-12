@@ -13,7 +13,8 @@ repos:
     rev: v5.0.0
     hooks:
       - id: check-added-large-files
-        args: [--maxkb=10000]
+        args:
+          - --maxkb=10000
       - id: check-case-conflict
       - id: check-merge-conflict
       - id: check-vcs-permalinks
@@ -22,13 +23,20 @@ repos:
       - id: debug-statements
       - id: end-of-file-fixer
       - id: fix-byte-order-marker
-        types: [text]
+        types:
+          - text
       - id: forbid-submodules
       - id: mixed-line-ending
-        args: [--fix=lf]
+        args:
+          - --fix=lf
         description: Forces to replace line ending by the UNIX 'lf' character.
+      - id: name-tests-test
+        args:
+          - --pytest-test-first
       - id: no-commit-to-branch
-        args: [--branch, main]
+        args:
+          - --branch
+          - main
       - id: trailing-whitespace
       - id: check-ast
       - id: check-docstring-first
@@ -37,15 +45,33 @@ repos:
     hooks:
       - id: yamllint
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.7.2
+    rev: v0.9.6
     hooks:
       # Run the linter.
       - id: ruff
-        types_or: [python, jupyter]
+        types_or:
+          - python
+          - pyi
+          - jupyter
         args:
           - --fix
       # Run the formatter.
       - id: ruff-format
-        types_or: [python, jupyter]
+        types_or:
+          - python
+          - pyi
+          - jupyter
+  - repo: https://github.com/executablebooks/mdformat
+    rev: 0.7.22
+    hooks:
+      - id: mdformat
+        additional_dependencies:
+          - mdformat-gfm
+          - mdformat-gfm-alerts
+          - mdformat-ruff
+        args:
+          - --wrap
+          - '88'
+        files: (README\.md)
 ci:
   autoupdate_schedule: monthly

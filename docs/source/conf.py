@@ -1,7 +1,6 @@
 import os
 from importlib.metadata import version
 
-
 author = "Janoś Gabler, Tobias Raabe"
 
 # Set variable so that todos are shown in local build
@@ -25,7 +24,6 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.napoleon",
     "sphinx_panels",
-    "autoapi.extension",
 ]
 
 autodoc_member_order = "bysource"
@@ -44,10 +42,8 @@ extlinks = {
 
 intersphinx_mapping = {
     "numpy": ("https://numpy.org/doc/stable", None),
-    "np": ("https://numpy.org/doc/stable", None),
     "pandas": ("https://pandas.pydata.org/pandas-docs/stable", None),
-    "pd": ("https://pandas.pydata.org/pandas-docs/stable", None),
-    "python": ("https://docs.python.org/3.9", None),
+    "python": ("https://docs.python.org/3.12", None),
 }
 
 # Add any paths that contain templates here, relative to this directory.
@@ -100,13 +96,6 @@ else:
 copybutton_prompt_text = r"\$ |>>> |In \[\d\]: "
 copybutton_prompt_is_regexp = True
 
-# Configuration for autoapi
-autoapi_type = "python"
-autoapi_dirs = ["../../src"]
-autoapi_keep_files = False
-autoapi_add_toctree_entry = False
-
-
 # -- Options for HTML output ----------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
@@ -136,5 +125,5 @@ html_sidebars = {
     "**": [
         "relations.html",  # needs 'show_related': True theme option to display
         "searchbox.html",
-    ]
+    ],
 }

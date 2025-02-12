@@ -2,9 +2,8 @@ import inspect
 from functools import partial
 
 import pytest
-from dags.dag import concatenate_functions
-from dags.dag import create_dag
-from dags.dag import get_ancestors
+
+from dags.dag import concatenate_functions, create_dag, get_ancestors
 
 
 def _utility(_consumption, _leisure, leisure_weight):
@@ -20,7 +19,8 @@ def _consumption(working_hours, wage):
 
 
 def _unrelated(working_hours):
-    raise NotImplementedError("This should not be called.")
+    msg = "This should not be called."
+    raise NotImplementedError(msg)
 
 
 def _leisure_cycle(working_hours, _utility):
@@ -35,8 +35,7 @@ def _complete_utility(wage, working_hours, leisure_weight):
     """The function that we try to generate dynamically."""
     leis = _leisure(working_hours)
     cons = _consumption(working_hours, wage)
-    util = _utility(cons, leis, leisure_weight)
-    return util
+    return _utility(cons, leis, leisure_weight)
 
 
 def test_concatenate_functions_no_target():
