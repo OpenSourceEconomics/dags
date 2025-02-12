@@ -5,6 +5,7 @@ requires-python = ">=3.7"
 dynamic = ["version"]
 dependencies = [
     "networkx",
+    "flatten-dict",
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -63,6 +64,45 @@ source = "vcs"
 
 [tool.hatch.metadata]
 allow-direct-references = true
+
+
+# ======================================================================================
+# Pixi
+# ======================================================================================
+
+[tool.pixi.project]
+channels = ["conda-forge"]
+platforms = ["linux-64", "osx-64", "osx-arm64", "win-64"]
+
+# Development Dependencies
+# --------------------------------------------------------------------------------------
+
+[tool.pixi.dependencies]
+python = ">=3.12,<3.13"
+jupyterlab = "*"
+pre-commit = "*"
+
+[tool.pixi.pypi-dependencies]
+dags = {path = ".", editable = true}
+pdbp = "*"
+
+# Features and Tasks
+# --------------------------------------------------------------------------------------
+
+[tool.pixi.feature.test.dependencies]
+pytest = "*"
+pytest-cov = "*"
+pytest-xdist = "*"
+
+[tool.pixi.feature.test.tasks]
+tests = "pytest tests"
+tests-with-cov = "pytest tests --cov-report=xml --cov=./"
+
+# Environments
+# --------------------------------------------------------------------------------------
+
+[tool.pixi.environments]
+test = {features = ["test"], solve-group = "default"}
 
 
 # ======================================================================================
@@ -140,6 +180,7 @@ extend-ignore = [
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
+
 
 # ======================================================================================
 # Pytest configuration
