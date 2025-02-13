@@ -5,16 +5,20 @@ from collections.abc import Callable
 from typing import (
     Literal,
     TypeVar,
+    Any,
+    TypeGuard,
+    cast,
 )
 
-import networkx as nx
+import networkx as nx  # type: ignore[import]
 
 from dags.output import aggregated_output, dict_output, list_output, single_output
 from dags.signature import with_signature
 
 T = TypeVar("T")
+ConcatT = TypeVar("ConcatT")  # For concatenated function return type
 
-FunctionCollection = dict[str, Callable] | list[Callable]
+FunctionCollection = dict[str, Callable[..., Any]] | list[Callable[..., Any]]
 TargetType = str | list[str] | None
 CombinedFunctionReturnType = Literal["tuple", "list", "dict"]
 
@@ -162,15 +166,15 @@ def _create_combined_function_from_dag(
 
     # Return function in specified format.
     if isinstance(targets, str) or (aggregator is not None and len(_targets) == 1):
-        out = single_output(_concatenated)
+        out = cast(Callable[..., Any], single_output(_concatenated))
     elif aggregator is not None:
-        out = aggregated_output(_concatenated, aggregator=aggregator)
+        out = cast(Callable[..., Any], aggregated_output(_concatenated, aggregator=aggregator))
     elif return_type == "list":
-        out = list_output(_concatenated)
+        out = cast(Callable[..., Any], list_output(_concatenated))
     elif return_type == "tuple":
         out = _concatenated
     elif return_type == "dict":
-        out = dict_output(_concatenated, keys=_targets)
+        out = cast(Callable[..., Any], dict_output(_concatenated, keys=_targets))
     else:
         msg = (
             f"Invalid return type {return_type}. Must be 'list', 'tuple', or 'dict'. "
@@ -209,7 +213,7 @@ def get_ancestors(
     # Create the DAG.
     dag = create_dag(functions, targets)
 
-    ancestors = set()
+    ancestors: set[str] = set()
     for target in _targets:
         ancestors = ancestors.union(nx.ancestors(dag, target))
         if include_targets:
@@ -219,7 +223,7 @@ def get_ancestors(
 
 def _harmonize_and_check_functions_and_targets(
     functions: FunctionCollection,
-    targets: str | list[str],
+    targets: TargetType,
 ) -> tuple[dict[str, Callable], list[str]]:
     """Harmonize the type of specified functions and targets and do some checks.
 
@@ -243,14 +247,16 @@ def _harmonize_and_check_functions_and_targets(
 
     return functions_harmonized, targets_harmonized
 
-
 def _harmonize_functions(
-    functions: list[Callable] | tuple[Callable, ...],
-) -> dict[str, Callable]:
-    if isinstance(functions, list | tuple):
-        functions = {func.__name__: func for func in functions}
-    return functions
+    functions: FunctionCollection,
+) -> dict[str, Callable[..., Any]]:
 
+    if not isinstance(functions, dict):
+        functions_dict = {func.__name__: func for func in functions}
+    else:
+        functions_dict = functions
+
+    return functions_dict
 
 def _harmonize_targets(
     targets: TargetType,
@@ -276,14 +282,11 @@ def _fail_if_functions_are_missing(
     functions: dict[str, Callable],
     targets: list[str],
 ) -> None:
-    # to-do: add typo suggestions via fuzzywuzzy, see estimagic
     targets_not_in_functions = set(targets) - set(functions)
     if targets_not_in_functions:
-        formatted = _format_list_linewise(targets_not_in_functions)
+        formatted = _format_list_linewise(list(targets_not_in_functions))
         msg = f"The following targets have no corresponding function:\n{formatted}"
         raise ValueError(msg)
-
-    return functions, targets
 
 
 def _fail_if_dag_contains_cycle(
@@ -384,7 +387,7 @@ def _create_arguments_of_concatenated_function(
 def _create_execution_info(
     functions: dict[str, Callable],
     dag: nx.DiGraph,
-) -> dict[str, dict[str, str]]:
+) -> dict[str, dict[str, Any]]:
     """Create a dictionary with all information needed to execute relevant functions.
 
     Args:
@@ -401,19 +404,20 @@ def _create_execution_info(
     for node in nx.topological_sort(dag):
         if node in functions:
             arguments = _get_free_arguments(functions[node])
-            info = {}
-            info["func"] = functions[node]
-            info["arguments"] = arguments
+            info = {
+                "func": functions[node],
+                "arguments": arguments
+            }
             out[node] = info
     return out
 
 
 def _create_concatenated_function(
-    execution_info: dict[str, dict[str, object]],
+    execution_info: dict[str, dict[str, Any]],
     arglist: list[str],
     targets: list[str],
     enforce_signature: bool,
-) -> Callable[..., object]:
+) -> Callable[..., tuple[Any, ...]]:
     """Create a concatenated function object with correct signature.
 
     Args:
