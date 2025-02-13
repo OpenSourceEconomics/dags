@@ -1,17 +1,20 @@
 import functools
 import inspect
+from collections.abc import Callable
 
 
-def create_signature(args=None, kwargs=None):
+def create_signature(
+    args: list[str] | None = None, kwargs: list[str] | None = None
+) -> inspect.Signature:
     """Create a inspect.Signature object based on args and kwargs.
 
     Args:
-        args (list or None): The names of positional or keyword arguments.
-        kwargs (list or None): The keyword only arguments.
+        args: The names of positional or keyword arguments.
+        kwargs: The keyword only arguments.
 
     Returns
     -------
-        inspect.Signature
+        The signature
 
     """
     args = [] if args is None else args
@@ -35,7 +38,13 @@ def create_signature(args=None, kwargs=None):
     return inspect.Signature(parameters=parameter_objects)
 
 
-def with_signature(func=None, *, args=None, kwargs=None, enforce=True):
+def with_signature(
+    func: Callable | None = None,
+    *,
+    args: list[str] | None = None,
+    kwargs: list[str] | None = None,
+    enforce: bool = True,
+) -> Callable:
     """Decorator that adds a signature to a function of type `f(*args, **kwargs)`.
 
     Caveats: The created signature only contains the names of arguments and whether
@@ -43,34 +52,33 @@ def with_signature(func=None, *, args=None, kwargs=None, enforce=True):
     or other things.
 
     Args:
-        func (callable): The function to be decorated. Should take `*args`
+        func: The function to be decorated. Should take `*args`
             and `**kwargs` as only arguments.
-        args (list or None): The names of positional or keyword arguments.
-        kwargs (list or None): The keyword only arguments.
-        enforce (bool): Whether the signature should be enforced or just
+        args: The names of positional or keyword arguments.
+        kwargs: The keyword only arguments.
+        enforce: Whether the signature should be enforced or just
             added to the function for introspection. This creates runtime
             overhead.
 
     Returns
     -------
         function: The function with signature.
-
     """
 
-    def decorator_with_signature(func):
-        _args = [] if args is None else args
-        _kwargs = [] if kwargs is None else kwargs
+    def decorator_with_signature(func: Callable) -> Callable:
+        _args: list[str] = [] if args is None else args
+        _kwargs: list[str] = [] if kwargs is None else kwargs
         signature = create_signature(_args, _kwargs)
 
         if enforce:
-            valid_kwargs = set(_kwargs) | set(_args)
-            funcname = getattr(func, "__name__", "function")
+            valid_kwargs: set[str] = set(_kwargs) | set(_args)
+            funcname: str = getattr(func, "__name__", "function")
 
             @functools.wraps(func)
-            def wrapper_with_signature(*args, **kwargs):
+            def wrapper_with_signature(*args: object, **kwargs: object) -> object:
                 _fail_if_too_many_positional_arguments(args, _args, funcname)
-                present_args = set(_args[: len(args)])
-                present_kwargs = set(kwargs)
+                present_args: set[str] = set(_args[: len(args)])
+                present_kwargs: set[str] = set(kwargs)
                 _fail_if_duplicated_arguments(present_args, present_kwargs, funcname)
                 _fail_if_invalid_keyword_arguments(
                     present_kwargs,
@@ -78,10 +86,9 @@ def with_signature(func=None, *, args=None, kwargs=None, enforce=True):
                     funcname,
                 )
                 return func(*args, **kwargs)
-
         else:
 
-            def wrapper_with_signature(*args, **kwargs):
+            def wrapper_with_signature(*args: object, **kwargs: object) -> object:
                 return func(*args, **kwargs)
 
         wrapper_with_signature.__signature__ = signature
@@ -93,7 +100,9 @@ def with_signature(func=None, *, args=None, kwargs=None, enforce=True):
     return decorator_with_signature
 
 
-def _fail_if_too_many_positional_arguments(present_args, argnames, funcname):
+def _fail_if_too_many_positional_arguments(
+    present_args: tuple[str], argnames: list[str], funcname: str
+) -> None:
     if len(present_args) > len(argnames):
         msg = (
             f"{funcname}() takes {len(argnames)} positional arguments "
@@ -102,7 +111,9 @@ def _fail_if_too_many_positional_arguments(present_args, argnames, funcname):
         raise TypeError(msg)
 
 
-def _fail_if_duplicated_arguments(present_args, present_kwargs, funcname):
+def _fail_if_duplicated_arguments(
+    present_args: set[str], present_kwargs: set[str], funcname: str
+) -> None:
     problematic = present_args & present_kwargs
     if problematic:
         s = "s" if len(problematic) >= 2 else ""
@@ -111,7 +122,9 @@ def _fail_if_duplicated_arguments(present_args, present_kwargs, funcname):
         raise TypeError(msg)
 
 
-def _fail_if_invalid_keyword_arguments(present_kwargs, valid_kwargs, funcname):
+def _fail_if_invalid_keyword_arguments(
+    present_kwargs: set[str], valid_kwargs: set[str], funcname: str
+) -> None:
     problematic = present_kwargs - valid_kwargs
     if problematic:
         s = "s" if len(problematic) >= 2 else ""
@@ -120,7 +133,9 @@ def _fail_if_invalid_keyword_arguments(present_kwargs, valid_kwargs, funcname):
         raise TypeError(msg)
 
 
-def rename_arguments(func=None, *, mapper=None):
+def rename_arguments(
+    func: Callable | None = None, *, mapper: dict[str, str] | None = None
+) -> Callable:
     """Rename positional and keyword arguments of func.
 
     Args:
@@ -131,29 +146,35 @@ def rename_arguments(func=None, *, mapper=None):
     Returns
     -------
         function: The function with renamed arguments.
-
     """
 
-    def decorator_rename_arguments(func):
-        old_parameters = dict(inspect.signature(func).parameters)
-        parameters = []
+    def decorator_rename_arguments(
+        func: Callable,
+    ) -> Callable:
+        old_parameters: dict[str, inspect.Parameter] = dict(
+            inspect.signature(func).parameters
+        )
+        parameters: list[inspect.Parameter] = []
+        # mapper is assumed not to be None when renaming is desired.
         for name, param in old_parameters.items():
-            if name in mapper:
+            if mapper is not None and name in mapper:
                 parameters.append(param.replace(name=mapper[name]))
             else:
                 parameters.append(param)
 
         signature = inspect.Signature(parameters=parameters)
 
-        reverse_mapper = {v: k for k, v in mapper.items()}
+        reverse_mapper: dict[str, str] = (
+            {v: k for k, v in mapper.items()} if mapper is not None else {}
+        )
 
         @functools.wraps(func)
-        def wrapper_rename_arguments(*args, **kwargs):
-            internal_kwargs = {}
+        def wrapper_rename_arguments(*args: object, **kwargs: object) -> object:
+            internal_kwargs: dict[str, object] = {}
             for name, value in kwargs.items():
                 if name in reverse_mapper:
                     internal_kwargs[reverse_mapper[name]] = value
-                elif name not in mapper:
+                elif mapper is None or name not in mapper:
                     internal_kwargs[name] = value
             return func(*args, **internal_kwargs)
 
@@ -161,7 +182,7 @@ def rename_arguments(func=None, *, mapper=None):
 
         # Preserve function type
         if isinstance(func, functools.partial):
-            out = functools.partial(
+            out: Callable = functools.partial(
                 wrapper_rename_arguments,
                 *func.args,
                 **func.keywords,

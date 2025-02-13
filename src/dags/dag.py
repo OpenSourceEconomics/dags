@@ -1,20 +1,31 @@
 import functools
 import inspect
 import textwrap
+from collections.abc import Callable
+from typing import (
+    Literal,
+    TypeVar,
+)
 
 import networkx as nx
 
 from dags.output import aggregated_output, dict_output, list_output, single_output
 from dags.signature import with_signature
 
+T = TypeVar("T")
+
+FunctionCollection = dict[str, Callable] | list[Callable]
+TargetType = str | list[str] | None
+CombinedFunctionReturnType = Literal["tuple", "list", "dict"]
+
 
 def concatenate_functions(
-    functions,
-    targets=None,
-    return_type="tuple",
-    aggregator=None,
-    enforce_signature=True,
-):
+    functions: FunctionCollection,
+    targets: TargetType = None,
+    return_type: CombinedFunctionReturnType = "tuple",
+    aggregator: Callable[[T, T], T] | None = None,
+    enforce_signature: bool = True,
+) -> Callable:
     """Combine functions to one function that generates targets.
 
     Functions can depend on the output of other functions as inputs, as long as the
@@ -59,7 +70,10 @@ def concatenate_functions(
     )
 
 
-def create_dag(functions, targets):
+def create_dag(
+    functions: FunctionCollection,
+    targets: TargetType,
+) -> nx.DiGraph:
     """Build a directed acyclic graph (DAG) from functions.
 
     Functions can depend on the output of other functions as inputs, as long as the
@@ -97,13 +111,13 @@ def create_dag(functions, targets):
 
 
 def _create_combined_function_from_dag(
-    dag,
-    functions,
-    targets,
-    return_type="tuple",
-    aggregator=None,
-    enforce_signature=True,
-):
+    dag: nx.DiGraph,
+    functions: FunctionCollection,
+    targets: TargetType,
+    return_type: CombinedFunctionReturnType = "tuple",
+    aggregator: Callable[[T, T], T] | None = None,
+    enforce_signature: bool = True,
+) -> Callable:
     """Create combined function which allows to execute a complete directed acyclic
     graph (DAG) in one function call.
 
@@ -167,7 +181,11 @@ def _create_combined_function_from_dag(
     return out
 
 
-def get_ancestors(functions, targets, include_targets=False):
+def get_ancestors(
+    functions: FunctionCollection,
+    targets: str,
+    include_targets: bool = False,
+) -> set[str]:
     """Build a DAG and extract all ancestors of targets.
 
     Args:
@@ -199,7 +217,10 @@ def get_ancestors(functions, targets, include_targets=False):
     return ancestors
 
 
-def _harmonize_and_check_functions_and_targets(functions, targets):
+def _harmonize_and_check_functions_and_targets(
+    functions: FunctionCollection,
+    targets: str | list[str],
+) -> tuple[dict[str, Callable], list[str]]:
     """Harmonize the type of specified functions and targets and do some checks.
 
     Args:
@@ -223,13 +244,18 @@ def _harmonize_and_check_functions_and_targets(functions, targets):
     return functions_harmonized, targets_harmonized
 
 
-def _harmonize_functions(functions):
+def _harmonize_functions(
+    functions: list[Callable] | tuple[Callable, ...],
+) -> dict[str, Callable]:
     if isinstance(functions, list | tuple):
         functions = {func.__name__: func for func in functions}
     return functions
 
 
-def _harmonize_targets(targets, function_names):
+def _harmonize_targets(
+    targets: TargetType,
+    function_names: list[str],
+) -> list[str]:
     if targets is None:
         targets = function_names
     elif isinstance(targets, str):
@@ -237,14 +263,19 @@ def _harmonize_targets(targets, function_names):
     return targets
 
 
-def _fail_if_targets_have_wrong_types(targets):
+def _fail_if_targets_have_wrong_types(
+    targets: list[str],
+) -> None:
     not_strings = [target for target in targets if not isinstance(target, str)]
     if not_strings:
         msg = f"Targets must be strings. The following targets are not: {not_strings}"
         raise ValueError(msg)
 
 
-def _fail_if_functions_are_missing(functions, targets):
+def _fail_if_functions_are_missing(
+    functions: dict[str, Callable],
+    targets: list[str],
+) -> None:
     # to-do: add typo suggestions via fuzzywuzzy, see estimagic
     targets_not_in_functions = set(targets) - set(functions)
     if targets_not_in_functions:
@@ -255,7 +286,9 @@ def _fail_if_functions_are_missing(functions, targets):
     return functions, targets
 
 
-def _fail_if_dag_contains_cycle(dag):
+def _fail_if_dag_contains_cycle(
+    dag: nx.DiGraph,
+) -> None:
     """Check for cycles in DAG."""
     cycles = list(nx.simple_cycles(dag))
 
@@ -265,7 +298,9 @@ def _fail_if_dag_contains_cycle(dag):
         raise ValueError(msg)
 
 
-def _create_complete_dag(functions):
+def _create_complete_dag(
+    functions: dict[str, Callable],
+) -> nx.DiGraph:
     """Create the complete DAG.
 
     This DAG is constructed from all functions and not pruned by specified root nodes or
@@ -285,7 +320,9 @@ def _create_complete_dag(functions):
     return nx.DiGraph(functions_arguments_dict).reverse()
 
 
-def _get_free_arguments(func):
+def _get_free_arguments(
+    func: Callable,
+) -> list[str]:
     arguments = list(inspect.signature(func).parameters)
     if isinstance(func, functools.partial):
         # arguments that are partialled by position are not part of the signature
@@ -296,7 +333,10 @@ def _get_free_arguments(func):
     return arguments
 
 
-def _limit_dag_to_targets_and_their_ancestors(dag, targets):
+def _limit_dag_to_targets_and_their_ancestors(
+    dag: nx.DiGraph,
+    targets: list[str],
+) -> nx.DiGraph:
     """Limit DAG to targets and their ancestors.
 
     Args:
@@ -321,7 +361,10 @@ def _limit_dag_to_targets_and_their_ancestors(dag, targets):
     return dag
 
 
-def _create_arguments_of_concatenated_function(functions, dag):
+def _create_arguments_of_concatenated_function(
+    functions: dict[str, Callable],
+    dag: nx.DiGraph,
+) -> list[str]:
     """Create the signature of the concatenated function.
 
     Args:
@@ -338,7 +381,10 @@ def _create_arguments_of_concatenated_function(functions, dag):
     return sorted(all_nodes - function_names)
 
 
-def _create_execution_info(functions, dag):
+def _create_execution_info(
+    functions: dict[str, Callable],
+    dag: nx.DiGraph,
+) -> dict[str, dict[str, str]]:
     """Create a dictionary with all information needed to execute relevant functions.
 
     Args:
@@ -363,26 +409,26 @@ def _create_execution_info(functions, dag):
 
 
 def _create_concatenated_function(
-    execution_info,
-    arglist,
-    targets,
-    enforce_signature,
-):
+    execution_info: dict[str, dict[str, object]],
+    arglist: list[str],
+    targets: list[str],
+    enforce_signature: bool,
+) -> Callable[..., object]:
     """Create a concatenated function object with correct signature.
 
     Args:
-        execution_info (dict): Dictionary with functions and their arguments for each
+        execution_info: Dictionary with functions and their arguments for each
             node in the DAG. The functions are already in topological_sort order.
-        arglist (list): The list of arguments of the concatenated function.
-        targets (list): List that is used to determine what is returned and the
+        arglist: The list of arguments of the concatenated function.
+        targets: List that is used to determine what is returned and the
             order of the outputs.
-        enforce_signature (bool):If True, the signature of the concatenated function
+        enforce_signature: If True, the signature of the concatenated function
             is enforced. Otherwise it is only provided for introspection purposes.
             Enforcing the signature has a small runtime overhead.
 
     Returns
     -------
-        callable: The concatenated function
+        The concatenated function
 
     """
 
@@ -399,7 +445,9 @@ def _create_concatenated_function(
     return concatenated
 
 
-def _format_list_linewise(list_):
+def _format_list_linewise(
+    list_: list[object],
+) -> str:
     formatted_list = '",\n    "'.join([str(c) for c in list_])
     return textwrap.dedent(
         """
