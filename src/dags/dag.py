@@ -3,10 +3,9 @@ import inspect
 import textwrap
 from collections.abc import Callable
 from typing import (
+    Any,
     Literal,
     TypeVar,
-    Any,
-    TypeGuard,
     cast,
 )
 
@@ -168,7 +167,9 @@ def _create_combined_function_from_dag(
     if isinstance(targets, str) or (aggregator is not None and len(_targets) == 1):
         out = cast(Callable[..., Any], single_output(_concatenated))
     elif aggregator is not None:
-        out = cast(Callable[..., Any], aggregated_output(_concatenated, aggregator=aggregator))
+        out = cast(
+            Callable[..., Any], aggregated_output(_concatenated, aggregator=aggregator)
+        )
     elif return_type == "list":
         out = cast(Callable[..., Any], list_output(_concatenated))
     elif return_type == "tuple":
@@ -247,16 +248,17 @@ def _harmonize_and_check_functions_and_targets(
 
     return functions_harmonized, targets_harmonized
 
+
 def _harmonize_functions(
     functions: FunctionCollection,
 ) -> dict[str, Callable[..., Any]]:
-
     if not isinstance(functions, dict):
         functions_dict = {func.__name__: func for func in functions}
     else:
         functions_dict = functions
 
     return functions_dict
+
 
 def _harmonize_targets(
     targets: TargetType,
@@ -404,10 +406,7 @@ def _create_execution_info(
     for node in nx.topological_sort(dag):
         if node in functions:
             arguments = _get_free_arguments(functions[node])
-            info = {
-                "func": functions[node],
-                "arguments": arguments
-            }
+            info = {"func": functions[node], "arguments": arguments}
             out[node] = info
     return out
 

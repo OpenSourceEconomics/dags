@@ -1,6 +1,6 @@
 import functools
 from collections.abc import Callable
-from typing import TypeVar, ParamSpec, overload
+from typing import ParamSpec, TypeVar, overload
 
 P = ParamSpec("P")
 T = TypeVar("T")
@@ -18,22 +18,28 @@ def single_output(func: Callable[P, tuple[T, ...]]) -> Callable[P, T]:
 
 
 @overload
-def dict_output(func: Callable[P, tuple[T, ...]]) -> Callable[P, dict[str, T]]:
-    ...
+def dict_output(func: Callable[P, tuple[T, ...]]) -> Callable[P, dict[str, T]]: ...
+
 
 @overload
-def dict_output(*, keys: list[str]) -> Callable[[Callable[P, tuple[T, ...]]], Callable[P, dict[str, T]]]:
-    ...
+def dict_output(
+    *, keys: list[str]
+) -> Callable[[Callable[P, tuple[T, ...]]], Callable[P, dict[str, T]]]: ...
+
 
 def dict_output(
     func: Callable[P, tuple[T, ...]] | None = None, *, keys: list[str] | None = None
-) -> Callable[P, dict[str, T]] | Callable[[Callable[P, tuple[T, ...]]], Callable[P, dict[str, T]]]:
+) -> (
+    Callable[P, dict[str, T]]
+    | Callable[[Callable[P, tuple[T, ...]]], Callable[P, dict[str, T]]]
+):
     """Convert tuple output to dict output."""
-
     if keys is None:
         raise ValueError("keys is required")
 
-    def decorator_dict_output(func: Callable[P, tuple[T, ...]]) -> Callable[P, dict[str, T]]:
+    def decorator_dict_output(
+        func: Callable[P, tuple[T, ...]],
+    ) -> Callable[P, dict[str, T]]:
         @functools.wraps(func)
         def wrapper_dict_output(*args: P.args, **kwargs: P.kwargs) -> dict[str, T]:
             raw = func(*args, **kwargs)
@@ -58,18 +64,23 @@ def list_output(func: Callable[P, tuple[T, ...]]) -> Callable[P, list[T]]:
 
 
 @overload
-def aggregated_output(func: Callable[P, tuple[T, ...]], *, aggregator: Callable[[T, T], T]) -> Callable[P, T]:
-    ...
+def aggregated_output(
+    func: Callable[P, tuple[T, ...]], *, aggregator: Callable[[T, T], T]
+) -> Callable[P, T]: ...
+
 
 @overload
-def aggregated_output(*, aggregator: Callable[[T, T], T]) -> Callable[[Callable[P, tuple[T, ...]]], Callable[P, T]]:
-    ...
+def aggregated_output(
+    *, aggregator: Callable[[T, T], T]
+) -> Callable[[Callable[P, tuple[T, ...]]], Callable[P, T]]: ...
 
-def aggregated_output(func: Callable[P, tuple[T, ...]] | None = None,
-                      *, aggregator: Callable[[T, T], T] | None = None
+
+def aggregated_output(
+    func: Callable[P, tuple[T, ...]] | None = None,
+    *,
+    aggregator: Callable[[T, T], T] | None = None,
 ) -> Callable[P, T] | Callable[[Callable[P, tuple[T, ...]]], Callable[P, T]]:
     """Aggregate tuple output."""
-
     if aggregator is None:
         raise ValueError("aggregator is required")
 

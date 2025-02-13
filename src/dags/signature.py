@@ -1,7 +1,7 @@
 import functools
 import inspect
 from collections.abc import Callable
-from typing import Any, TypeVar, overload, ParamSpec
+from typing import Any, ParamSpec, TypeVar, overload
 
 # P captures the parameter types, R captures the return type
 P = ParamSpec("P")
@@ -44,12 +44,17 @@ def create_signature(
 
 
 @overload
-def with_signature(func: Callable[P, R]) -> Callable[P, R]:
-    ...
+def with_signature(func: Callable[P, R]) -> Callable[P, R]: ...
+
 
 @overload
-def with_signature(*, args: list[str] | None = None, kwargs: list[str] | None = None, enforce: bool = True) -> Callable[[Callable[P, R]], Callable[P, R]]:
-    ...
+def with_signature(
+    *,
+    args: list[str] | None = None,
+    kwargs: list[str] | None = None,
+    enforce: bool = True,
+) -> Callable[[Callable[P, R]], Callable[P, R]]: ...
+
 
 def with_signature(
     func: Callable[P, R] | None = None,
@@ -83,7 +88,7 @@ def with_signature(
         signature = create_signature(_args, _kwargs)
         valid_kwargs: set[str] = set(_kwargs) | set(_args)
         funcname: str = getattr(func, "__name__", "function")
-        
+
         @functools.wraps(func)
         def wrapper_with_signature(*args: P.args, **kwargs: P.kwargs) -> R:
             if enforce:
@@ -91,9 +96,11 @@ def with_signature(
                 present_args: set[str] = set(_args[: len(args)])
                 present_kwargs: set[str] = set(kwargs)
                 _fail_if_duplicated_arguments(present_args, present_kwargs, funcname)
-                _fail_if_invalid_keyword_arguments(present_kwargs, valid_kwargs, funcname)
+                _fail_if_invalid_keyword_arguments(
+                    present_kwargs, valid_kwargs, funcname
+                )
             return func(*args, **kwargs)
-        
+
         wrapper_with_signature.__signature__ = signature  # type: ignore[attr-defined]
         return wrapper_with_signature
 
@@ -136,14 +143,18 @@ def _fail_if_invalid_keyword_arguments(
 
 
 @overload
-def rename_arguments(func: Callable[P, R]) -> Callable[P, R]:
-    ...
+def rename_arguments(func: Callable[P, R]) -> Callable[P, R]: ...
+
 
 @overload
-def rename_arguments(*, mapper: dict[str, str]) -> Callable[[Callable[P, R]], Callable[P, R]]:
-    ...
+def rename_arguments(
+    *, mapper: dict[str, str]
+) -> Callable[[Callable[P, R]], Callable[P, R]]: ...
 
-def rename_arguments(func: Callable[P, R] | None = None, *, mapper: dict[str, str] | None = None) -> Callable[P, R] | Callable[[Callable[P, R]], Callable[P, R]]:
+
+def rename_arguments(
+    func: Callable[P, R] | None = None, *, mapper: dict[str, str] | None = None
+) -> Callable[P, R] | Callable[[Callable[P, R]], Callable[P, R]]:
     """Rename positional and keyword arguments of func.
 
     Args:
@@ -188,7 +199,9 @@ def rename_arguments(func: Callable[P, R] | None = None, *, mapper: dict[str, st
 
         # Preserve function type
         if isinstance(func, functools.partial):
-            out = functools.partial(wrapper_rename_arguments, *func.args, **func.keywords)
+            out = functools.partial(
+                wrapper_rename_arguments, *func.args, **func.keywords
+            )
         else:
             out = wrapper_rename_arguments
 
