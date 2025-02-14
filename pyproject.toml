@@ -155,6 +155,7 @@ extend-ignore = [
     "PLR0913",  # too many arguments to function call
     "PLR2004",  # magic value used in comparison
     "S101",  # use of `assert` detected
+    "TRY003", # "long" messages outside exception class.
 
     # Rules to be fixed in the future
     # ----------------------------------------------------------------------------------

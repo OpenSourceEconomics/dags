@@ -9,7 +9,7 @@ from typing import (
     cast,
 )
 
-import networkx as nx  # type: ignore[import]
+import networkx as nx
 
 from dags.output import aggregated_output, dict_output, list_output, single_output
 from dags.signature import with_signature
@@ -326,7 +326,7 @@ def _create_complete_dag(
 
 
 def _get_free_arguments(
-    func: Callable,
+    func: Callable[..., Any],
 ) -> list[str]:
     arguments = list(inspect.signature(func).parameters)
     if isinstance(func, functools.partial):

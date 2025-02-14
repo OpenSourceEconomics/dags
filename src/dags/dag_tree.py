@@ -12,9 +12,9 @@ from typing import TYPE_CHECKING, Any, Literal, Union
 if TYPE_CHECKING:
     import networkx as nx
 
-from flatten_dict import flatten, unflatten
-from flatten_dict.reducers import make_reducer
-from flatten_dict.splitters import make_splitter
+from flatten_dict import flatten, unflatten  # type: ignore[import]
+from flatten_dict.reducers import make_reducer  # type: ignore[import]
+from flatten_dict.splitters import make_splitter  # type: ignore[import]
 
 from dags.dag import (
     _create_arguments_of_concatenated_function,
@@ -23,8 +23,6 @@ from dags.dag import (
     create_dag,
 )
 from dags.signature import rename_arguments
-
-SimpleValue = int | float | str | bool
 
 NestedFunctionDict = dict[str, Union[Callable, "NestedFunctionDict"]]
 FlatFunctionDict = dict[str, Callable]
@@ -41,7 +39,6 @@ NestedOutputDict = dict[str, Union[Any, "NestedOutputDict"]]
 NestedStrDict = dict[str, Union[Any, "NestedStrDict"]]
 FlatStrDict = dict[str, Any]
 
-GlobalOrLocal = Literal["global", "local"]
 GlobalOrLocal = Literal["global", "local"]
 
 # Constants for qualified names.
@@ -132,7 +129,7 @@ def _flatten_functions_and_rename_parameters(
         namespace: str = _qualified_name_delimiter.join(
             name.split(_qualified_name_delimiter)[:-1]
         )
-        renamed: Callable[..., SimpleValue] = rename_arguments(
+        renamed: Callable[..., Any] = rename_arguments(
             func,
             mapper=_create_parameter_name_mapper(
                 flat_functions,
@@ -256,7 +253,7 @@ def _create_parameter_name_mapper(
     flat_functions: FlatFunctionDict,
     flat_input_structure: FlatInputStructureDict,
     namespace: str,
-    func: Callable[..., SimpleValue],
+    func: Callable[..., Any],
 ) -> dict[str, str]:
     """
     Create a mapping from parameter names to qualified names for a given function.
