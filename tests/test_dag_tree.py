@@ -247,7 +247,7 @@ def test_fail_if_branches_have_trailing_underscores(
 def test_check_for_parent_child_name_clashes_error(
     functions: FlatFunctionDict,
     input_structure: FlatInputStructureDict,
-    name_clashes: "raise",
+    name_clashes: Literal["raise"],
 ) -> None:
     with pytest.raises(ValueError, match="There are name clashes:"):
         _check_for_parent_child_name_clashes(functions, input_structure, name_clashes)
