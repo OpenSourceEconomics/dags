@@ -5,6 +5,7 @@ requires-python = ">=3.10"
 dynamic = ["version"]
 dependencies = [
     "networkx",
+    "types-networkx",
     "flatten-dict",
 ]
 classifiers = [
@@ -119,7 +120,14 @@ py310 = ["test", "py310"]
 py311 = ["test", "py311"]
 py312 = ["test", "py312"]
 py313 = ["test", "py313"]
+mypy = {features = ["mypy"], solve-group = "default"}
 
+
+[tool.pixi.feature.mypy.dependencies]
+mypy = ">=1.11.2"
+
+[tool.pixi.feature.mypy.tasks]
+mypy = "mypy src"
 
 # ======================================================================================
 # Ruff configuration
