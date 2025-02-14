@@ -89,7 +89,7 @@ pre-commit = "*"
 pytest = "*"
 pytest-cov = "*"
 pytest-xdist = "*"
-mypy = ">=1.11.2"
+mypy = "==1.15.0"
 
 [tool.pixi.pypi-dependencies]
 dags = {path = ".", editable = true}

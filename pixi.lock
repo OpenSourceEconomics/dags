@@ -4637,8 +4637,8 @@ packages:
   timestamp: 1736761414276
 - pypi: .
   name: dags
-  version: 0.2.4.dev18+g2c12263.d20250214
-  sha256: 712af6423edc76ac8769146b76cf13f4582827fb804fd2c057f117e58cd500f7
+  version: 0.2.4.dev28+g70d6a4c.d20250214
+  sha256: 77fbf047fb32aaf9cc240228782af6846c561b612c95437f1d1a2714d0533b9c
   requires_dist:
   - flatten-dict
   - networkx
@@ -6520,6 +6520,8 @@ packages:
   - python_abi 3.10.* *_cp310
   - tomli >=1.1.0
   - typing_extensions >=4.1.0
+  arch: x86_64
+  platform: linux
   license: MIT
   license_family: MIT
   purls:
@@ -6537,6 +6539,8 @@ packages:
   - python >=3.11,<3.12.0a0
   - python_abi 3.11.* *_cp311
   - typing_extensions >=4.1.0
+  arch: x86_64
+  platform: linux
   license: MIT
   license_family: MIT
   purls:
@@ -6554,6 +6558,8 @@ packages:
   - python >=3.12,<3.13.0a0
   - python_abi 3.12.* *_cp312
   - typing_extensions >=4.1.0
+  arch: x86_64
+  platform: linux
   license: MIT
   license_family: MIT
   purls:
@@ -6571,6 +6577,8 @@ packages:
   - python >=3.13,<3.14.0a0
   - python_abi 3.13.* *_cp313
   - typing_extensions >=4.1.0
+  arch: x86_64
+  platform: linux
   license: MIT
   license_family: MIT
   purls:
@@ -6588,6 +6596,8 @@ packages:
   - python_abi 3.10.* *_cp310
   - tomli >=1.1.0
   - typing_extensions >=4.1.0
+  arch: x86_64
+  platform: osx
   license: MIT
   license_family: MIT
   purls:
@@ -6604,6 +6614,8 @@ packages:
   - python >=3.11,<3.12.0a0
   - python_abi 3.11.* *_cp311
   - typing_extensions >=4.1.0
+  arch: x86_64
+  platform: osx
   license: MIT
   license_family: MIT
   purls:
@@ -6620,6 +6632,8 @@ packages:
   - python >=3.12,<3.13.0a0
   - python_abi 3.12.* *_cp312
   - typing_extensions >=4.1.0
+  arch: x86_64
+  platform: osx
   license: MIT
   license_family: MIT
   purls:
@@ -6636,6 +6650,8 @@ packages:
   - python >=3.13,<3.14.0a0
   - python_abi 3.13.* *_cp313
   - typing_extensions >=4.1.0
+  arch: x86_64
+  platform: osx
   license: MIT
   license_family: MIT
   purls:
@@ -6654,6 +6670,8 @@ packages:
   - python_abi 3.10.* *_cp310
   - tomli >=1.1.0
   - typing_extensions >=4.1.0
+  arch: arm64
+  platform: osx
   license: MIT
   license_family: MIT
   purls:
@@ -6671,6 +6689,8 @@ packages:
   - python >=3.11,<3.12.0a0 *_cpython
   - python_abi 3.11.* *_cp311
   - typing_extensions >=4.1.0
+  arch: arm64
+  platform: osx
   license: MIT
   license_family: MIT
   purls:
@@ -6688,6 +6708,8 @@ packages:
   - python >=3.12,<3.13.0a0 *_cpython
   - python_abi 3.12.* *_cp312
   - typing_extensions >=4.1.0
+  arch: arm64
+  platform: osx
   license: MIT
   license_family: MIT
   purls:
@@ -6705,6 +6727,8 @@ packages:
   - python >=3.13,<3.14.0a0 *_cp313
   - python_abi 3.13.* *_cp313
   - typing_extensions >=4.1.0
+  arch: arm64
+  platform: osx
   license: MIT
   license_family: MIT
   purls:
@@ -6724,6 +6748,8 @@ packages:
   - ucrt >=10.0.20348.0
   - vc >=14.2,<15
   - vc14_runtime >=14.29.30139
+  arch: x86_64
+  platform: win
   license: MIT
   license_family: MIT
   purls:
@@ -6742,6 +6768,8 @@ packages:
   - ucrt >=10.0.20348.0
   - vc >=14.2,<15
   - vc14_runtime >=14.29.30139
+  arch: x86_64
+  platform: win
   license: MIT
   license_family: MIT
   purls:
@@ -6760,6 +6788,8 @@ packages:
   - ucrt >=10.0.20348.0
   - vc >=14.2,<15
   - vc14_runtime >=14.29.30139
+  arch: x86_64
+  platform: win
   license: MIT
   license_family: MIT
   purls:
@@ -6778,6 +6808,8 @@ packages:
   - ucrt >=10.0.20348.0
   - vc >=14.2,<15
   - vc14_runtime >=14.29.30139
+  arch: x86_64
+  platform: win
   license: MIT
   license_family: MIT
   purls:
