@@ -1,4 +1,4 @@
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from typing import Any, Literal, ParamSpec, TypeVar, Union
 
 GenericCallable = Callable[..., Any]
@@ -14,19 +14,19 @@ T = TypeVar("T")
 
 
 # DAG-Tree typing
-NestedFunctionDict = dict[str, Union[GenericCallable, "NestedFunctionDict"]]
+NestedFunctionDict = Mapping[str, Union[GenericCallable, "NestedFunctionDict"]]
 FlatFunctionDict = dict[str, GenericCallable]
 
-NestedTargetDict = dict[str, Union[None, "NestedTargetDict"]]
+NestedTargetDict = Mapping[str, Union[None, "NestedTargetDict"]]
 FlatTargetList = list[str]
 
-NestedInputStructureDict = dict[str, Union[None, "NestedInputStructureDict"]]
+NestedInputStructureDict = Mapping[str, Union[None, "NestedInputStructureDict"]]
 FlatInputStructureDict = dict[str, None]
 
-NestedInputDict = dict[str, Union[Any, "NestedInputDict"]]
-NestedOutputDict = dict[str, Union[Any, "NestedOutputDict"]]
+NestedInputDict = Mapping[str, Union[Any, "NestedInputDict"]]
+NestedOutputDict = Mapping[str, Union[Any, "NestedOutputDict"]]
 
-NestedStrDict = dict[str, Union[Any, "NestedStrDict"]]
+NestedStrDict = Mapping[str, Union[Any, "NestedStrDict"]]
 FlatStrDict = dict[str, Any]
 
 GlobalOrLocal = Literal["global", "local"]

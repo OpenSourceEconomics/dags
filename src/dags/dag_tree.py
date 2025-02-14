@@ -492,7 +492,7 @@ def _is_qualified_name(s: str) -> bool:
     return bool(re.fullmatch(_qualified_name, s))
 
 
-def _fail_if_branches_have_trailing_undersores(functions: FlatStrDict) -> None:
+def _fail_if_branches_have_trailing_undersores(functions: NestedFunctionDict) -> None:
     """Raise a ValueError if any branch of the functions tree ends with an underscore.
 
     Args:
