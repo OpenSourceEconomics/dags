@@ -321,7 +321,7 @@ def _create_complete_dag(
     functions_arguments_dict = {
         name: _get_free_arguments(function) for name, function in functions.items()
     }
-    return nx.DiGraph(functions_arguments_dict).reverse()
+    return nx.DiGraph(functions_arguments_dict).reverse()  # type: ignore[arg-type]
 
 
 def _get_free_arguments(

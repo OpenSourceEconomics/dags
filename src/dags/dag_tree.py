@@ -12,9 +12,9 @@ from typing import TYPE_CHECKING, Any, Literal, Union
 if TYPE_CHECKING:
     import networkx as nx
 
-from flatten_dict import flatten, unflatten  # type: ignore[import]
-from flatten_dict.reducers import make_reducer  # type: ignore[import]
-from flatten_dict.splitters import make_splitter  # type: ignore[import]
+from flatten_dict import flatten, unflatten
+from flatten_dict.reducers import make_reducer
+from flatten_dict.splitters import make_splitter
 
 from dags.dag import (
     _create_arguments_of_concatenated_function,

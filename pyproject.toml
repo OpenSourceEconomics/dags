@@ -199,3 +199,12 @@ addopts = ["--pdbcls=pdbp:Pdb"]
 line_length = 88
 sequence_style = "block_style"
 none_representation = "null"
+
+
+# ======================================================================================
+# mypy configuration
+# ======================================================================================
+
+[[tool.mypy.overrides]]
+module = ["flatten_dict.*"]
+ignore_missing_imports = true
