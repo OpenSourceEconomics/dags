@@ -17,7 +17,8 @@ classifiers = [
     "Operating System :: Unix",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Topic :: Utilities"
+    "Topic :: Utilities",
+    "Typing :: Typed",
 ]
 authors = [
     {name = "Janoś Gabler", email = "janos.gabler@gmail.com"},
@@ -59,6 +60,9 @@ only-packages = true
 [tool.hatch.build.targets.wheel]
 only-include = ["src"]
 sources = ["src"]
+include = [
+    "src/dags/py.typed",
+]
 
 [tool.hatch.version]
 source = "vcs"
@@ -85,6 +89,7 @@ pre-commit = "*"
 pytest = "*"
 pytest-cov = "*"
 pytest-xdist = "*"
+mypy = ">=1.11.2"
 
 [tool.pixi.pypi-dependencies]
 dags = {path = ".", editable = true}
@@ -120,14 +125,6 @@ py310 = ["test", "py310"]
 py311 = ["test", "py311"]
 py312 = ["test", "py312"]
 py313 = ["test", "py313"]
-mypy =  ["mypy"]
-
-
-[tool.pixi.feature.mypy.dependencies]
-mypy = ">=1.11.2"
-
-[tool.pixi.feature.mypy.tasks]
-mypy = "mypy src"
 
 # ======================================================================================
 # Ruff configuration
@@ -204,6 +201,20 @@ none_representation = "null"
 # ======================================================================================
 # mypy configuration
 # ======================================================================================
+
+[tool.mypy]
+files = ["src", "tests"]
+check_untyped_defs = true
+disallow_any_generics = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+
+[[tool.mypy.overrides]]
+module = ["tests.*"]
+disallow_untyped_defs = false
 
 [[tool.mypy.overrides]]
 module = ["flatten_dict.*"]
