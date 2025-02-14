@@ -3,6 +3,7 @@ from __future__ import annotations
 import functools
 import inspect
 import textwrap
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, cast
 
 import networkx as nx
@@ -19,6 +20,21 @@ from dags.signature import with_signature
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+
+
+@dataclass
+class FunctionExecutionInfo:
+    """Information about a function that is needed to execute it.
+
+    Attributes
+    ----------
+        func: The function to execute.
+        arguments: The names of the arguments of the function.
+
+    """
+
+    func: GenericCallable
+    arguments: list[str]
 
 
 def concatenate_functions(
@@ -385,7 +401,7 @@ def _create_arguments_of_concatenated_function(
 def _create_execution_info(
     functions: dict[str, GenericCallable],
     dag: nx.DiGraph[str],
-) -> dict[str, dict[str, Any]]:
+) -> dict[str, FunctionExecutionInfo]:
     """Create a dictionary with all information needed to execute relevant functions.
 
     Args:
@@ -402,13 +418,12 @@ def _create_execution_info(
     for node in nx.topological_sort(dag):
         if node in functions:
             arguments = _get_free_arguments(functions[node])
-            info = {"func": functions[node], "arguments": arguments}
-            out[node] = info
+            out[node] = FunctionExecutionInfo(func=functions[node], arguments=arguments)
     return out
 
 
 def _create_concatenated_function(
-    execution_info: dict[str, dict[str, Any]],
+    execution_info: dict[str, FunctionExecutionInfo],
     arglist: list[str],
     targets: list[str],
     enforce_signature: bool,
@@ -416,7 +431,7 @@ def _create_concatenated_function(
     """Create a concatenated function object with correct signature.
 
     Args:
-        execution_info: Dictionary with functions and their arguments for each
+        execution_info: Dataclass with functions and their arguments for each
             node in the DAG. The functions are already in topological_sort order.
         arglist: The list of arguments of the concatenated function.
         targets: List that is used to determine what is returned and the
@@ -432,11 +447,13 @@ def _create_concatenated_function(
     """
 
     @with_signature(args=arglist, enforce=enforce_signature)
-    def concatenated(*args: Any, **kwargs: Any) -> tuple[Any, ...]:
+    def concatenated(
+        *args: tuple[Any, ...], **kwargs: dict[str, Any]
+    ) -> tuple[Any, ...]:
         results = {**dict(zip(arglist, args, strict=False)), **kwargs}
         for name, info in execution_info.items():
-            kwargs = {arg: results[arg] for arg in info["arguments"]}
-            result = info["func"](**kwargs)
+            func_kwargs = {arg: results[arg] for arg in info.arguments}
+            result = info.func(**func_kwargs)
             results[name] = result
 
         return tuple(results[target] for target in targets)
