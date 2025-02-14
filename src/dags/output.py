@@ -18,7 +18,9 @@ def single_output(func: Callable[P, tuple[T, ...]]) -> Callable[P, T]:
 
 
 @overload
-def dict_output(func: Callable[P, tuple[T, ...]]) -> Callable[P, dict[str, T]]: ...
+def dict_output(
+    func: Callable[P, tuple[T, ...]], *, keys: list[str]
+) -> Callable[P, dict[str, T]]: ...
 
 
 @overload
