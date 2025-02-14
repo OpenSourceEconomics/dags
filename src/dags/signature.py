@@ -1,7 +1,7 @@
 import functools
 import inspect
 from collections.abc import Callable
-from typing import Any, ParamSpec, TypeVar, overload
+from typing import Any, ParamSpec, TypeVar, cast, overload
 
 # P captures the parameter types, R captures the return type
 P = ParamSpec("P")
@@ -44,7 +44,13 @@ def create_signature(
 
 
 @overload
-def with_signature(func: Callable[P, R]) -> Callable[P, R]: ...
+def with_signature(
+    func: Callable[P, R],
+    *,
+    args: list[str] | None = None,
+    kwargs: list[str] | None = None,
+    enforce: bool = True,
+) -> Callable[P, R]: ...
 
 
 @overload
@@ -143,7 +149,11 @@ def _fail_if_invalid_keyword_arguments(
 
 
 @overload
-def rename_arguments(func: Callable[P, R]) -> Callable[P, R]: ...
+def rename_arguments(
+    func: Callable[P, R],
+    *,
+    mapper: dict[str, str],
+) -> Callable[P, R]: ...
 
 
 @overload
@@ -199,9 +209,10 @@ def rename_arguments(
 
         # Preserve function type
         if isinstance(func, functools.partial):
-            out = functools.partial(
+            partial_wrapper = functools.partial(
                 wrapper_rename_arguments, *func.args, **func.keywords
             )
+            out = cast(Callable[P, R], partial_wrapper)
         else:
             out = wrapper_rename_arguments
 
