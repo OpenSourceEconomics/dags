@@ -63,7 +63,7 @@ def with_signature(
     kwargs: list[str] | None = None,
     enforce: bool = True,
 ) -> Callable[P, R] | Callable[[Callable[P, R]], Callable[P, R]]:
-    """Decorator that adds a signature to a function of type `f(*args, **kwargs)`.
+    """Add a signature to a function of type `f(*args, **kwargs)` (decorator).
 
     Caveats: The created signature only contains the names of arguments and whether
     they are keyword-only. There is no way of setting default values or type hints.

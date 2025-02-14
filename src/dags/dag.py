@@ -121,8 +121,7 @@ def _create_combined_function_from_dag(
     aggregator: Callable[[T, T], T] | None = None,
     enforce_signature: bool = True,
 ) -> Callable:
-    """Create combined function which allows to execute a complete directed acyclic
-    graph (DAG) in one function call.
+    """Create combined function which allows executing a DAG in one function call.
 
     The arguments of the combined function are all arguments of relevant functions that
     are not themselves function names, in alphabetical order.

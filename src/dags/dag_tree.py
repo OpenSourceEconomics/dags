@@ -132,10 +132,10 @@ def _flatten_functions_and_rename_parameters(
         renamed: Callable[..., Any] = rename_arguments(
             func,
             mapper=_create_parameter_name_mapper(
-                flat_functions,
-                flat_input_structure,
-                namespace,
-                func,
+                flat_functions=flat_functions,
+                flat_input_structure=flat_input_structure,
+                namespace=namespace,
+                func=func,
             ),
         )
         flat_functions[name] = renamed
@@ -495,7 +495,7 @@ def _is_qualified_name(s: str) -> bool:
 
 
 def _fail_if_branches_have_trailing_undersores(functions: FlatStrDict) -> None:
-    """Raises an ValueError if any branch of the functions tree ends with an underscore.
+    """Raise a ValueError if any branch of the functions tree ends with an underscore.
 
     Args:
         functions:

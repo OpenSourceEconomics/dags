@@ -38,7 +38,7 @@ if TYPE_CHECKING:
 
 
 def _global__f(g, namespace1__f1, input_, namespace1__input):
-    """A global function with the same simple name as other functions."""
+    """Global function, duplicate simple name."""
     return {
         "name": "global__f",
         "args": {
@@ -51,7 +51,7 @@ def _global__f(g, namespace1__f1, input_, namespace1__input):
 
 
 def _global__g():
-    """A global function with a unique simple name."""
+    """Global function, unique simple name."""
     return {"name": "global__g"}
 
 
@@ -62,7 +62,7 @@ def _namespace1__f(
     namespace1__input,
     namespace2__input2,
 ):
-    """A namespaced function with the same simple name as other functions."""
+    """Namespaced function, duplicate simple name."""
     return {
         "name": "namespace1__f",
         "args": {
@@ -76,19 +76,17 @@ def _namespace1__f(
 
 
 def _namespace1__f1():
-    """A namespaced function with a unique simple name."""
+    """Namespaced function, unique simple name."""
     return {"name": "namespace1__f1"}
 
 
 def _namespace2__f(f2, input_):
-    """A namespaced function with the same simple name as other functions. All arguments
-    use simple names.
-    """
+    """Namespaced function, duplicate simple name. All arguments with simple names."""
     return {"name": "namespace2__f", "args": {"f2": f2, "input_": input_}}
 
 
 def _namespace2__f2():
-    """A namespaced function with a unique simple name."""
+    """Namespaced function, unique simple name."""
     return {"name": "namespace2__f2"}
 
 
