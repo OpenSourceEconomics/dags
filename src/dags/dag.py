@@ -15,7 +15,6 @@ from dags.output import aggregated_output, dict_output, list_output, single_outp
 from dags.signature import with_signature
 
 T = TypeVar("T")
-ConcatT = TypeVar("ConcatT")  # For concatenated function return type
 
 FunctionCollection = dict[str, Callable[..., Any]] | list[Callable[..., Any]]
 TargetType = str | list[str] | None
@@ -28,7 +27,7 @@ def concatenate_functions(
     return_type: CombinedFunctionReturnType = "tuple",
     aggregator: Callable[[T, T], T] | None = None,
     enforce_signature: bool = True,
-) -> Callable:
+) -> Callable[..., Any]:
     """Combine functions to one function that generates targets.
 
     Functions can depend on the output of other functions as inputs, as long as the
@@ -120,7 +119,7 @@ def _create_combined_function_from_dag(
     return_type: CombinedFunctionReturnType = "tuple",
     aggregator: Callable[[T, T], T] | None = None,
     enforce_signature: bool = True,
-) -> Callable:
+) -> Callable[..., Any]:
     """Create combined function which allows executing a DAG in one function call.
 
     The arguments of the combined function are all arguments of relevant functions that
@@ -224,7 +223,7 @@ def get_ancestors(
 def _harmonize_and_check_functions_and_targets(
     functions: FunctionCollection,
     targets: TargetType,
-) -> tuple[dict[str, Callable], list[str]]:
+) -> tuple[dict[str, Callable[..., Any]], list[str]]:
     """Harmonize the type of specified functions and targets and do some checks.
 
     Args:
@@ -280,7 +279,7 @@ def _fail_if_targets_have_wrong_types(
 
 
 def _fail_if_functions_are_missing(
-    functions: dict[str, Callable],
+    functions: dict[str, Callable[..., Any]],
     targets: list[str],
 ) -> None:
     targets_not_in_functions = set(targets) - set(functions)
@@ -303,7 +302,7 @@ def _fail_if_dag_contains_cycle(
 
 
 def _create_complete_dag(
-    functions: dict[str, Callable],
+    functions: dict[str, Callable[..., Any]],
 ) -> nx.DiGraph:
     """Create the complete DAG.
 
@@ -366,7 +365,7 @@ def _limit_dag_to_targets_and_their_ancestors(
 
 
 def _create_arguments_of_concatenated_function(
-    functions: dict[str, Callable],
+    functions: dict[str, Callable[..., Any]],
     dag: nx.DiGraph,
 ) -> list[str]:
     """Create the signature of the concatenated function.
@@ -386,7 +385,7 @@ def _create_arguments_of_concatenated_function(
 
 
 def _create_execution_info(
-    functions: dict[str, Callable],
+    functions: dict[str, Callable[..., Any]],
     dag: nx.DiGraph,
 ) -> dict[str, dict[str, Any]]:
     """Create a dictionary with all information needed to execute relevant functions.
@@ -435,7 +434,7 @@ def _create_concatenated_function(
     """
 
     @with_signature(args=arglist, enforce=enforce_signature)
-    def concatenated(*args, **kwargs):
+    def concatenated(*args: Any, **kwargs: Any) -> tuple[Any, ...]:
         results = {**dict(zip(arglist, args, strict=False)), **kwargs}
         for name, info in execution_info.items():
             kwargs = {arg: results[arg] for arg in info["arguments"]}

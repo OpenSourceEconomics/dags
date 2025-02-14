@@ -24,8 +24,8 @@ from dags.dag import (
 )
 from dags.signature import rename_arguments
 
-NestedFunctionDict = dict[str, Union[Callable, "NestedFunctionDict"]]
-FlatFunctionDict = dict[str, Callable]
+NestedFunctionDict = dict[str, Union[Callable[..., Any], "NestedFunctionDict"]]
+FlatFunctionDict = dict[str, Callable[..., Any]]
 
 NestedTargetDict = dict[str, Union[None, "NestedTargetDict"]]
 FlatTargetList = list[str]
