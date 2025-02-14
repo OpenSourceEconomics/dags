@@ -1,9 +1,8 @@
 import functools
 from collections.abc import Callable
-from typing import ParamSpec, TypeVar, overload
+from typing import overload
 
-P = ParamSpec("P")
-T = TypeVar("T")
+from dags.dags_typing import P, T
 
 
 def single_output(func: Callable[P, tuple[T, ...]]) -> Callable[P, T]:

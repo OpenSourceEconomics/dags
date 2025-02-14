@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import functools
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Literal
 
 import pytest
 
@@ -32,7 +32,7 @@ from dags.dag_tree import (
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from dags.dags_typing import GenericCallable
 
 # Fixtures & Other Test Inputs
 
@@ -247,7 +247,7 @@ def test_fail_if_branches_have_trailing_underscores(
 def test_check_for_parent_child_name_clashes_error(
     functions: FlatFunctionDict,
     input_structure: FlatInputStructureDict,
-    name_clashes: Literal["raise"],
+    name_clashes: "raise",
 ) -> None:
     with pytest.raises(ValueError, match="There are name clashes:"):
         _check_for_parent_child_name_clashes(functions, input_structure, name_clashes)
@@ -393,7 +393,7 @@ def test_create_parameter_name_mapper(
     functions: NestedFunctionDict,
     input_structure: NestedInputStructureDict,
     namespace: str,
-    function: Callable[..., Any],
+    function: GenericCallable,
     expected: dict[str, str],
 ) -> None:
     flat_functions = _flatten_str_dict(functions)

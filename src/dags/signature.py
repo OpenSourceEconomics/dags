@@ -1,11 +1,9 @@
 import functools
 import inspect
 from collections.abc import Callable
-from typing import Any, ParamSpec, TypeVar, cast, overload
+from typing import Any, cast, overload
 
-# P captures the parameter types, R captures the return type
-P = ParamSpec("P")
-R = TypeVar("R")
+from dags.dags_typing import P, R
 
 
 def create_signature(

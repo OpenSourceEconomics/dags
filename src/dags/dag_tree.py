@@ -4,13 +4,29 @@ import functools
 import inspect
 import re
 import warnings
-from collections.abc import Callable
 from itertools import combinations, groupby
 from operator import itemgetter
-from typing import TYPE_CHECKING, Any, Literal, Union
+from typing import TYPE_CHECKING, Literal
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     import networkx as nx
+
+    from dags.dags_typing import (
+        FlatFunctionDict,
+        FlatInputStructureDict,
+        FlatStrDict,
+        FlatTargetList,
+        GenericCallable,
+        GlobalOrLocal,
+        NestedFunctionDict,
+        NestedInputDict,
+        NestedInputStructureDict,
+        NestedOutputDict,
+        NestedStrDict,
+        NestedTargetDict,
+    )
 
 from flatten_dict import flatten, unflatten
 from flatten_dict.reducers import make_reducer
@@ -23,23 +39,6 @@ from dags.dag import (
     create_dag,
 )
 from dags.signature import rename_arguments
-
-NestedFunctionDict = dict[str, Union[Callable[..., Any], "NestedFunctionDict"]]
-FlatFunctionDict = dict[str, Callable[..., Any]]
-
-NestedTargetDict = dict[str, Union[None, "NestedTargetDict"]]
-FlatTargetList = list[str]
-
-NestedInputStructureDict = dict[str, Union[None, "NestedInputStructureDict"]]
-FlatInputStructureDict = dict[str, None]
-
-NestedInputDict = dict[str, Union[Any, "NestedInputDict"]]
-NestedOutputDict = dict[str, Union[Any, "NestedOutputDict"]]
-
-NestedStrDict = dict[str, Union[Any, "NestedStrDict"]]
-FlatStrDict = dict[str, Any]
-
-GlobalOrLocal = Literal["global", "local"]
 
 # Constants for qualified names.
 _python_identifier: str = r"[a-zA-Z_][a-zA-Z0-9_]*"
@@ -129,7 +128,7 @@ def _flatten_functions_and_rename_parameters(
         namespace: str = _qualified_name_delimiter.join(
             name.split(_qualified_name_delimiter)[:-1]
         )
-        renamed: Callable[..., Any] = rename_arguments(
+        renamed: GenericCallable = rename_arguments(
             func,
             mapper=_create_parameter_name_mapper(
                 flat_functions=flat_functions,
@@ -253,7 +252,7 @@ def _create_parameter_name_mapper(
     flat_functions: FlatFunctionDict,
     flat_input_structure: FlatInputStructureDict,
     namespace: str,
-    func: Callable[..., Any],
+    func: GenericCallable,
 ) -> dict[str, str]:
     """
     Create a mapping from parameter names to qualified names for a given function.
