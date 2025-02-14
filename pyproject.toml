@@ -5,6 +5,7 @@ requires-python = ">=3.10"
 dynamic = ["version"]
 dependencies = [
     "networkx",
+    "types-networkx",
     "flatten-dict",
 ]
 classifiers = [
@@ -16,7 +17,8 @@ classifiers = [
     "Operating System :: Unix",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Topic :: Utilities"
+    "Topic :: Utilities",
+    "Typing :: Typed",
 ]
 authors = [
     {name = "Janoś Gabler", email = "janos.gabler@gmail.com"},
@@ -58,6 +60,9 @@ only-packages = true
 [tool.hatch.build.targets.wheel]
 only-include = ["src"]
 sources = ["src"]
+include = [
+    "src/dags/py.typed",
+]
 
 [tool.hatch.version]
 source = "vcs"
@@ -84,6 +89,7 @@ pre-commit = "*"
 pytest = "*"
 pytest-cov = "*"
 pytest-xdist = "*"
+mypy = "==1.15.0"
 
 [tool.pixi.pypi-dependencies]
 dags = {path = ".", editable = true}
@@ -120,7 +126,6 @@ py311 = ["test", "py311"]
 py312 = ["test", "py312"]
 py313 = ["test", "py313"]
 
-
 # ======================================================================================
 # Ruff configuration
 # ======================================================================================
@@ -147,16 +152,14 @@ extend-ignore = [
     "PLR0913",  # too many arguments to function call
     "PLR2004",  # magic value used in comparison
     "S101",  # use of `assert` detected
+    "TRY003", # "long" messages outside exception class.
 
     # Rules to be fixed in the future
     # ----------------------------------------------------------------------------------
 
-    "PLR0913",
     "FBT001",
     "FBT002",
-    "D205",
-    "D401",
-    "INP001",
+
 
     # Rules ignored to avoid conflict with formatter
     # ----------------------------------------------------------------------------------
@@ -166,6 +169,7 @@ extend-ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "docs/source/conf.py" = ["INP001", "ERA001", "RUF100"]
+"tests/*" = ["D401", "FBT001", "INP001"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
@@ -192,3 +196,26 @@ addopts = ["--pdbcls=pdbp:Pdb"]
 line_length = 88
 sequence_style = "block_style"
 none_representation = "null"
+
+
+# ======================================================================================
+# mypy configuration
+# ======================================================================================
+
+[tool.mypy]
+files = ["src", "tests"]
+check_untyped_defs = true
+disallow_any_generics = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+
+[[tool.mypy.overrides]]
+module = ["tests.*"]
+disallow_untyped_defs = false
+
+[[tool.mypy.overrides]]
+module = ["flatten_dict.*"]
+ignore_missing_imports = true

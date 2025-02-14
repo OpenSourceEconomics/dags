@@ -3,7 +3,13 @@ from functools import partial
 
 import pytest
 
-from dags.dag import concatenate_functions, create_dag, get_ancestors
+from dags.dag import (
+    CombinedFunctionReturnType,
+    FunctionCollection,
+    concatenate_functions,
+    create_dag,
+    get_ancestors,
+)
 
 
 def _utility(_consumption, _leisure, leisure_weight):
@@ -38,7 +44,7 @@ def _complete_utility(wage, working_hours, leisure_weight):
     return _utility(cons, leis, leisure_weight)
 
 
-def test_concatenate_functions_no_target():
+def test_concatenate_functions_no_target() -> None:
     concatenated = concatenate_functions(functions=[_utility, _leisure, _consumption])
 
     calculated_result = concatenated(wage=5, working_hours=8, leisure_weight=2)
@@ -59,7 +65,7 @@ def test_concatenate_functions_no_target():
     assert calculated_args == expected_args
 
 
-def test_concatenate_functions_single_target():
+def test_concatenate_functions_single_target() -> None:
     concatenated = concatenate_functions(
         functions=[_utility, _unrelated, _leisure, _consumption],
         targets="_utility",
@@ -76,8 +82,10 @@ def test_concatenate_functions_single_target():
     assert calculated_args == expected_args
 
 
-@pytest.mark.parametrize("return_type", ["dict", "tuple"])
-def test_concatenate_functions_multi_target(return_type):
+@pytest.mark.parametrize("return_type", ["tuple", "list", "dict"])
+def test_concatenate_functions_multi_target(
+    return_type: CombinedFunctionReturnType,
+) -> None:
     concatenated = concatenate_functions(
         functions=[_utility, _unrelated, _leisure, _consumption],
         targets=["_utility", "_consumption"],
@@ -91,8 +99,11 @@ def test_concatenate_functions_multi_target(return_type):
         "_consumption": _consumption(wage=5, working_hours=8),
     }
     if return_type == "tuple":
-        expected_result = tuple(expected_result.values())
-    assert calculated_result == expected_result
+        assert calculated_result == tuple(expected_result.values())
+    elif return_type == "list":
+        assert calculated_result == list(expected_result.values())
+    else:
+        assert calculated_result == expected_result
 
     calculated_args = set(inspect.signature(concatenated).parameters)
     expected_args = {"leisure_weight", "wage", "working_hours"}
@@ -100,7 +111,7 @@ def test_concatenate_functions_multi_target(return_type):
     assert calculated_args == expected_args
 
 
-def test_get_ancestors_many_ancestors():
+def test_get_ancestors_many_ancestors() -> None:
     calculated = get_ancestors(
         functions=[_utility, _unrelated, _leisure, _consumption],
         targets="_utility",
@@ -110,7 +121,7 @@ def test_get_ancestors_many_ancestors():
     assert calculated == expected
 
 
-def test_get_ancestors_few_ancestors():
+def test_get_ancestors_few_ancestors() -> None:
     calculated = get_ancestors(
         functions=[_utility, _unrelated, _leisure, _consumption],
         targets="_unrelated",
@@ -121,7 +132,7 @@ def test_get_ancestors_few_ancestors():
     assert calculated == expected
 
 
-def test_get_ancestors_multiple_targets():
+def test_get_ancestors_multiple_targets() -> None:
     calculated = get_ancestors(
         functions=[_utility, _unrelated, _leisure, _consumption],
         targets=["_unrelated", "_consumption"],
@@ -131,7 +142,7 @@ def test_get_ancestors_multiple_targets():
     assert calculated == expected
 
 
-def test_concatenate_functions_with_aggregation_via_and():
+def test_concatenate_functions_with_aggregation_via_and() -> None:
     funcs = {"f1": lambda: True, "f2": lambda: False}
     aggregated = concatenate_functions(
         functions=funcs,
@@ -141,7 +152,7 @@ def test_concatenate_functions_with_aggregation_via_and():
     assert not aggregated()
 
 
-def test_concatenate_functions_with_aggregation_via_or():
+def test_concatenate_functions_with_aggregation_via_or() -> None:
     funcs = {"f1": lambda: True, "f2": lambda: False}
     aggregated = concatenate_functions(
         functions=funcs,
@@ -151,7 +162,7 @@ def test_concatenate_functions_with_aggregation_via_or():
     assert aggregated()
 
 
-def test_partialled_argument_is_ignored():
+def test_partialled_argument_is_ignored() -> None:
     def f(a, b, c):
         return a + b + c
 
@@ -182,7 +193,7 @@ def test_partialled_argument_is_ignored():
         },
     ],
 )
-def test_fail_if_cycle_in_dag(funcs):
+def test_fail_if_cycle_in_dag(funcs: FunctionCollection) -> None:
     with pytest.raises(
         ValueError,
         match="The DAG contains one or more cycles:",

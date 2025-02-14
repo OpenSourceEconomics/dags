@@ -1,8 +1,10 @@
 import inspect
+from collections.abc import Callable
 from functools import partial
 
 import pytest
 
+from dags.dags_typing import GenericCallable
 from dags.output import aggregated_output, dict_output, list_output, single_output
 from dags.signature import with_signature
 
@@ -15,7 +17,9 @@ decorators = [
 
 
 @pytest.mark.parametrize("decorator", decorators)
-def test_output_decorators_preserve_signature_created_by_with_signature(decorator):
+def test_output_decorators_preserve_signature_created_by_with_signature(
+    decorator: Callable[[GenericCallable], GenericCallable],
+) -> None:
     @with_signature(args=["a"], kwargs=["b"])
     def f(*args, **kwargs):
         return (args[0], kwargs["b"])
