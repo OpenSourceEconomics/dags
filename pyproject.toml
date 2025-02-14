@@ -120,7 +120,7 @@ py310 = ["test", "py310"]
 py311 = ["test", "py311"]
 py312 = ["test", "py312"]
 py313 = ["test", "py313"]
-mypy = {features = ["mypy"], solve-group = "default"}
+mypy =  ["mypy"]
 
 
 [tool.pixi.feature.mypy.dependencies]
