@@ -186,7 +186,7 @@ def _create_combined_function_from_dag(
 
 def get_ancestors(
     functions: FunctionCollection,
-    targets: str,
+    targets: TargetType,
     include_targets: bool = False,
 ) -> set[str]:
     """Build a DAG and extract all ancestors of targets.
@@ -289,9 +289,7 @@ def _fail_if_functions_are_missing(
         raise ValueError(msg)
 
 
-def _fail_if_dag_contains_cycle(
-    dag: nx.DiGraph,
-) -> None:
+def _fail_if_dag_contains_cycle(dag: nx.DiGraph) -> None:
     """Check for cycles in DAG."""
     cycles = list(nx.simple_cycles(dag))
 

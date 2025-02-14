@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import functools
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 import pytest
 
@@ -216,7 +216,7 @@ def test_concatenate_functions_tree(
     targets: NestedTargetDict,
     input_: NestedInputDict,
     expected: NestedOutputDict,
-):
+) -> None:
     f = concatenate_functions_tree(functions, targets, input_, name_clashes="ignore")
     assert f(input_) == expected
 
@@ -228,7 +228,9 @@ def test_concatenate_functions_tree(
         {"x": {"x_": {"x": lambda x: x}}, "y": lambda y: y},
     ],
 )
-def test_fail_if_branches_have_trailing_underscores(functions: NestedFunctionDict):
+def test_fail_if_branches_have_trailing_underscores(
+    functions: NestedFunctionDict,
+) -> None:
     with pytest.raises(ValueError, match="Branches of the functions tree cannot end"):
         _flatten_functions_and_rename_parameters(functions, {})
 
@@ -246,7 +248,7 @@ def test_check_for_parent_child_name_clashes_error(
     functions: FlatFunctionDict,
     input_structure: FlatInputStructureDict,
     name_clashes: Literal["raise"],
-):
+) -> None:
     with pytest.raises(ValueError, match="There are name clashes:"):
         _check_for_parent_child_name_clashes(functions, input_structure, name_clashes)
 
@@ -264,7 +266,7 @@ def test_check_for_parent_child_name_clashes_warn(
     functions: FlatFunctionDict,
     input_structure: FlatInputStructureDict,
     name_clashes: Literal["warn"],
-):
+) -> None:
     with pytest.warns(UserWarning, match="There are name clashes:"):
         _check_for_parent_child_name_clashes(functions, input_structure, name_clashes)
 
@@ -283,7 +285,7 @@ def test_check_for_parent_child_name_clashes_no_error(
     functions: FlatFunctionDict,
     input_structure: FlatInputStructureDict,
     name_clashes: Literal["raise", "ignore"],
-):
+) -> None:
     _check_for_parent_child_name_clashes(functions, input_structure, name_clashes)
 
 
@@ -305,7 +307,7 @@ def test_find_parent_child_name_clashes(
     functions: FlatFunctionDict,
     input_structure: FlatInputStructureDict,
     expected: list[tuple[str, str]],
-):
+) -> None:
     actual = _find_parent_child_name_clashes(functions, input_structure)
 
     unordered_expected = [set(pair) for pair in expected]
@@ -323,7 +325,9 @@ def test_find_parent_child_name_clashes(
         ("a___b", ("a", "_b")),
     ],
 )
-def test_get_namespace_and_simple_name(qualified_name: str, expected: tuple[str, str]):
+def test_get_namespace_and_simple_name(
+    qualified_name: str, expected: tuple[str, str]
+) -> None:
     assert _get_namespace_and_simple_name(qualified_name) == expected
 
 
@@ -335,7 +339,7 @@ def test_get_namespace_and_simple_name(qualified_name: str, expected: tuple[str,
         ("a", "b", "a__b"),
     ],
 )
-def test_get_qualified_name(namespace: str, simple_name: str, expected: str):
+def test_get_qualified_name(namespace: str, simple_name: str, expected: str) -> None:
     assert _get_qualified_name(namespace, simple_name) == expected
 
 
@@ -389,9 +393,9 @@ def test_create_parameter_name_mapper(
     functions: NestedFunctionDict,
     input_structure: NestedInputStructureDict,
     namespace: str,
-    function: Callable,
+    function: Callable[..., Any],
     expected: dict[str, str],
-):
+) -> None:
     flat_functions = _flatten_str_dict(functions)
     flat_input_structure = _flatten_str_dict(input_structure)
 
@@ -406,7 +410,7 @@ def test_create_parameter_name_mapper(
     )
 
 
-def test_map_parameter_raises():
+def test_map_parameter_raises() -> None:
     with pytest.raises(ValueError, match="Cannot resolve parameter"):
         _map_parameter({}, {}, "x", "x")
 
@@ -471,11 +475,11 @@ def test_create_input_structure_tree(
     targets: NestedTargetDict | None,
     level_of_inputs: GlobalOrLocal,
     expected: NestedInputStructureDict,
-):
+) -> None:
     assert create_input_structure_tree(functions, targets, level_of_inputs) == expected
 
 
-def test_flatten_str_dict(functions: NestedFunctionDict):
+def test_flatten_str_dict(functions: NestedFunctionDict) -> None:
     assert _flatten_str_dict(functions) == {
         "f": _global__f,
         "g": _global__g,
@@ -487,7 +491,7 @@ def test_flatten_str_dict(functions: NestedFunctionDict):
     }
 
 
-def test_unflatten_str_dict(functions: NestedFunctionDict):
+def test_unflatten_str_dict(functions: NestedFunctionDict) -> None:
     assert (
         _unflatten_str_dict(
             {
@@ -521,7 +525,7 @@ def test_unflatten_str_dict(functions: NestedFunctionDict):
         ),
     ],
 )
-def test_flatten_targets(targets, expected):
+def test_flatten_targets(targets: NestedTargetDict, expected: list[str]) -> None:
     assert _flatten_targets(targets) == expected
 
 
@@ -548,7 +552,7 @@ def test_link_parameter_to_function_or_input(
     namespace: str,
     parameter_name: str,
     expected: tuple[str],
-):
+) -> None:
     flat_functions = _flatten_str_dict(functions)
     assert (
         _link_parameter_to_function_or_input(
@@ -583,7 +587,7 @@ def test_link_parameter_to_function_or_input(
         ("AB", True),
     ],
 )
-def test_is_python_identifier(s: str, expected: bool):
+def test_is_python_identifier(s: str, expected: bool) -> None:
     assert _is_python_identifier(s) == expected
 
 
@@ -597,11 +601,11 @@ def test_is_python_identifier(s: str, expected: bool):
         ("a__b", True),
     ],
 )
-def test_is_qualified_name(s: str, expected: bool):
+def test_is_qualified_name(s: str, expected: bool) -> None:
     assert _is_qualified_name(s) == expected
 
 
-def test_partialled_function_argument():
+def test_partialled_function_argument() -> None:
     def f(a, b):
         return a + b
 
@@ -610,5 +614,7 @@ def test_partialled_function_argument():
     input_structure = {"a": None}
     targets = {"f": None}
 
-    concatenated_func = concatenate_functions_tree(tree, targets, input_structure)
+    concatenated_func = concatenate_functions_tree(
+        functions=tree, targets=targets, input_structure=input_structure
+    )
     concatenated_func({"a": 1})

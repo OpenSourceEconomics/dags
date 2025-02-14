@@ -1,5 +1,7 @@
 import inspect
+from collections.abc import Callable
 from functools import partial
+from typing import Any
 
 import pytest
 
@@ -15,7 +17,9 @@ decorators = [
 
 
 @pytest.mark.parametrize("decorator", decorators)
-def test_output_decorators_preserve_signature_created_by_with_signature(decorator):
+def test_output_decorators_preserve_signature_created_by_with_signature(
+    decorator: Callable[[Callable[..., Any]], Callable[..., Any]],
+) -> None:
     @with_signature(args=["a"], kwargs=["b"])
     def f(*args, **kwargs):
         return (args[0], kwargs["b"])

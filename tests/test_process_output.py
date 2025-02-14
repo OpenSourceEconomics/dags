@@ -1,7 +1,7 @@
 from dags.output import aggregated_output, dict_output, list_output, single_output
 
 
-def test_single_output_decorator():
+def test_single_output_decorator() -> None:
     @single_output
     def f():
         return (1,)
@@ -9,7 +9,7 @@ def test_single_output_decorator():
     assert f() == 1
 
 
-def test_dict_output_decorator():
+def test_dict_output_decorator() -> None:
     @dict_output(keys=["a", "b"])
     def f():
         return (1, 2)
@@ -17,7 +17,7 @@ def test_dict_output_decorator():
     assert f() == {"a": 1, "b": 2}
 
 
-def test_list_output_decorator():
+def test_list_output_decorator() -> None:
     @list_output
     def f():
         return (1, 2)
@@ -25,7 +25,7 @@ def test_list_output_decorator():
     assert f() == [1, 2]
 
 
-def test_aggregated_output_decorator():
+def test_aggregated_output_decorator() -> None:
     @aggregated_output(aggregator=lambda x, y: x + y)
     def f():
         return (1, 2)
@@ -33,7 +33,7 @@ def test_aggregated_output_decorator():
     assert f() == 3
 
 
-def test_single_output_direct_call():
+def test_single_output_direct_call() -> None:
     def f():
         return (1,)
 
@@ -42,7 +42,7 @@ def test_single_output_direct_call():
     assert g() == 1
 
 
-def test_dict_output_direct_call():
+def test_dict_output_direct_call() -> None:
     def f():
         return (1, 2)
 
@@ -51,7 +51,7 @@ def test_dict_output_direct_call():
     assert g() == {"a": 1, "b": 2}
 
 
-def test_list_output_direct_call():
+def test_list_output_direct_call() -> None:
     def f():
         return (1, 2)
 
@@ -60,7 +60,7 @@ def test_list_output_direct_call():
     assert g() == [1, 2]
 
 
-def test_aggregated_output_direct_call():
+def test_aggregated_output_direct_call() -> None:
     def f():
         return (1, 2)
 
