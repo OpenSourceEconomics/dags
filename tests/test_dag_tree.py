@@ -6,14 +6,6 @@ from typing import TYPE_CHECKING, Literal
 import pytest
 
 from dags.dag_tree import (
-    FlatFunctionDict,
-    FlatInputStructureDict,
-    GlobalOrLocal,
-    NestedFunctionDict,
-    NestedInputDict,
-    NestedInputStructureDict,
-    NestedOutputDict,
-    NestedTargetDict,
     _check_for_parent_child_name_clashes,
     _create_parameter_name_mapper,
     _find_parent_child_name_clashes,
@@ -32,7 +24,17 @@ from dags.dag_tree import (
 )
 
 if TYPE_CHECKING:
-    from dags.dags_typing import GenericCallable
+    from dags.dags_typing import (
+        FlatFunctionDict,
+        FlatInputStructureDict,
+        GenericCallable,
+        GlobalOrLocal,
+        NestedFunctionDict,
+        NestedInputDict,
+        NestedInputStructureDict,
+        NestedOutputDict,
+        NestedTargetDict,
+    )
 
 # Fixtures & Other Test Inputs
 
