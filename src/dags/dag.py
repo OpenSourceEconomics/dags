@@ -447,9 +447,7 @@ def _create_concatenated_function(
     """
 
     @with_signature(args=arglist, enforce=enforce_signature)
-    def concatenated(
-        *args: tuple[Any, ...], **kwargs: dict[str, Any]
-    ) -> tuple[Any, ...]:
+    def concatenated(*args: Any, **kwargs: Any) -> tuple[Any, ...]:  # noqa: ANN401
         results = {**dict(zip(arglist, args, strict=False)), **kwargs}
         for name, info in execution_info.items():
             func_kwargs = {arg: results[arg] for arg in info.arguments}
