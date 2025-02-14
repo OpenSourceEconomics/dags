@@ -22,6 +22,16 @@ from dags.dag_tree import (
     concatenate_functions_tree,
     create_input_structure_tree,
 )
+from dags.dags_typing import (
+    FlatFunctionDict,
+    FlatInputStructureDict,
+    GlobalOrLocal,
+    NestedFunctionDict,
+    NestedInputDict,
+    NestedInputStructureDict,
+    NestedOutputDict,
+    NestedTargetDict,
+)
 
 if TYPE_CHECKING:
     from dags.dags_typing import (

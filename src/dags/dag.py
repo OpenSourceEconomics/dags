@@ -1,11 +1,9 @@
+from __future__ import annotations
+
 import functools
 import inspect
 import textwrap
-from collections.abc import Callable
-from typing import (
-    Any,
-    cast,
-)
+from typing import TYPE_CHECKING, Any, cast
 
 import networkx as nx
 
@@ -18,6 +16,9 @@ from dags.dags_typing import (
 )
 from dags.output import aggregated_output, dict_output, list_output, single_output
 from dags.signature import with_signature
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 def concatenate_functions(
@@ -74,7 +75,7 @@ def concatenate_functions(
 def create_dag(
     functions: FunctionCollection,
     targets: TargetType,
-) -> nx.DiGraph:
+) -> nx.DiGraph[str]:
     """Build a directed acyclic graph (DAG) from functions.
 
     Functions can depend on the output of other functions as inputs, as long as the
@@ -112,7 +113,7 @@ def create_dag(
 
 
 def _create_combined_function_from_dag(
-    dag: nx.DiGraph,
+    dag: nx.DiGraph[str],
     functions: FunctionCollection,
     targets: TargetType,
     return_type: CombinedFunctionReturnType = "tuple",
@@ -288,7 +289,7 @@ def _fail_if_functions_are_missing(
         raise ValueError(msg)
 
 
-def _fail_if_dag_contains_cycle(dag: nx.DiGraph) -> None:
+def _fail_if_dag_contains_cycle(dag: nx.DiGraph[str]) -> None:
     """Check for cycles in DAG."""
     cycles = list(nx.simple_cycles(dag))
 
@@ -300,7 +301,7 @@ def _fail_if_dag_contains_cycle(dag: nx.DiGraph) -> None:
 
 def _create_complete_dag(
     functions: dict[str, GenericCallable],
-) -> nx.DiGraph:
+) -> nx.DiGraph[str]:
     """Create the complete DAG.
 
     This DAG is constructed from all functions and not pruned by specified root nodes or
@@ -334,9 +335,9 @@ def _get_free_arguments(
 
 
 def _limit_dag_to_targets_and_their_ancestors(
-    dag: nx.DiGraph,
+    dag: nx.DiGraph[str],
     targets: list[str],
-) -> nx.DiGraph:
+) -> nx.DiGraph[str]:
     """Limit DAG to targets and their ancestors.
 
     Args:
@@ -363,7 +364,7 @@ def _limit_dag_to_targets_and_their_ancestors(
 
 def _create_arguments_of_concatenated_function(
     functions: dict[str, GenericCallable],
-    dag: nx.DiGraph,
+    dag: nx.DiGraph[str],
 ) -> list[str]:
     """Create the signature of the concatenated function.
 
@@ -383,7 +384,7 @@ def _create_arguments_of_concatenated_function(
 
 def _create_execution_info(
     functions: dict[str, GenericCallable],
-    dag: nx.DiGraph,
+    dag: nx.DiGraph[str],
 ) -> dict[str, dict[str, Any]]:
     """Create a dictionary with all information needed to execute relevant functions.
 

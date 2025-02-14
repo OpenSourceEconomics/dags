@@ -388,9 +388,8 @@ def create_dag_tree(
     targets: NestedTargetDict | None,
     input_structure: NestedInputStructureDict,
     name_clashes: Literal["raise", "warn", "ignore"] = "raise",
-) -> nx.DiGraph:
-    """
-    Build a DAG from the given functions, targets, and input structure.
+) -> nx.DiGraph[str]:
+    """Build a DAG from the given functions, targets, and input structure.
 
     Args:
         functions: A nested dictionary of functions.
