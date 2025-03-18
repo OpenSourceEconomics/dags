@@ -6,10 +6,10 @@ import re
 import warnings
 from itertools import combinations, groupby
 from operator import itemgetter
-from typing import TYPE_CHECKING, Literal, cast
+from typing import TYPE_CHECKING, Literal
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Sequence
+    from collections.abc import Callable
 
     import networkx as nx
 
@@ -473,7 +473,7 @@ def tree_paths(nested: NestedStrDict) -> list[tuple[str, ...]]:
     -------
         A list of tuples.
     """
-    return list(cast("Sequence[tuple[str, ...]]", flatten_to_tree_paths(nested).keys()))
+    return list(flatten_to_tree_paths(nested).keys())
 
 
 def unflatten_from_tree_paths(flat_tree_paths: FlatTPDict) -> NestedStrDict:
