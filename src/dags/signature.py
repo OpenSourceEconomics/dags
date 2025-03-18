@@ -210,7 +210,7 @@ def rename_arguments(
             partial_wrapper = functools.partial(
                 wrapper_rename_arguments, *func.args, **func.keywords
             )
-            out = cast(Callable[P, R], partial_wrapper)
+            out = cast("Callable[P, R]", partial_wrapper)
         else:
             out = wrapper_rename_arguments
 

@@ -380,7 +380,7 @@ def create_input_structure_tree(
     dag = create_dag(flat_renamed_functions, flat_targets)
     parameters = _create_arguments_of_concatenated_function(flat_renamed_functions, dag)
 
-    return _unflatten_str_dict({parameter: None for parameter in parameters})
+    return _unflatten_str_dict(dict.fromkeys(parameters))
 
 
 def create_dag_tree(
