@@ -642,7 +642,6 @@ def test_partialled_function_argument() -> None:
     ),
     [
         (
-            # For some reason, this works:
             {
                 "common_name": {"foo": lambda x: x},
                 "target_namespace": {
@@ -658,21 +657,19 @@ def test_partialled_function_argument() -> None:
             "common_name__foo",
         ),
         (
-            # This does not work, returned arg name:
-            # "einkommensteuer__kindergeld__grundsätzlich_anspruchsberechtigt"
             {
-                "kindergeld": {"grundsätzlich_anspruchsberechtigt": lambda x: x},
-                "einkommensteuer": {
-                    "kindergeld": {"grundsätzlich_anspruchsberechtigt": lambda x: x},
-                    "anzahl_kinderfreibeträge": lambda kindergeld__grundsätzlich_anspruchsberechtigt: kindergeld__grundsätzlich_anspruchsberechtigt,  # noqa: E501, PLC2401
+                "common_name": {"föö": lambda x: x},
+                "target_namespace": {
+                    "common_name": {"föö": lambda x: x},
+                    "target_leaf": lambda common_name__föö: common_name__föö,
                 },
             },
             {
-                "kindergeld": {"x": None},
-                "einkommensteuer": {"kindergeld": {"x": None}},
+                "common_name": {"x": None},
+                "target_namespace": {"common_name": {"x": None}},
             },
-            "einkommensteuer__anzahl_kinderfreibeträge",
-            "kindergeld__grundsätzlich_anspruchsberechtigt",
+            "target_namespace__target_leaf",
+            "common_name__föö",
         ),
     ],
 )

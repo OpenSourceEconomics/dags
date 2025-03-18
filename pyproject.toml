@@ -169,7 +169,7 @@ extend-ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "docs/source/conf.py" = ["INP001", "ERA001", "RUF100"]
-"tests/*" = ["D401", "FBT001", "INP001"]
+"tests/*" = ["D401", "FBT001", "INP001", "PLC2401"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
