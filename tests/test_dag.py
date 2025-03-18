@@ -4,11 +4,13 @@ from functools import partial
 import pytest
 
 from dags.dag import (
-    CombinedFunctionReturnType,
-    FunctionCollection,
     concatenate_functions,
     create_dag,
     get_ancestors,
+)
+from dags.dags_typing import (
+    CombinedFunctionReturnType,
+    FunctionCollection,
 )
 
 

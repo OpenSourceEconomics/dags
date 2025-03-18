@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import functools
+import inspect
 from typing import TYPE_CHECKING, Literal
 
 import pytest
@@ -630,3 +631,58 @@ def test_partialled_function_argument() -> None:
         functions=tree, targets=targets, input_structure=input_structure
     )
     concatenated_func({"a": 1})
+
+
+@pytest.mark.parametrize(
+    (
+        "functions_tree",
+        "input_structure",
+        "flat_function_name_to_check",
+        "expected_argument_name",
+    ),
+    [
+        (
+            {
+                "common_name": {"foo": lambda x: x},
+                "target_namespace": {
+                    "common_name": {"foo": lambda x: x},
+                    "target_leaf": lambda common_name__foo: common_name__foo,
+                },
+            },
+            {
+                "common_name": {"x": None},
+                "target_namespace": {"common_name": {"x": None}},
+            },
+            "target_namespace__target_leaf",
+            "common_name__foo",
+        ),
+        (
+            {
+                "common_name": {"föö": lambda x: x},
+                "target_namespace": {
+                    "common_name": {"föö": lambda x: x},
+                    "target_leaf": lambda common_name__föö: common_name__föö,
+                },
+            },
+            {
+                "common_name": {"x": None},
+                "target_namespace": {"common_name": {"x": None}},
+            },
+            "target_namespace__target_leaf",
+            "common_name__föö",
+        ),
+    ],
+)
+def test_correct_argument_names(
+    functions_tree: NestedFunctionDict,
+    input_structure: NestedInputStructureDict,
+    flat_function_name_to_check: str,
+    expected_argument_name: str,
+) -> None:
+    flat_functions = _flatten_functions_and_rename_parameters(
+        functions_tree, input_structure
+    )
+    assert (
+        expected_argument_name
+        in inspect.signature(flat_functions[flat_function_name_to_check]).parameters
+    )
