@@ -8,18 +8,19 @@ from typing import TYPE_CHECKING, Any, cast
 
 import networkx as nx
 
-from dags.dags_typing import (
-    CombinedFunctionReturnType,
-    FunctionCollection,
-    GenericCallable,
-    T,
-    TargetType,
-)
 from dags.output import aggregated_output, dict_output, list_output, single_output
 from dags.signature import with_signature
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+
+    from dags.dags_typing import (
+        CombinedFunctionReturnType,
+        FunctionCollection,
+        GenericCallable,
+        T,
+        TargetType,
+    )
 
 
 @dataclass
