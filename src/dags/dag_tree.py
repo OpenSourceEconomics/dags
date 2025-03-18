@@ -115,9 +115,7 @@ def _flatten_functions_and_rename_parameters(
     )
 
     for name, func in flat_functions.items():
-        namespace: str = QUALIFIED_NAME_DELIMITER.join(
-            name.split(QUALIFIED_NAME_DELIMITER)[:-1]
-        )
+        namespace: str = QUAL_NAME_DELIMITER.join(name.split(QUAL_NAME_DELIMITER)[:-1])
         renamed: GenericCallable = rename_arguments(
             func,
             mapper=_create_parameter_name_mapper(
@@ -213,10 +211,10 @@ def _get_namespace_and_simple_name(qualified_name: str) -> tuple[str, str]:
     -------
         A tuple containing the namespace and the simple name.
     """
-    segments: list[str] = qualified_name.split(QUALIFIED_NAME_DELIMITER)
+    segments: list[str] = qualified_name.split(QUAL_NAME_DELIMITER)
     if len(segments) == 1:
         return "", segments[0]
-    namespace: str = QUALIFIED_NAME_DELIMITER.join(segments[:-1])
+    namespace: str = QUAL_NAME_DELIMITER.join(segments[:-1])
     simple_name: str = segments[-1]
     return namespace, simple_name
 
@@ -234,7 +232,7 @@ def _get_qualified_name(namespace: str, simple_name: str) -> str:
         The fully qualified name.
     """
     if namespace:
-        return f"{namespace}{QUALIFIED_NAME_DELIMITER}{simple_name}"
+        return f"{namespace}{QUAL_NAME_DELIMITER}{simple_name}"
     return simple_name
 
 
@@ -338,8 +336,8 @@ def create_input_structure_tree(
     flat_input_structure: FlatInputStructureDict = {}
 
     for path, func in flat_functions.items():
-        namespace = QUALIFIED_NAME_DELIMITER.join(
-            path.split(QUALIFIED_NAME_DELIMITER)[:-1],
+        namespace = QUAL_NAME_DELIMITER.join(
+            path.split(QUAL_NAME_DELIMITER)[:-1],
         )
         parameter_names = dict(inspect.signature(func).parameters).keys()
 
@@ -402,17 +400,15 @@ def create_dag_tree(
 
 
 # Constants for qualified names.
-QUALIFIED_NAME_DELIMITER: str = "__"
+QUAL_NAME_DELIMITER: str = "__"
 _python_identifier: str = r"[a-zA-Z_\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF][a-zA-Z0-9_\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]*"  # noqa: E501
 _qualified_name: str = (
-    f"{_python_identifier}(?:{QUALIFIED_NAME_DELIMITER}{_python_identifier})+"
+    f"{_python_identifier}(?:{QUAL_NAME_DELIMITER}{_python_identifier})+"
 )
 
 # Reducers and splitters to flatten/unflatten dicts with qualified names as keys.
-_qualified_name_reducer = fd.reducers.make_reducer(delimiter=QUALIFIED_NAME_DELIMITER)
-_qualified_name_splitter = fd.splitters.make_splitter(
-    delimiter=QUALIFIED_NAME_DELIMITER
-)
+_qualified_name_reducer = fd.reducers.make_reducer(delimiter=QUAL_NAME_DELIMITER)
+_qualified_name_splitter = fd.splitters.make_splitter(delimiter=QUAL_NAME_DELIMITER)
 
 
 def flatten_to_qual_names(nested: NestedStrDict) -> FlatQNDict:
