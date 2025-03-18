@@ -41,7 +41,7 @@ from dags.dag import (
 from dags.signature import rename_arguments
 
 # Constants for qualified names.
-_python_identifier: str = r"[a-zA-Z_][a-zA-Z0-9_]*"
+_python_identifier: str = r"[a-zA-Z_\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF][a-zA-Z0-9_\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]*"  # noqa: E501
 _qualified_name_delimiter: str = "__"
 _qualified_name: str = (
     f"{_python_identifier}(?:{_qualified_name_delimiter}{_python_identifier})+"
