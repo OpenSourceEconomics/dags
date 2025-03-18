@@ -244,7 +244,9 @@ def test_concatenate_functions_tree(
 def test_fail_if_branches_have_trailing_underscores(
     functions: NestedFunctionDict,
 ) -> None:
-    with pytest.raises(ValueError, match="Branches of the functions tree cannot end"):
+    with pytest.raises(
+        ValueError, match="Elements of the paths in the functions tree must not"
+    ):
         _flatten_functions_and_rename_parameters(functions, {})
 
 
@@ -598,6 +600,11 @@ def test_link_parameter_to_function_or_input(
         ("A_", True),
         ("Ab", True),
         ("AB", True),
+        ("ÄB", True),
+        ("ä", True),
+        ("äb", True),
+        ("Ä", True),
+        ("ß", True),
     ],
 )
 def test_is_python_identifier(s: str, expected: bool) -> None:

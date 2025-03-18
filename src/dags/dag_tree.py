@@ -503,8 +503,11 @@ def _fail_if_branches_have_trailing_undersores(functions: NestedFunctionDict) ->
     ------
         ValueError: If any branch of the functions tree ends with an underscore.
     """
-    flattened_functions_tree = flatten(functions)
+    flattened_functions_tree = flatten(functions, reducer="tuple")
     for path in flattened_functions_tree:
         if len(path) > 1 and any(name.endswith("_") for name in path[:-1]):
-            msg = "Branches of the functions tree cannot end with an underscore."
+            msg = (
+                "Elements of the paths in the functions tree must not end with an "
+                f"underscore. Path: {path}"
+            )
             raise ValueError(msg)
