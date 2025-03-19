@@ -27,7 +27,7 @@ from dags.dag_tree import (
     unflatten_from_qual_names,
     unflatten_from_tree_paths,
 )
-from dags.dags_typing import (
+from dags.typing import (
     FlatFunctionDict,
     FlatInputStructureDict,
     GlobalOrLocal,
@@ -39,7 +39,7 @@ from dags.dags_typing import (
 )
 
 if TYPE_CHECKING:
-    from dags.dags_typing import (
+    from dags.typing import (
         FlatFunctionDict,
         FlatInputStructureDict,
         GenericCallable,

@@ -8,7 +8,7 @@ from dags.dag import (
     create_dag,
     get_ancestors,
 )
-from dags.dags_typing import (
+from dags.typing import (
     CombinedFunctionReturnType,
     FunctionCollection,
 )

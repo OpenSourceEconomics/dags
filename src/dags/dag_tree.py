@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
     import networkx as nx
 
-    from dags.dags_typing import (
+    from dags.typing import (
         FlatFunctionDict,
         FlatInputStructureDict,
         FlatQNDict,
