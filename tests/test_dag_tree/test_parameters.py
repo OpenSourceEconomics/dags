@@ -13,9 +13,8 @@ from dags.dag_tree.dag_tree import (
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
-
-    from dags.dag_tree import (
+    from dags.dag_tree.typing import (
+        GenericCallable,
         GlobalOrLocal,
         NestedFunctionDict,
         NestedInputStructureDict,
@@ -80,13 +79,13 @@ def test_create_parameter_name_mapper(
     functions: NestedFunctionDict,
     input_structure: NestedInputStructureDict,
     namespace: str,
-    function: Callable,
+    function: GenericCallable,
     expected: dict[str, str],
 ) -> None:
-    from dags.dag_tree.tree_utils import _flatten_str_dict
+    from dags.dag_tree.tree_utils import flatten_to_qual_names
 
-    flat_functions = _flatten_str_dict(functions)
-    flat_input_structure = _flatten_str_dict(input_structure)
+    flat_functions = flatten_to_qual_names(functions)
+    flat_input_structure = flatten_to_qual_names(input_structure)
 
     assert (
         _create_parameter_name_mapper(
@@ -128,9 +127,9 @@ def test_link_parameter_to_function_or_input(
     parameter_name: str,
     expected: tuple[str],
 ) -> None:
-    from dags.dag_tree.tree_utils import _flatten_str_dict
+    from dags.dag_tree.tree_utils import flatten_to_qual_names
 
-    flat_functions = _flatten_str_dict(functions)
+    flat_functions = flatten_to_qual_names(functions)
     assert (
         _link_parameter_to_function_or_input(
             flat_functions,

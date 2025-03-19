@@ -12,7 +12,7 @@ from dags.dag_tree.validation import (
 )
 
 if TYPE_CHECKING:
-    from dags.dag_tree import (
+    from dags.dag_tree.typing import (
         FlatFunctionDict,
         FlatInputStructureDict,
     )

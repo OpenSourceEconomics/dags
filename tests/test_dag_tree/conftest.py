@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 if TYPE_CHECKING:
-    from dags.dag_tree import NestedFunctionDict
+    from dags.dag_tree.typing import NestedFunctionDict
 
 
 def _global__f(g, namespace1__f1, input_, namespace1__input):

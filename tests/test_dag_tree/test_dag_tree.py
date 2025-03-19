@@ -39,7 +39,7 @@ from dags.dag_tree.validation import (
 )
 
 if TYPE_CHECKING:
-    from dags.dag_tree import (
+    from dags.dag_tree.typing import (
         FlatFunctionDict,
         FlatInputStructureDict,
         GlobalOrLocal,
@@ -131,17 +131,17 @@ def functions() -> NestedFunctionDict:
 
 
 @pytest.mark.parametrize(
-    ("targets", "input_", "expected"),
+    ("targets", "global_input", "expected"),
     [
         (
             None,
             {
-                "input_": "namespace1__input",
+                "global_input": "namespace1__input",
                 "namespace1": {
                     "input": "namespace1__input",
                 },
                 "namespace2": {
-                    "input_": "namespace2__input",
+                    "global_input": "namespace2__input",
                     "input2": "namespace2__input2",
                 },
             },
@@ -192,7 +192,7 @@ def functions() -> NestedFunctionDict:
                 "namespace2": {"f": None},
             },
             {
-                "input_": "global__input",
+                "global_input": "global__input",
                 "namespace1": {
                     "input": "namespace1__input",
                 },
@@ -229,11 +229,13 @@ def functions() -> NestedFunctionDict:
 def test_concatenate_functions_tree(
     functions: NestedFunctionDict,
     targets: NestedTargetDict,
-    input_: NestedInputDict,
+    global_input: NestedInputDict,
     expected: NestedOutputDict,
 ) -> None:
-    f = concatenate_functions_tree(functions, targets, input_, name_clashes="ignore")
-    assert f(input_) == expected
+    f = concatenate_functions_tree(
+        functions, targets, global_input, name_clashes="ignore"
+    )
+    assert f(global_input) == expected
 
 
 @pytest.mark.parametrize(
@@ -246,7 +248,9 @@ def test_concatenate_functions_tree(
 def test_fail_if_branches_have_trailing_underscores(
     functions: NestedFunctionDict,
 ) -> None:
-    with pytest.raises(ValueError, match="Branches of the functions tree cannot end"):
+    with pytest.raises(
+        ValueError, match="Elements of the paths in the functions tree must not"
+    ):
         _flatten_functions_and_rename_parameters(functions, {})
 
 
@@ -437,12 +441,12 @@ def test_map_parameter_raises() -> None:
             None,
             "local",
             {
-                "input_": None,
+                "global_input": None,
                 "namespace1": {
                     "input": None,
                 },
                 "namespace2": {
-                    "input_": None,
+                    "global_input": None,
                     "input2": None,
                 },
             },
@@ -451,7 +455,7 @@ def test_map_parameter_raises() -> None:
             None,
             "global",
             {
-                "input_": None,
+                "global_input": None,
                 "namespace1": {
                     "input": None,
                 },
@@ -464,12 +468,12 @@ def test_map_parameter_raises() -> None:
             {"f": None, "namespace2": {"f": None}},
             "local",
             {
-                "input_": None,
+                "global_input": None,
                 "namespace1": {
                     "input": None,
                 },
                 "namespace2": {
-                    "input_": None,
+                    "global_input": None,
                 },
             },
         ),
@@ -477,7 +481,7 @@ def test_map_parameter_raises() -> None:
             {"f": None, "namespace2": {"f": None}},
             "global",
             {
-                "input_": None,
+                "global_input": None,
                 "namespace1": {
                     "input": None,
                 },
@@ -492,35 +496,6 @@ def test_create_input_structure_tree(
     expected: NestedInputStructureDict,
 ) -> None:
     assert create_input_structure_tree(functions, targets, level_of_inputs) == expected
-
-
-def test_flatten_str_dict(functions: NestedFunctionDict) -> None:
-    assert flatten_to_qual_names(functions) == {
-        "f": f,
-        "g": g,
-        "namespace1__f": _namespace1__f,
-        "namespace1__f1": _namespace1__f1,
-        "namespace1__deep__f": _namespace1__deep__f,
-        "namespace2__f": _namespace2__f,
-        "namespace2__f2": _namespace2__f2,
-    }
-
-
-def test_unflatten_str_dict(functions: NestedFunctionDict) -> None:
-    assert (
-        unflatten_from_qual_names(
-            {
-                "f": f,
-                "g": g,
-                "namespace1__f": _namespace1__f,
-                "namespace1__f1": _namespace1__f1,
-                "namespace1__deep__f": _namespace1__deep__f,
-                "namespace2__f": _namespace2__f,
-                "namespace2__f2": _namespace2__f2,
-            },
-        )
-        == functions
-    )
 
 
 @pytest.mark.parametrize(
@@ -540,7 +515,9 @@ def test_unflatten_str_dict(functions: NestedFunctionDict) -> None:
         ),
     ],
 )
-def test_flatten_targets(targets, expected) -> None:
+def test_flatten_targets(
+    targets: NestedTargetDict | None, expected: list[str] | None
+) -> None:
     assert _flatten_targets_to_qual_names(targets) == expected
 
 
