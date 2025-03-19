@@ -13,11 +13,12 @@ if TYPE_CHECKING:
 
     import networkx as nx
 
-    from dags.dags_typing import (
+    from dags.typing import (
         FlatFunctionDict,
         FlatInputStructureDict,
-        FlatStrDict,
+        FlatQNDict,
         FlatTargetList,
+        FlatTPDict,
         GenericCallable,
         GlobalOrLocal,
         NestedFunctionDict,
@@ -28,9 +29,7 @@ if TYPE_CHECKING:
         NestedTargetDict,
     )
 
-from flatten_dict import flatten, unflatten
-from flatten_dict.reducers import make_reducer
-from flatten_dict.splitters import make_splitter
+import flatten_dict as fd
 
 from dags.dag import (
     _create_arguments_of_concatenated_function,
@@ -39,17 +38,6 @@ from dags.dag import (
     create_dag,
 )
 from dags.signature import rename_arguments
-
-# Constants for qualified names.
-_python_identifier: str = r"[a-zA-Z_\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF][a-zA-Z0-9_\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]*"  # noqa: E501
-_qualified_name_delimiter: str = "__"
-_qualified_name: str = (
-    f"{_python_identifier}(?:{_qualified_name_delimiter}{_python_identifier})+"
-)
-
-# Reducers and splitters to flatten/unflatten dicts with qualified names as keys.
-_qualified_name_reducer = make_reducer(delimiter=_qualified_name_delimiter)
-_qualified_name_splitter = make_splitter(delimiter=_qualified_name_delimiter)
 
 
 def concatenate_functions_tree(
@@ -78,7 +66,7 @@ def concatenate_functions_tree(
         input_structure,
         name_clashes,
     )
-    flat_targets: FlatTargetList | None = _flatten_targets(targets)
+    flat_targets: FlatTargetList | None = _flatten_targets_to_qual_names(targets)
 
     concatenated_function = concatenate_functions(
         flat_functions,
@@ -89,9 +77,9 @@ def concatenate_functions_tree(
 
     @functools.wraps(concatenated_function)
     def wrapper(inputs: NestedInputDict) -> NestedOutputDict:
-        flat_inputs: FlatStrDict = _flatten_str_dict(inputs)
-        flat_outputs: FlatStrDict = concatenated_function(**flat_inputs)
-        return _unflatten_str_dict(flat_outputs)
+        flat_inputs: FlatQNDict = flatten_to_qual_names(inputs)
+        flat_outputs: FlatQNDict = concatenated_function(**flat_inputs)
+        return unflatten_from_qual_names(flat_outputs)
 
     return wrapper
 
@@ -115,19 +103,19 @@ def _flatten_functions_and_rename_parameters(
     """
     _fail_if_branches_have_trailing_undersores(functions)
 
-    flat_functions: FlatFunctionDict = _flatten_str_dict(functions)
-    flat_input_structure: FlatInputStructureDict = _flatten_str_dict(input_structure)
+    flat_functions: FlatFunctionDict = flatten_to_qual_names(functions)
+    flat_input_structure: FlatInputStructureDict = flatten_to_qual_names(
+        input_structure
+    )
 
     _check_for_parent_child_name_clashes(
-        flat_functions,
-        flat_input_structure,
-        name_clashes,
+        flat_functions=flat_functions,
+        flat_input_structure=flat_input_structure,
+        name_clashes_resolution=name_clashes,
     )
 
     for name, func in flat_functions.items():
-        namespace: str = _qualified_name_delimiter.join(
-            name.split(_qualified_name_delimiter)[:-1]
-        )
+        namespace: str = QUAL_NAME_DELIMITER.join(name.split(QUAL_NAME_DELIMITER)[:-1])
         renamed: GenericCallable = rename_arguments(
             func,
             mapper=_create_parameter_name_mapper(
@@ -214,7 +202,7 @@ def _find_parent_child_name_clashes(
 
 def _get_namespace_and_simple_name(qualified_name: str) -> tuple[str, str]:
     """
-    Split a qualified name into its namespace and simple name.
+    Split a qualified name into its top-level namespace and the remaining path elements.
 
     Args:
         qualified_name: A string representing the fully qualified name.
@@ -223,10 +211,10 @@ def _get_namespace_and_simple_name(qualified_name: str) -> tuple[str, str]:
     -------
         A tuple containing the namespace and the simple name.
     """
-    segments: list[str] = qualified_name.split(_qualified_name_delimiter)
+    segments: list[str] = qualified_name.split(QUAL_NAME_DELIMITER)
     if len(segments) == 1:
         return "", segments[0]
-    namespace: str = _qualified_name_delimiter.join(segments[:-1])
+    namespace: str = QUAL_NAME_DELIMITER.join(segments[:-1])
     simple_name: str = segments[-1]
     return namespace, simple_name
 
@@ -244,7 +232,7 @@ def _get_qualified_name(namespace: str, simple_name: str) -> str:
         The fully qualified name.
     """
     if namespace:
-        return f"{namespace}{_qualified_name_delimiter}{simple_name}"
+        return f"{namespace}{QUAL_NAME_DELIMITER}{simple_name}"
     return simple_name
 
 
@@ -344,12 +332,12 @@ def create_input_structure_tree(
     """
     _fail_if_branches_have_trailing_undersores(functions)
 
-    flat_functions = _flatten_str_dict(functions)
+    flat_functions = flatten_to_qual_names(functions)
     flat_input_structure: FlatInputStructureDict = {}
 
     for path, func in flat_functions.items():
-        namespace = _qualified_name_delimiter.join(
-            path.split(_qualified_name_delimiter)[:-1],
+        namespace = QUAL_NAME_DELIMITER.join(
+            path.split(QUAL_NAME_DELIMITER)[:-1],
         )
         parameter_names = dict(inspect.signature(func).parameters).keys()
 
@@ -364,7 +352,7 @@ def create_input_structure_tree(
             if parameter_path not in flat_functions:
                 flat_input_structure[parameter_path] = None
 
-    nested_input_structure = _unflatten_str_dict(flat_input_structure)
+    nested_input_structure = unflatten_from_qual_names(flat_input_structure)
 
     # If no targets are specified, all inputs are needed
     if targets is None:
@@ -376,11 +364,11 @@ def create_input_structure_tree(
         nested_input_structure,
         name_clashes="ignore",
     )
-    flat_targets = _flatten_targets(targets)
+    flat_targets = _flatten_targets_to_qual_names(targets)
     dag = create_dag(flat_renamed_functions, flat_targets)
     parameters = _create_arguments_of_concatenated_function(flat_renamed_functions, dag)
 
-    return _unflatten_str_dict(dict.fromkeys(parameters))
+    return unflatten_from_qual_names(dict.fromkeys(parameters))
 
 
 def create_dag_tree(
@@ -406,24 +394,134 @@ def create_dag_tree(
         input_structure,
         name_clashes,
     )
-    flat_targets = _flatten_targets(targets)
+    flat_targets = _flatten_targets_to_qual_names(targets)
 
     return create_dag(flat_functions, flat_targets)
 
 
-def _flatten_str_dict(str_dict: NestedStrDict) -> FlatStrDict:
-    return flatten(str_dict, reducer=_qualified_name_reducer)
+# Constants for qualified names.
+QUAL_NAME_DELIMITER: str = "__"
+_python_identifier: str = r"[a-zA-Z_\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF][a-zA-Z0-9_\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]*"  # noqa: E501
+_qualified_name: str = (
+    f"{_python_identifier}(?:{QUAL_NAME_DELIMITER}{_python_identifier})+"
+)
+
+# Reducers and splitters to flatten/unflatten dicts with qualified names as keys.
+_qualified_name_reducer = fd.reducers.make_reducer(delimiter=QUAL_NAME_DELIMITER)
+_qualified_name_splitter = fd.splitters.make_splitter(delimiter=QUAL_NAME_DELIMITER)
 
 
-def _unflatten_str_dict(str_dict: FlatStrDict) -> NestedStrDict:
-    return unflatten(str_dict, splitter=_qualified_name_splitter)
+def qual_name_from_tree_path(tree_path: tuple[str, ...]) -> str:
+    """Convert a tree path to a qualified name.
+
+    Args:
+        tree_path: A tuple of strings.
+
+    Returns
+    -------
+        A qualified name.
+    """
+    return QUAL_NAME_DELIMITER.join(tree_path)
 
 
-def _flatten_targets(targets: NestedTargetDict | None) -> FlatTargetList | None:
+def tree_path_from_qual_name(qual_name: str) -> tuple[str, ...]:
+    """Convert a qualified name to a tree path (tuple of strings).
+
+    Args:
+        qual_name: A qualified name.
+
+    Returns
+    -------
+        A tree path.
+    """
+    return tuple(qual_name.split(QUAL_NAME_DELIMITER))
+
+
+def flatten_to_qual_names(nested: NestedStrDict) -> FlatQNDict:
+    """Flatten a nested dictionary to a flat dictionary with qualified names as keys.
+
+    Args:
+        nested: A nested dictionary.
+
+    Returns
+    -------
+        A flat dictionary with qualified names as keys.
+    """
+    return fd.flatten(nested, reducer=_qualified_name_reducer)
+
+
+def qual_names(nested: NestedStrDict) -> list[str]:
+    """Return a list of qualified names from the keys of the nested dictionary.
+
+    Args:
+        nested: A nested dictionary.
+
+    Returns
+    -------
+        A list of qualified names.
+    """
+    return list(flatten_to_qual_names(nested).keys())
+
+
+def unflatten_from_qual_names(flat_qual_names: FlatQNDict) -> NestedStrDict:
+    """Return a nested dictionary from a flat dictionary with qualified names as keys.
+
+    Args:
+        flat_qual_names: A dictionary with qualified names as keys.
+
+    Returns
+    -------
+        A nested dictionary.
+    """
+    return fd.unflatten(flat_qual_names, splitter=_qualified_name_splitter)
+
+
+def flatten_to_tree_paths(nested: NestedStrDict) -> FlatTPDict:
+    """Flatten a nested dictionary to a flat dictionary with tree paths as keys.
+
+    Args:
+        nested: A nested dictionary.
+
+    Returns
+    -------
+        A flat dictionary with qualified names as keys.
+    """
+    return fd.flatten(nested, reducer="tuple")
+
+
+def tree_paths(nested: NestedStrDict) -> list[tuple[str, ...]]:
+    """Return a list of tree paths of the nested dictionary.
+
+    Args:
+        nested: A nested dictionary.
+
+    Returns
+    -------
+        A list of tuples.
+    """
+    return list(flatten_to_tree_paths(nested).keys())
+
+
+def unflatten_from_tree_paths(flat_tree_paths: FlatTPDict) -> NestedStrDict:
+    """Return a nested dictionary from a flat dictionary with tree paths as keys.
+
+    Args:
+        flat_tree_paths: A flat dictionary with tree paths (tuples) as keys.
+
+    Returns
+    -------
+        A nested dictionary.
+    """
+    return fd.unflatten(flat_tree_paths, splitter="tuple")
+
+
+def _flatten_targets_to_qual_names(
+    targets: NestedTargetDict | None,
+) -> FlatTargetList | None:
     if targets is None:
         return None
 
-    return list(_flatten_str_dict(targets).keys())
+    return list(flatten_to_qual_names(targets).keys())
 
 
 def _link_parameter_to_function_or_input(
@@ -503,8 +601,11 @@ def _fail_if_branches_have_trailing_undersores(functions: NestedFunctionDict) ->
     ------
         ValueError: If any branch of the functions tree ends with an underscore.
     """
-    flattened_functions_tree = flatten(functions)
+    flattened_functions_tree = fd.flatten(functions, reducer="tuple")
     for path in flattened_functions_tree:
         if len(path) > 1 and any(name.endswith("_") for name in path[:-1]):
-            msg = "Branches of the functions tree cannot end with an underscore."
+            msg = (
+                "Elements of the paths in the functions tree must not end with an "
+                f"underscore. Path: {path}"
+            )
             raise ValueError(msg)

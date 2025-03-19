@@ -11,19 +11,25 @@ from dags.dag_tree import (
     _create_parameter_name_mapper,
     _find_parent_child_name_clashes,
     _flatten_functions_and_rename_parameters,
-    _flatten_str_dict,
-    _flatten_targets,
+    _flatten_targets_to_qual_names,
     _get_namespace_and_simple_name,
     _get_qualified_name,
     _is_python_identifier,
     _is_qualified_name,
     _link_parameter_to_function_or_input,
     _map_parameter,
-    _unflatten_str_dict,
     concatenate_functions_tree,
     create_input_structure_tree,
+    flatten_to_qual_names,
+    flatten_to_tree_paths,
+    qual_name_from_tree_path,
+    qual_names,
+    tree_path_from_qual_name,
+    tree_paths,
+    unflatten_from_qual_names,
+    unflatten_from_tree_paths,
 )
-from dags.dags_typing import (
+from dags.typing import (
     FlatFunctionDict,
     FlatInputStructureDict,
     GlobalOrLocal,
@@ -35,7 +41,7 @@ from dags.dags_typing import (
 )
 
 if TYPE_CHECKING:
-    from dags.dags_typing import (
+    from dags.typing import (
         FlatFunctionDict,
         FlatInputStructureDict,
         GenericCallable,
@@ -50,22 +56,22 @@ if TYPE_CHECKING:
 # Fixtures & Other Test Inputs
 
 
-def _global__f(g, namespace1__f1, input_, namespace1__input):
+def f(g, namespace1__f1, global_input, namespace1__input):
     """Global function, duplicate simple name."""
     return {
-        "name": "global__f",
+        "name": "f",
         "args": {
             "g": g,
             "namespace1__f1": namespace1__f1,
-            "input_": input_,
+            "global_input": global_input,
             "namespace1__input": namespace1__input,
         },
     }
 
 
-def _global__g():
+def g():
     """Global function, unique simple name."""
-    return {"name": "global__g"}
+    return {"name": "g"}
 
 
 def _namespace1__f(
@@ -93,9 +99,9 @@ def _namespace1__f1():
     return {"name": "namespace1__f1"}
 
 
-def _namespace2__f(f2, input_):
+def _namespace2__f(f2, global_input):
     """Namespaced function, duplicate simple name. All arguments with simple names."""
-    return {"name": "namespace2__f", "args": {"f2": f2, "input_": input_}}
+    return {"name": "namespace2__f", "args": {"f2": f2, "global_input": global_input}}
 
 
 def _namespace2__f2():
@@ -111,8 +117,8 @@ def _namespace1__deep__f():
 @pytest.fixture
 def functions() -> NestedFunctionDict:
     return {
-        "f": _global__f,
-        "g": _global__g,
+        "f": f,
+        "g": g,
         "namespace1": {
             "f": _namespace1__f,
             "f1": _namespace1__f1,
@@ -129,36 +135,36 @@ def functions() -> NestedFunctionDict:
 
 
 @pytest.mark.parametrize(
-    ("targets", "input_", "expected"),
+    ("targets", "global_input", "expected"),
     [
         (
             None,
             {
-                "input_": "namespace1__input",
+                "global_input": "namespace1__input",
                 "namespace1": {
                     "input": "namespace1__input",
                 },
                 "namespace2": {
-                    "input_": "namespace2__input",
+                    "global_input": "namespace2__input",
                     "input2": "namespace2__input2",
                 },
             },
             {
                 "f": {
-                    "name": "global__f",
+                    "name": "f",
                     "args": {
-                        "g": {"name": "global__g"},
+                        "g": {"name": "g"},
                         "namespace1__f1": {"name": "namespace1__f1"},
-                        "input_": "namespace1__input",
+                        "global_input": "namespace1__input",
                         "namespace1__input": "namespace1__input",
                     },
                 },
-                "g": {"name": "global__g"},
+                "g": {"name": "g"},
                 "namespace1": {
                     "f": {
                         "name": "namespace1__f",
                         "args": {
-                            "g": {"name": "global__g"},
+                            "g": {"name": "g"},
                             "namespace1__f1": {"name": "namespace1__f1"},
                             "namespace2__f2": {"name": "namespace2__f2"},
                             "namespace1__input": "namespace1__input",
@@ -175,7 +181,7 @@ def functions() -> NestedFunctionDict:
                         "name": "namespace2__f",
                         "args": {
                             "f2": {"name": "namespace2__f2"},
-                            "input_": "namespace2__input",
+                            "global_input": "namespace2__input",
                         },
                     },
                     "f2": {"name": "namespace2__f2"},
@@ -190,7 +196,7 @@ def functions() -> NestedFunctionDict:
                 "namespace2": {"f": None},
             },
             {
-                "input_": "global__input",
+                "global_input": "global__input",
                 "namespace1": {
                     "input": "namespace1__input",
                 },
@@ -203,7 +209,7 @@ def functions() -> NestedFunctionDict:
                     "f": {
                         "name": "namespace1__f",
                         "args": {
-                            "g": {"name": "global__g"},
+                            "g": {"name": "g"},
                             "namespace1__f1": {"name": "namespace1__f1"},
                             "namespace2__f2": {"name": "namespace2__f2"},
                             "namespace1__input": "namespace1__input",
@@ -216,7 +222,7 @@ def functions() -> NestedFunctionDict:
                         "name": "namespace2__f",
                         "args": {
                             "f2": {"name": "namespace2__f2"},
-                            "input_": "global__input",
+                            "global_input": "global__input",
                         },
                     },
                 },
@@ -227,11 +233,13 @@ def functions() -> NestedFunctionDict:
 def test_concatenate_functions_tree(
     functions: NestedFunctionDict,
     targets: NestedTargetDict,
-    input_: NestedInputDict,
+    global_input: NestedInputDict,
     expected: NestedOutputDict,
 ) -> None:
-    f = concatenate_functions_tree(functions, targets, input_, name_clashes="ignore")
-    assert f(input_) == expected
+    f = concatenate_functions_tree(
+        functions, targets, global_input, name_clashes="ignore"
+    )
+    assert f(global_input) == expected
 
 
 @pytest.mark.parametrize(
@@ -244,7 +252,9 @@ def test_concatenate_functions_tree(
 def test_fail_if_branches_have_trailing_underscores(
     functions: NestedFunctionDict,
 ) -> None:
-    with pytest.raises(ValueError, match="Branches of the functions tree cannot end"):
+    with pytest.raises(
+        ValueError, match="Elements of the paths in the functions tree must not"
+    ):
         _flatten_functions_and_rename_parameters(functions, {})
 
 
@@ -362,20 +372,20 @@ def test_get_qualified_name(namespace: str, simple_name: str, expected: str) -> 
         (
             {},
             "",
-            _global__g,
+            g,
             {},
         ),
         (
-            {"input_": None},
+            {"global_input": None},
             "namespace2",
             _namespace2__f,
-            {"f2": "namespace2__f2", "input_": "input_"},
+            {"f2": "namespace2__f2", "global_input": "global_input"},
         ),
         (
-            {"namespace2": {"input_": None}},
+            {"namespace2": {"global_input": None}},
             "namespace2",
             _namespace2__f,
-            {"f2": "namespace2__f2", "input_": "namespace2__input_"},
+            {"f2": "namespace2__f2", "global_input": "namespace2__global_input"},
         ),
         (
             {"namespace1": {"input": None}, "namespace2": {"input2": None}},
@@ -390,13 +400,13 @@ def test_get_qualified_name(namespace: str, simple_name: str, expected: str) -> 
             },
         ),
         (
-            {"input_": None, "namespace1": {"input_": None}},
+            {"global_input": None, "namespace1": {"global_input": None}},
             "",
-            _global__f,
+            f,
             {
                 "g": "g",
                 "namespace1__f1": "namespace1__f1",
-                "input_": "input_",
+                "global_input": "global_input",
                 "namespace1__input": "namespace1__input",
             },
         ),
@@ -409,13 +419,13 @@ def test_create_parameter_name_mapper(
     function: GenericCallable,
     expected: dict[str, str],
 ) -> None:
-    flat_functions = _flatten_str_dict(functions)
-    flat_input_structure = _flatten_str_dict(input_structure)
+    flat_functions = flatten_to_qual_names(functions)
+    input_structure = flatten_to_qual_names(input_structure)
 
     assert (
         _create_parameter_name_mapper(
             flat_functions,
-            flat_input_structure,
+            input_structure,
             namespace,
             function,
         )
@@ -435,12 +445,12 @@ def test_map_parameter_raises() -> None:
             None,
             "local",
             {
-                "input_": None,
+                "global_input": None,
                 "namespace1": {
                     "input": None,
                 },
                 "namespace2": {
-                    "input_": None,
+                    "global_input": None,
                     "input2": None,
                 },
             },
@@ -449,7 +459,7 @@ def test_map_parameter_raises() -> None:
             None,
             "global",
             {
-                "input_": None,
+                "global_input": None,
                 "namespace1": {
                     "input": None,
                 },
@@ -462,12 +472,12 @@ def test_map_parameter_raises() -> None:
             {"f": None, "namespace2": {"f": None}},
             "local",
             {
-                "input_": None,
+                "global_input": None,
                 "namespace1": {
                     "input": None,
                 },
                 "namespace2": {
-                    "input_": None,
+                    "global_input": None,
                 },
             },
         ),
@@ -475,7 +485,7 @@ def test_map_parameter_raises() -> None:
             {"f": None, "namespace2": {"f": None}},
             "global",
             {
-                "input_": None,
+                "global_input": None,
                 "namespace1": {
                     "input": None,
                 },
@@ -493,9 +503,9 @@ def test_create_input_structure_tree(
 
 
 def test_flatten_str_dict(functions: NestedFunctionDict) -> None:
-    assert _flatten_str_dict(functions) == {
-        "f": _global__f,
-        "g": _global__g,
+    assert flatten_to_qual_names(functions) == {
+        "f": f,
+        "g": g,
         "namespace1__f": _namespace1__f,
         "namespace1__f1": _namespace1__f1,
         "namespace1__deep__f": _namespace1__deep__f,
@@ -506,10 +516,10 @@ def test_flatten_str_dict(functions: NestedFunctionDict) -> None:
 
 def test_unflatten_str_dict(functions: NestedFunctionDict) -> None:
     assert (
-        _unflatten_str_dict(
+        unflatten_from_qual_names(
             {
-                "f": _global__f,
-                "g": _global__g,
+                "f": f,
+                "g": g,
                 "namespace1__f": _namespace1__f,
                 "namespace1__f1": _namespace1__f1,
                 "namespace1__deep__f": _namespace1__deep__f,
@@ -539,7 +549,7 @@ def test_unflatten_str_dict(functions: NestedFunctionDict) -> None:
     ],
 )
 def test_flatten_targets(targets: NestedTargetDict, expected: list[str]) -> None:
-    assert _flatten_targets(targets) == expected
+    assert _flatten_targets_to_qual_names(targets) == expected
 
 
 @pytest.mark.parametrize(
@@ -566,7 +576,7 @@ def test_link_parameter_to_function_or_input(
     parameter_name: str,
     expected: tuple[str],
 ) -> None:
-    flat_functions = _flatten_str_dict(functions)
+    flat_functions = flatten_to_qual_names(functions)
     assert (
         _link_parameter_to_function_or_input(
             flat_functions,
@@ -598,6 +608,11 @@ def test_link_parameter_to_function_or_input(
         ("A_", True),
         ("Ab", True),
         ("AB", True),
+        ("ÄB", True),
+        ("ä", True),
+        ("äb", True),
+        ("Ä", True),
+        ("ß", True),
     ],
 )
 def test_is_python_identifier(s: str, expected: bool) -> None:
@@ -686,3 +701,78 @@ def test_correct_argument_names(
         expected_argument_name
         in inspect.signature(flat_functions[flat_function_name_to_check]).parameters
     )
+
+
+def _bb() -> None:
+    return None
+
+
+def _ee() -> None:
+    return None
+
+
+def _ff() -> None:
+    return None
+
+
+@pytest.fixture
+def functions_tree() -> NestedFunctionDict:
+    return {
+        "a": {"b": _bb},
+        "c": {"d": {"e": _ee}},
+        "f": _ff,
+    }
+
+
+def test_flatten_to_qual_names(functions_tree: NestedFunctionDict) -> None:
+    assert flatten_to_qual_names(functions_tree) == {
+        "a__b": _bb,
+        "c__d__e": _ee,
+        "f": _ff,
+    }
+
+
+def test_round_trip_via_qual_names(functions_tree: NestedFunctionDict) -> None:
+    assert (
+        unflatten_from_qual_names(flatten_to_qual_names(functions_tree))
+        == functions_tree
+    )
+
+
+def test_qual_names(functions_tree: NestedFunctionDict) -> None:
+    assert qual_names(functions_tree) == [
+        "a__b",
+        "c__d__e",
+        "f",
+    ]
+
+
+def test_flatten_to_tree_paths(functions_tree: NestedFunctionDict) -> None:
+    assert flatten_to_tree_paths(functions_tree) == {
+        ("a", "b"): _bb,
+        ("c", "d", "e"): _ee,
+        ("f",): _ff,
+    }
+
+
+def test_round_trip_via_tree_paths(functions_tree: NestedFunctionDict) -> None:
+    assert (
+        unflatten_from_tree_paths(flatten_to_tree_paths(functions_tree))
+        == functions_tree
+    )
+
+
+def test_tree_paths(functions_tree: NestedFunctionDict) -> None:
+    assert tree_paths(functions_tree) == [
+        ("a", "b"),
+        ("c", "d", "e"),
+        ("f",),
+    ]
+
+
+def test_qual_name_from_tree_path() -> None:
+    assert qual_name_from_tree_path(("a", "b")) == "a__b"
+
+
+def test_tree_path_from_qual_name() -> None:
+    assert tree_path_from_qual_name("a__b") == ("a", "b")

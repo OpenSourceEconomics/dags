@@ -3,7 +3,7 @@ import inspect
 from collections.abc import Callable
 from typing import Any, cast, overload
 
-from dags.dags_typing import P, R
+from dags.typing import P, R
 
 
 def create_signature(

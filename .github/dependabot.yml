@@ -7,6 +7,6 @@ updates:
       # Check for updates to GitHub Actions every week
       interval: monthly
     groups:
-      dependencies:
+      github-actions:
         patterns:
           - '*'

@@ -4,9 +4,9 @@ from functools import partial
 
 import pytest
 
-from dags.dags_typing import GenericCallable
 from dags.output import aggregated_output, dict_output, list_output, single_output
 from dags.signature import with_signature
+from dags.typing import GenericCallable
 
 decorators = [
     single_output,

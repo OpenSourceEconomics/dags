@@ -14,7 +14,7 @@ from dags.signature import with_signature
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from dags.dags_typing import (
+    from dags.typing import (
         CombinedFunctionReturnType,
         FunctionCollection,
         GenericCallable,

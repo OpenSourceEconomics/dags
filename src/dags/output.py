@@ -2,7 +2,7 @@ import functools
 from collections.abc import Callable
 from typing import overload
 
-from dags.dags_typing import P, T
+from dags.typing import P, T
 
 
 def single_output(func: Callable[P, tuple[T, ...]]) -> Callable[P, T]:

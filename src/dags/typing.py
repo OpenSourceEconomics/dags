@@ -27,6 +27,7 @@ NestedInputDict = Mapping[str, Union[Any, "NestedInputDict"]]
 NestedOutputDict = Mapping[str, Union[Any, "NestedOutputDict"]]
 
 NestedStrDict = Mapping[str, Union[Any, "NestedStrDict"]]
-FlatStrDict = dict[str, Any]
+FlatQNDict = dict[str, Any]
+FlatTPDict = dict[tuple[str, ...], Any]
 
 GlobalOrLocal = Literal["global", "local"]
