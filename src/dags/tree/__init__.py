@@ -1,11 +1,11 @@
 """Module for handling DAG trees with nested dictionaries and qualified names."""
 
-from dags.dag_tree.dag_tree import (
+from dags.tree.dag_tree import (
     concatenate_functions_tree,
     create_dag_tree,
     create_input_structure_tree,
 )
-from dags.dag_tree.tree_utils import (
+from dags.tree.tree_utils import (
     QUAL_NAME_DELIMITER,
     flatten_to_qual_names,
     flatten_to_tree_paths,

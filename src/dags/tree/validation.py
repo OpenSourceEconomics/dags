@@ -9,13 +9,13 @@ from typing import TYPE_CHECKING, Literal
 
 import flatten_dict as fd
 
-from dags.dag_tree.tree_utils import (
+from dags.tree.tree_utils import (
     _get_namespace_and_simple_name,
     _get_qualified_name,
 )
 
 if TYPE_CHECKING:
-    from dags.dag_tree.typing import (
+    from dags.tree.typing import (
         FlatFunctionDict,
         FlatInputStructureDict,
         NestedFunctionDict,

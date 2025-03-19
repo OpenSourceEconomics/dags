@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 import flatten_dict as fd
 
 if TYPE_CHECKING:
-    from dags.dag_tree.typing import FlatQNDict, FlatTPDict, NestedStrDict
+    from dags.tree.typing import FlatQNDict, FlatTPDict, NestedStrDict
 
 # Constants for qualified names
 QUAL_NAME_DELIMITER: str = "__"

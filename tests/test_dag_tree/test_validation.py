@@ -6,13 +6,13 @@ from typing import TYPE_CHECKING, Literal
 
 import pytest
 
-from dags.dag_tree.validation import (
+from dags.tree.validation import (
     _check_for_parent_child_name_clashes,
     _find_parent_child_name_clashes,
 )
 
 if TYPE_CHECKING:
-    from dags.dag_tree.typing import (
+    from dags.tree.typing import (
         FlatFunctionDict,
         FlatInputStructureDict,
     )

@@ -11,24 +11,24 @@ from dags.dag import (
     concatenate_functions,
     create_dag,
 )
-from dags.dag_tree.tree_utils import (
+from dags.signature import rename_arguments
+from dags.tree.tree_utils import (
     QUAL_NAME_DELIMITER,
     _is_qualified_name,
     flatten_to_qual_names,
     unflatten_from_qual_names,
 )
-from dags.dag_tree.validation import (
+from dags.tree.validation import (
     _check_for_parent_child_name_clashes,
     _fail_if_branches_have_trailing_undersores,
 )
-from dags.signature import rename_arguments
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
     import networkx as nx
 
-    from dags.dag_tree.typing import (
+    from dags.tree.typing import (
         FlatFunctionDict,
         FlatInputStructureDict,
         FlatTargetList,

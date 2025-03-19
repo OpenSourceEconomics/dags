@@ -8,17 +8,17 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from dags.dag_tree import (
+from dags.tree import (
     concatenate_functions_tree,
     create_input_structure_tree,
 )
-from dags.dag_tree.dag_tree import (
+from dags.tree.dag_tree import (
     _flatten_functions_and_rename_parameters,
     _flatten_targets_to_qual_names,
 )
 
 if TYPE_CHECKING:
-    from dags.dag_tree.typing import (
+    from dags.tree.typing import (
         GlobalOrLocal,
         NestedFunctionDict,
         NestedInputDict,

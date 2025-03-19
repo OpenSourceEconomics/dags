@@ -7,10 +7,10 @@ from typing import TYPE_CHECKING
 import pytest
 
 if TYPE_CHECKING:
-    from dags.dag_tree.typing import NestedFunctionDict
+    from dags.tree.typing import NestedFunctionDict
 
 # Import fixtures
-from dags.dag_tree.tree_utils import (
+from dags.tree.tree_utils import (
     _get_namespace_and_simple_name,
     _get_qualified_name,
     _is_python_identifier,

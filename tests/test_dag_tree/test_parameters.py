@@ -6,14 +6,14 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from dags.dag_tree.dag_tree import (
+from dags.tree.dag_tree import (
     _create_parameter_name_mapper,
     _link_parameter_to_function_or_input,
     _map_parameter,
 )
 
 if TYPE_CHECKING:
-    from dags.dag_tree.typing import (
+    from dags.tree.typing import (
         GenericCallable,
         GlobalOrLocal,
         NestedFunctionDict,
@@ -149,7 +149,7 @@ def test_create_parameter_name_mapper(
     function: GenericCallable,
     expected: dict[str, str],
 ) -> None:
-    from dags.dag_tree.tree_utils import flatten_to_qual_names
+    from dags.tree.tree_utils import flatten_to_qual_names
 
     flat_functions = flatten_to_qual_names(functions)
     flat_input_structure = flatten_to_qual_names(input_structure)
@@ -194,7 +194,7 @@ def test_link_parameter_to_function_or_input(
     parameter_name: str,
     expected: tuple[str],
 ) -> None:
-    from dags.dag_tree.tree_utils import flatten_to_qual_names
+    from dags.tree.tree_utils import flatten_to_qual_names
 
     flat_functions = flatten_to_qual_names(functions)
     assert (
