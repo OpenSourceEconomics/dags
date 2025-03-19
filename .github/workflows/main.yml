@@ -47,6 +47,6 @@ jobs:
         run: pixi run -e ${{ matrix.environment }} tests-with-cov
       - name: Upload coverage report.
         if: runner.os == 'Linux' && matrix.environment == 'py313'
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
