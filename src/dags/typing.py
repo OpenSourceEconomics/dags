@@ -1,5 +1,5 @@
-from collections.abc import Callable, Mapping
-from typing import Any, Literal, ParamSpec, TypeVar, Union
+from collections.abc import Callable
+from typing import Any, Literal, ParamSpec, TypeVar
 
 GenericCallable = Callable[..., Any]
 FunctionCollection = dict[str, GenericCallable] | list[GenericCallable]
@@ -11,23 +11,3 @@ CombinedFunctionReturnType = Literal["tuple", "list", "dict"]
 P = ParamSpec("P")
 R = TypeVar("R")
 T = TypeVar("T")
-
-
-# DAG-Tree typing
-NestedFunctionDict = Mapping[str, Union[GenericCallable, "NestedFunctionDict"]]
-FlatFunctionDict = dict[str, GenericCallable]
-
-NestedTargetDict = Mapping[str, Union[None, "NestedTargetDict"]]
-FlatTargetList = list[str]
-
-NestedInputStructureDict = Mapping[str, Union[None, "NestedInputStructureDict"]]
-FlatInputStructureDict = dict[str, None]
-
-NestedInputDict = Mapping[str, Union[Any, "NestedInputDict"]]
-NestedOutputDict = Mapping[str, Union[Any, "NestedOutputDict"]]
-
-NestedStrDict = Mapping[str, Union[Any, "NestedStrDict"]]
-FlatQNDict = dict[str, Any]
-FlatTPDict = dict[tuple[str, ...], Any]
-
-GlobalOrLocal = Literal["global", "local"]

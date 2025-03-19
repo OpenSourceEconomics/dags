@@ -7,17 +7,6 @@ from typing import TYPE_CHECKING, Literal
 import pytest
 
 from dags.dag_tree import (
-    _check_for_parent_child_name_clashes,
-    _create_parameter_name_mapper,
-    _find_parent_child_name_clashes,
-    _flatten_functions_and_rename_parameters,
-    _flatten_targets_to_qual_names,
-    _get_namespace_and_simple_name,
-    _get_qualified_name,
-    _is_python_identifier,
-    _is_qualified_name,
-    _link_parameter_to_function_or_input,
-    _map_parameter,
     concatenate_functions_tree,
     create_input_structure_tree,
     flatten_to_qual_names,
@@ -29,22 +18,30 @@ from dags.dag_tree import (
     unflatten_from_qual_names,
     unflatten_from_tree_paths,
 )
-from dags.typing import (
-    FlatFunctionDict,
-    FlatInputStructureDict,
-    GlobalOrLocal,
-    NestedFunctionDict,
-    NestedInputDict,
-    NestedInputStructureDict,
-    NestedOutputDict,
-    NestedTargetDict,
+from dags.dag_tree.concatenate import (
+    _flatten_functions_and_rename_parameters,
+    _flatten_targets_to_qual_names,
+)
+from dags.dag_tree.parameters import (
+    _create_parameter_name_mapper,
+    _link_parameter_to_function_or_input,
+    _map_parameter,
+)
+from dags.dag_tree.qualified_names import (
+    _get_namespace_and_simple_name,
+    _get_qualified_name,
+    _is_python_identifier,
+    _is_qualified_name,
+)
+from dags.dag_tree.validation import (
+    _check_for_parent_child_name_clashes,
+    _find_parent_child_name_clashes,
 )
 
 if TYPE_CHECKING:
-    from dags.typing import (
+    from dags.dag_tree.typing import (
         FlatFunctionDict,
         FlatInputStructureDict,
-        GenericCallable,
         GlobalOrLocal,
         NestedFunctionDict,
         NestedInputDict,
@@ -52,8 +49,7 @@ if TYPE_CHECKING:
         NestedOutputDict,
         NestedTargetDict,
     )
-
-# Fixtures & Other Test Inputs
+    from dags.typing import GenericCallable
 
 
 def f(g, namespace1__f1, global_input, namespace1__input):
