@@ -237,7 +237,7 @@ We can simply rename the arguments programmatically:
 
 .. code-block:: python
 
-    from dags.signature import rename_arguments
+    from dags import rename_arguments
 
     functions = {
         "f": rename_arguments(sum_of_squares, mapper={"a": "x", "b": "y"}),
