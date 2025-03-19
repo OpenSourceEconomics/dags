@@ -22,7 +22,9 @@ from dags.dag_tree import (
     create_input_structure_tree,
     flatten_to_qual_names,
     flatten_to_tree_paths,
+    qual_name_from_tree_path,
     qual_names,
+    tree_path_from_qual_name,
     tree_paths,
     unflatten_from_qual_names,
     unflatten_from_tree_paths,
@@ -766,3 +768,11 @@ def test_tree_paths(functions_tree: NestedFunctionDict) -> None:
         ("c", "d", "e"),
         ("f",),
     ]
+
+
+def test_qual_name_from_tree_path() -> None:
+    assert qual_name_from_tree_path(("a", "b")) == "a__b"
+
+
+def test_tree_path_from_qual_name() -> None:
+    assert tree_path_from_qual_name("a__b") == ("a", "b")

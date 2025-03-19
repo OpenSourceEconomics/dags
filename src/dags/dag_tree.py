@@ -411,6 +411,32 @@ _qualified_name_reducer = fd.reducers.make_reducer(delimiter=QUAL_NAME_DELIMITER
 _qualified_name_splitter = fd.splitters.make_splitter(delimiter=QUAL_NAME_DELIMITER)
 
 
+def qual_name_from_tree_path(tree_path: tuple[str, ...]) -> str:
+    """Convert a tree path to a qualified name.
+
+    Args:
+        tree_path: A tuple of strings.
+
+    Returns
+    -------
+        A qualified name.
+    """
+    return QUAL_NAME_DELIMITER.join(tree_path)
+
+
+def tree_path_from_qual_name(qual_name: str) -> tuple[str, ...]:
+    """Convert a qualified name to a tree path (tuple of strings).
+
+    Args:
+        qual_name: A qualified name.
+
+    Returns
+    -------
+        A tree path.
+    """
+    return tuple(qual_name.split(QUAL_NAME_DELIMITER))
+
+
 def flatten_to_qual_names(nested: NestedStrDict) -> FlatQNDict:
     """Flatten a nested dictionary to a flat dictionary with qualified names as keys.
 
