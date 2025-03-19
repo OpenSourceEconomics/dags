@@ -1,4 +1,4 @@
-"""Tests for tree_utils module of dag_tree."""
+"""Utilities for working with nested/flat dictionaries, tree paths, qualified names."""
 
 from __future__ import annotations
 
