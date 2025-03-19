@@ -18,16 +18,14 @@ from dags.dag_tree import (
     unflatten_from_qual_names,
     unflatten_from_tree_paths,
 )
-from dags.dag_tree.concatenate import (
+from dags.dag_tree.dag_tree import (
+    _create_parameter_name_mapper,
     _flatten_functions_and_rename_parameters,
     _flatten_targets_to_qual_names,
-)
-from dags.dag_tree.parameters import (
-    _create_parameter_name_mapper,
     _link_parameter_to_function_or_input,
     _map_parameter,
 )
-from dags.dag_tree.qualified_names import (
+from dags.dag_tree.tree_utils import (
     _get_namespace_and_simple_name,
     _get_qualified_name,
     _is_python_identifier,

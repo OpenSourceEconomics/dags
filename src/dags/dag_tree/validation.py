@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Literal
 
 import flatten_dict as fd
 
-from dags.dag_tree.qualified_names import (
+from dags.dag_tree.tree_utils import (
     _get_namespace_and_simple_name,
     _get_qualified_name,
 )

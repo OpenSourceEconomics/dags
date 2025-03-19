@@ -4637,8 +4637,8 @@ packages:
   timestamp: 1736761414276
 - pypi: .
   name: dags
-  version: 0.2.4.dev10+gad8f507.d20250318
-  sha256: af5dbe56c1e7fe32e9b59dde061a5a2a3fb2778484509945d79910bd1992fb3c
+  version: 0.2.4.dev9+g1509e19.d20250319
+  sha256: e1959d773c6e4ec59eaef235cef1ce598ca0eca454d512264711a9a16d6e687a
   requires_dist:
   - flatten-dict
   - networkx

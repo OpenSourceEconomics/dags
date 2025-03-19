@@ -7,7 +7,7 @@ releases are available on [conda-forge](https://anaconda.org/conda-forge/dags).
 ## 0.3.0
 
 - :gh:`29` Fix behavior of absolute/relative namespace handling (:ghuser:`hmgaudecker`)
-- :gh:`30` Refactor `dag_tree` (:ghuser:`hmgaudecker`)
+- :gh:`31` Refactor `dag_tree` (:ghuser:`hmgaudecker`)
 - :gh:`28` Expose relevant functions for working with function trees (:ghuser:`hmgaudecker`)
 - :gh:`26` Allow Unicode characters in Python identifiers (:ghuser:`MImmesberger`, :ghuser:`hmgaudecker`).
 - :gh:`24` Add type hints to the codebase (:ghuser:`timmens`, :ghuser:`hmgaudecker`).
