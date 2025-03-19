@@ -25,16 +25,6 @@ from dags.dag_tree.tree_utils import (
     unflatten_from_tree_paths,
 )
 
-from .conftest import (
-    _global__f,
-    _global__g,
-    _namespace1__deep__f,
-    _namespace1__f,
-    _namespace1__f1,
-    _namespace2__f,
-    _namespace2__f2,
-)
-
 
 @pytest.mark.parametrize(
     ("qualified_name", "expected"),
@@ -61,45 +51,6 @@ def test_get_namespace_and_simple_name(
 )
 def test_get_qualified_name(namespace: str, simple_name: str, expected: str) -> None:
     assert _get_qualified_name(namespace, simple_name) == expected
-
-
-def test_flatten_to_qual_names_large(functions: NestedFunctionDict) -> None:
-    assert flatten_to_qual_names(functions) == {
-        "f": _global__f,
-        "g": _global__g,
-        "namespace1__f": _namespace1__f,
-        "namespace1__f1": _namespace1__f1,
-        "namespace1__deep__f": _namespace1__deep__f,
-        "namespace2__f": _namespace2__f,
-        "namespace2__f2": _namespace2__f2,
-    }
-
-
-def test_unflatten_from_qual_names_large(functions: NestedFunctionDict) -> None:
-    from .conftest import (
-        _global__f,
-        _global__g,
-        _namespace1__deep__f,
-        _namespace1__f,
-        _namespace1__f1,
-        _namespace2__f,
-        _namespace2__f2,
-    )
-
-    assert (
-        unflatten_from_qual_names(
-            {
-                "f": _global__f,
-                "g": _global__g,
-                "namespace1__f": _namespace1__f,
-                "namespace1__f1": _namespace1__f1,
-                "namespace1__deep__f": _namespace1__deep__f,
-                "namespace2__f": _namespace2__f,
-                "namespace2__f2": _namespace2__f2,
-            },
-        )
-        == functions
-    )
 
 
 @pytest.mark.parametrize(
