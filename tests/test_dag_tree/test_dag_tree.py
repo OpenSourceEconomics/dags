@@ -1,3 +1,5 @@
+"""Tests for the dag_tree module."""
+
 from __future__ import annotations
 
 import functools
@@ -37,7 +39,7 @@ from dags.dag_tree.validation import (
 )
 
 if TYPE_CHECKING:
-    from dags.dag_tree.typing import (
+    from dags.dag_tree import (
         FlatFunctionDict,
         FlatInputStructureDict,
         GlobalOrLocal,
@@ -129,17 +131,17 @@ def functions() -> NestedFunctionDict:
 
 
 @pytest.mark.parametrize(
-    ("targets", "global_input", "expected"),
+    ("targets", "input_", "expected"),
     [
         (
             None,
             {
-                "global_input": "namespace1__input",
+                "input_": "namespace1__input",
                 "namespace1": {
                     "input": "namespace1__input",
                 },
                 "namespace2": {
-                    "global_input": "namespace2__input",
+                    "input_": "namespace2__input",
                     "input2": "namespace2__input2",
                 },
             },
@@ -190,7 +192,7 @@ def functions() -> NestedFunctionDict:
                 "namespace2": {"f": None},
             },
             {
-                "global_input": "global__input",
+                "input_": "global__input",
                 "namespace1": {
                     "input": "namespace1__input",
                 },
@@ -227,13 +229,11 @@ def functions() -> NestedFunctionDict:
 def test_concatenate_functions_tree(
     functions: NestedFunctionDict,
     targets: NestedTargetDict,
-    global_input: NestedInputDict,
+    input_: NestedInputDict,
     expected: NestedOutputDict,
 ) -> None:
-    f = concatenate_functions_tree(
-        functions, targets, global_input, name_clashes="ignore"
-    )
-    assert f(global_input) == expected
+    f = concatenate_functions_tree(functions, targets, input_, name_clashes="ignore")
+    assert f(input_) == expected
 
 
 @pytest.mark.parametrize(
@@ -246,9 +246,7 @@ def test_concatenate_functions_tree(
 def test_fail_if_branches_have_trailing_underscores(
     functions: NestedFunctionDict,
 ) -> None:
-    with pytest.raises(
-        ValueError, match="Elements of the paths in the functions tree must not"
-    ):
+    with pytest.raises(ValueError, match="Branches of the functions tree cannot end"):
         _flatten_functions_and_rename_parameters(functions, {})
 
 
@@ -439,12 +437,12 @@ def test_map_parameter_raises() -> None:
             None,
             "local",
             {
-                "global_input": None,
+                "input_": None,
                 "namespace1": {
                     "input": None,
                 },
                 "namespace2": {
-                    "global_input": None,
+                    "input_": None,
                     "input2": None,
                 },
             },
@@ -453,7 +451,7 @@ def test_map_parameter_raises() -> None:
             None,
             "global",
             {
-                "global_input": None,
+                "input_": None,
                 "namespace1": {
                     "input": None,
                 },
@@ -466,12 +464,12 @@ def test_map_parameter_raises() -> None:
             {"f": None, "namespace2": {"f": None}},
             "local",
             {
-                "global_input": None,
+                "input_": None,
                 "namespace1": {
                     "input": None,
                 },
                 "namespace2": {
-                    "global_input": None,
+                    "input_": None,
                 },
             },
         ),
@@ -479,7 +477,7 @@ def test_map_parameter_raises() -> None:
             {"f": None, "namespace2": {"f": None}},
             "global",
             {
-                "global_input": None,
+                "input_": None,
                 "namespace1": {
                     "input": None,
                 },
@@ -542,7 +540,7 @@ def test_unflatten_str_dict(functions: NestedFunctionDict) -> None:
         ),
     ],
 )
-def test_flatten_targets(targets: NestedTargetDict, expected: list[str]) -> None:
+def test_flatten_targets(targets, expected) -> None:
     assert _flatten_targets_to_qual_names(targets) == expected
 
 
@@ -636,9 +634,7 @@ def test_partialled_function_argument() -> None:
     input_structure = {"a": None}
     targets = {"f": None}
 
-    concatenated_func = concatenate_functions_tree(
-        functions=tree, targets=targets, input_structure=input_structure
-    )
+    concatenated_func = concatenate_functions_tree(tree, targets, input_structure)
     concatenated_func({"a": 1})
 
 
