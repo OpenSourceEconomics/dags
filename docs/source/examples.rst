@@ -83,7 +83,33 @@ outputs. And we would like to have them as a dictionary. We can do this as follo
     {"h": 0.6, "f": 5, "g": 3.0}
 
 
-Functions from different namespaces
+
+Renaming the output of a function
+---------------------------------
+
+So far, the name of the output of the function was determined from the ``__name__``
+attribute of each function. This is not enough if you want to use dags to create
+functions with exchangeable parts. Let's assume we have two implementations of f
+and want to create combined functions for both versions.
+
+
+.. code-block:: python
+
+    import numpy as np
+
+
+    def f_standard(x, y):
+        return x**2 + y**2
+
+
+    def f_numpy(x, y):
+        return np.square(x) + np.square(y)
+
+We can do that as follows:
+
+.. code-block:: python
+
+    combined_standard = concatenate_functions(Functions from different namespaces
 -----------------------------------
 
 In large projects, function names can become lengthy when they share the same namespace.
@@ -171,32 +197,6 @@ Finally, we combine the functions using `concatenate_functions_tree`.
 Importantly, dags does not allow for branches with trailing underscores in the
 definition of the functions tree.
 
-Renaming the output of a function
----------------------------------
-
-So far, the name of the output of the function was determined from the ``__name__``
-attribute of each function. This is not enough if you want to use dags to create
-functions with exchangeable parts. Let's assume we have two implementations of f
-and want to create combined functions for both versions.
-
-
-.. code-block:: python
-
-    import numpy as np
-
-
-    def f_standard(x, y):
-        return x**2 + y**2
-
-
-    def f_numpy(x, y):
-        return np.square(x) + np.square(y)
-
-We can do that as follows:
-
-.. code-block:: python
-
-    combined_standard = concatenate_functions(
         {"f": f_standard, "g": g, "h": h},
         targets="h",
     )
