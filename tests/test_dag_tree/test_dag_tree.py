@@ -13,8 +13,7 @@ from dags.tree import (
     create_input_structure_tree,
 )
 from dags.tree.dag_tree import (
-    _flatten_functions_and_rename_parameters,
-    _flatten_targets_to_qual_names,
+    _qual_name_functions_only_abs_paths,
 )
 
 if TYPE_CHECKING:
@@ -27,138 +26,171 @@ if TYPE_CHECKING:
     )
 
 
-def f(g, namespace1__f1, global_input, namespace1__input):
-    """Global function, leaf name."""
-    return {
-        "name": "f",
-        "args": {
-            "g": g,
-            "namespace1__f1": namespace1__f1,
-            "global_input": global_input,
-            "namespace1__input": namespace1__input,
-        },
-    }
+def f(g, a, b):
+    return g, a, b
 
 
-def g():
-    """Global function, unique simple name."""
-    return {"name": "g"}
+def g(a):
+    return a
 
 
-def _namespace1__f(
-    g,
-    namespace1__f1,
-    namespace2__f2,
-    namespace1__input,
-    namespace2__input2,
-):
-    """Namespaced function, duplicate simple name."""
-    return {
-        "name": "namespace1__f",
-        "args": {
-            "g": g,
-            "namespace1__f1": namespace1__f1,
-            "namespace2__f2": namespace2__f2,
-            "namespace1__input": namespace1__input,
-            "namespace2__input2": namespace2__input2,
-        },
-    }
-
-
-def _namespace1__f1():
-    """Namespaced function, unique simple name."""
-    return {"name": "namespace1__f1"}
-
-
-def _namespace2__f(f2, global_input):
-    """Namespaced function, duplicate simple name. All arguments with simple names."""
-    return {"name": "namespace2__f", "args": {"f2": f2, "global_input": global_input}}
-
-
-def _namespace2__f2():
-    """Namespaced function, unique simple name."""
-    return {"name": "namespace2__f2"}
-
-
-def _namespace1__deep__f():
-    """A deeply nested function."""
-    return {"name": "namespace1_deep__f"}
+def h(a, b__g):
+    return a, b__g
 
 
 @pytest.fixture
-def functions() -> NestedFunctionDict:
+def functions_simple() -> NestedFunctionDict:
     return {
-        "f": f,
-        "g": g,
-        "namespace1": {
-            "f": _namespace1__f,
-            "f1": _namespace1__f1,
-            "deep": {"f": _namespace1__deep__f},
+        "n1": {
+            "f": f,
+            "g": g,
         },
-        "namespace2": {
-            "f": _namespace2__f,
-            "f2": _namespace2__f2,
+        "n2": {
+            "h": h,
         },
+    }
+
+
+@pytest.fixture
+def functions_nested_and_duplicate_g() -> NestedFunctionDict:
+    return {
+        "n1": {
+            "f": f,
+            "g": g,
+        },
+        "n2": {"h": h, "b": {"g": g}},
     }
 
 
 @pytest.mark.parametrize(
-    ("targets", "expected"),
+    ("targets", "top_level_inputs", "expected"),
     [
         (
             None,
+            set(),
             {
-                "global_input": None,
-                "namespace1": {
-                    "input": None,
+                "n1": {
+                    "a": None,
+                    "b": None,
                 },
-                "namespace2": {
-                    "global_input": None,
-                    "input2": None,
+                "n2": {
+                    "a": None,
+                    "b": {"g": None},
                 },
             },
         ),
         (
             None,
+            {"a"},
             {
-                "global_input": None,
-                "namespace1": {
-                    "input": None,
+                "a": None,
+                "n1": {
+                    "b": None,
                 },
-                "namespace2": {
-                    "input2": None,
+                "n2": {
+                    "b": {"g": None},
                 },
             },
         ),
         (
-            {"f": None, "namespace2": {"f": None}},
+            {"n1": {"f": None}},
+            set(),
             {
-                "global_input": None,
-                "namespace1": {
-                    "input": None,
-                },
-                "namespace2": {
-                    "global_input": None,
+                "n1": {
+                    "a": None,
+                    "b": None,
                 },
             },
         ),
         (
-            {"f": None, "namespace2": {"f": None}},
+            {"n1": {"f": None}},
+            {"a"},
             {
-                "global_input": None,
-                "namespace1": {
-                    "input": None,
+                "a": None,
+                "n1": {
+                    "b": None,
                 },
             },
+        ),
+        (
+            None,
+            {"a", "g"},
+            {"raises_error": None},
         ),
     ],
 )
-def test_create_input_structure_tree(
-    functions: NestedFunctionDict,
+def test_create_input_structure_tree_simple(
+    functions_simple: NestedFunctionDict,
     targets: NestedTargetDict | None,
+    top_level_inputs: set[str],
     expected: NestedInputStructureDict,
 ) -> None:
-    assert create_input_structure_tree(functions, targets) == expected
+    if "raises_error" in expected:
+        with pytest.raises(
+            ValueError, match="Elements of the top-level namespace must not be repeated"
+        ):
+            create_input_structure_tree(functions_simple, targets, top_level_inputs)
+    else:
+        assert (
+            create_input_structure_tree(functions_simple, targets, top_level_inputs)
+            == expected
+        )
+
+
+@pytest.mark.parametrize(
+    ("targets", "top_level_inputs", "expected"),
+    [
+        (
+            None,
+            set(),
+            {
+                "n1": {
+                    "a": None,
+                    "b": None,
+                },
+                "n2": {
+                    "a": None,
+                    "b": {"a": None},
+                },
+            },
+        ),
+        (
+            None,
+            {"a"},
+            {
+                "a": None,
+                "n1": {
+                    "b": None,
+                },
+            },
+        ),
+        (
+            None,
+            {"a", "g"},
+            {"raises_error": None},
+        ),
+    ],
+)
+def test_create_input_structure_tree_nested_and_duplicate_g(
+    functions_nested_and_duplicate_g: NestedFunctionDict,
+    targets: NestedTargetDict | None,
+    top_level_inputs: set[str],
+    expected: NestedInputStructureDict,
+) -> None:
+    if "raises_error" in expected:
+        with pytest.raises(
+            ValueError, match="Elements of the top-level namespace must not be repeated"
+        ):
+            create_input_structure_tree(
+                functions_nested_and_duplicate_g, targets, top_level_inputs
+            )
+    else:
+        assert (
+            create_input_structure_tree(
+                functions_nested_and_duplicate_g, targets, top_level_inputs
+            )
+            == expected
+        )
 
 
 @pytest.mark.parametrize(
@@ -269,29 +301,6 @@ def test_concatenate_functions_tree(
     assert f(global_input) == expected
 
 
-@pytest.mark.parametrize(
-    ("targets", "expected"),
-    [
-        (None, None),
-        (
-            {
-                "namespace1": {"f": None, "namespace11": {"f": None}},
-                "namespace2": {"f": None},
-            },
-            [
-                "namespace1__f",
-                "namespace1__namespace11__f",
-                "namespace2__f",
-            ],
-        ),
-    ],
-)
-def test_flatten_targets(
-    targets: NestedTargetDict | None, expected: list[str] | None
-) -> None:
-    assert _flatten_targets_to_qual_names(targets) == expected
-
-
 def test_partialled_function_argument() -> None:
     def f(a, b):
         return a + b
@@ -351,7 +360,7 @@ def test_correct_argument_names(
     qual_name_function_name_to_check: str,
     expected_argument_name: str,
 ) -> None:
-    qual_name_functions = _flatten_functions_and_rename_parameters(
+    qual_name_functions = _qual_name_functions_only_abs_paths(
         functions_tree, input_structure
     )
     assert (
