@@ -39,7 +39,6 @@ if TYPE_CHECKING:
         NestedOutputDict,
         NestedTargetDict,
         QualNameFunctionDict,
-        TreePathFunctionDict,
         TreePathInputStructureDict,
     )
 
@@ -62,8 +61,8 @@ def create_input_structure_tree(
     """
     tree_path_functions = flatten_to_tree_paths(functions)
     tree_paths = set(tree_path_functions.keys())
-    top_level_namespace = _get_top_level_namespace(
-        tree_path_functions=tree_path_functions,
+    top_level_namespace = _get_top_level_namespace_initial(
+        tree_paths=tree_paths,
         top_level_inputs=set(top_level_inputs),
     )
 
@@ -101,7 +100,6 @@ def create_input_structure_tree(
     if targets is None:
         return nested_input_structure
 
-    # Now work only with qualified names because we to prepare for dags.dag proper.
     dag_tree = create_dag_tree(
         functions=functions,
         targets=targets,
@@ -109,14 +107,14 @@ def create_input_structure_tree(
         top_level_namespace=top_level_namespace,
         perform_checks=False,
     )
-    qual_name_renamed_functions = _qual_name_functions_only_abs_paths(
+    qual_name_functions = _qual_name_functions_only_abs_paths(
         functions=functions,
         input_structure=nested_input_structure,
         top_level_namespace=top_level_namespace,
         perform_checks=False,
     )
     parameters = _create_arguments_of_concatenated_function(
-        qual_name_renamed_functions, dag_tree
+        functions=qual_name_functions, dag=dag_tree
     )
     return unflatten_from_qual_names(dict.fromkeys(parameters))
 
@@ -146,7 +144,9 @@ def create_dag_tree(
         top_level_namespace=top_level_namespace,
         perform_checks=perform_checks,
     )
-    qual_name_targets = flatten_to_qual_names(targets)
+    qual_name_targets = (
+        list(flatten_to_qual_names(targets).keys()) if targets is not None else None
+    )
 
     return create_dag(qual_name_functions, qual_name_targets)
 
@@ -171,13 +171,19 @@ def concatenate_functions_tree(
     -------
         A callable that takes a NestedInputDict and returns a NestedOutputDict.
     """
+    top_level_namespace = _get_top_level_namespace_final(
+        functions=functions,
+        input_structure=input_structure,
+    )
+    qual_name_targets = (
+        list(flatten_to_qual_names(targets).keys()) if targets is not None else None
+    )
     qual_name_functions = _qual_name_functions_only_abs_paths(
         functions=functions,
         input_structure=input_structure,
         top_level_namespace=top_level_namespace,
         perform_checks=perform_checks,
     )
-    qual_name_targets = flatten_to_qual_names(targets)
 
     concatenated_function = concatenate_functions(
         qual_name_functions,
@@ -195,22 +201,31 @@ def concatenate_functions_tree(
     return wrapper
 
 
-def _get_top_level_namespace(
-    tree_path_functions: TreePathFunctionDict,
+def _get_top_level_namespace_initial(
+    tree_paths: set[tuple[str, ...]],
     top_level_inputs: set[str],
 ) -> set[str]:
     """Get the namespace of the top level.
 
     Args:
-        tree_path_functions: A dictionary of mapping tree paths to functions.
+        tree_paths: The set of tree paths.
         top_level_inputs: A set of input names in the top-level namespace.
 
     Returns
     -------
         The elements of the top-level namespace.
     """
-    top_level_elements_from_functions = {path[0] for path in tree_path_functions}
+    top_level_elements_from_functions = {path[0] for path in tree_paths}
     return top_level_elements_from_functions | top_level_inputs
+
+
+def _get_top_level_namespace_final(
+    functions: NestedFunctionDict, input_structure: NestedInputStructureDict
+) -> set[str]:
+    all_tree_paths = set(flatten_to_tree_paths(functions).keys()) | set(
+        flatten_to_tree_paths(input_structure).keys()
+    )
+    return {path[0] for path in all_tree_paths}
 
 
 def _qual_name_functions_only_abs_paths(
@@ -233,7 +248,10 @@ def _qual_name_functions_only_abs_paths(
     tree_path_functions = flatten_to_tree_paths(functions)
 
     if perform_checks:
-        tree_paths = set(tree_path_functions.keys()) | set(input_structure.keys())
+        tree_path_input_structure = flatten_to_tree_paths(input_structure)
+        tree_paths = set(tree_path_functions.keys()) | set(
+            tree_path_input_structure.keys()
+        )
         fail_if_path_elements_have_trailing_undersores(tree_paths)
         fail_if_top_level_elements_repeated_in_paths(
             top_level_namespace=top_level_namespace,

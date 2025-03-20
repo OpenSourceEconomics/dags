@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import inspect
 from typing import TYPE_CHECKING
 
 import pytest
@@ -10,12 +11,16 @@ from dags.tree.dag_tree import (
     _get_parameter_absolute_path,
     _get_parameter_rel_to_abs_mapper,
     _get_parameter_tree_path,
-    _get_top_level_namespace,
+    _get_top_level_namespace_final,
+    _get_top_level_namespace_initial,
+    _qual_name_functions_only_abs_paths,
 )
 
 if TYPE_CHECKING:
     from dags.tree.typing import (
         GenericCallable,
+        NestedFunctionDict,
+        NestedInputStructureDict,
         TreePathFunctionDict,
     )
 
@@ -41,12 +46,18 @@ def h(a, b__c):
         ({"b": {"a": lambda a: a}, "c": lambda c: c}, {"a"}, {"a", "b", "c"}),
     ],
 )
-def test_get_top_level_namespace(
+def test_get_top_level_namespace_initial(
     tree_path_functions: TreePathFunctionDict,
     top_level_inputs: set[str],
     expected: set[str],
 ) -> None:
-    assert _get_top_level_namespace(tree_path_functions, top_level_inputs) == expected
+    assert (
+        _get_top_level_namespace_initial(
+            tree_paths=set(tree_path_functions.keys()),
+            top_level_inputs=top_level_inputs,
+        )
+        == expected
+    )
 
 
 @pytest.mark.parametrize(
@@ -152,4 +163,69 @@ def test_link_parameter_to_function_or_input(
             top_level_namespace=top_level_namespace,
         )
         == expected
+    )
+
+
+@pytest.mark.parametrize(
+    (
+        "functions",
+        "input_structure",
+        "qual_name_function_name_to_check",
+        "expected_argument_name",
+    ),
+    [
+        (
+            {
+                "top_level": {"foo": lambda x: x},
+                "target_namespace": {
+                    "nested_level": {"foo": lambda x: x},
+                    "target_leaf": lambda top_level__foo: top_level__foo,
+                },
+            },
+            {
+                "top_level": {"x": None},
+                "target_namespace": {"nested_level": {"x": None}},
+            },
+            "target_namespace__target_leaf",
+            "top_level__foo",
+        ),
+        (
+            {
+                "top_level": {"föö": lambda x: x},
+                "target_namespace": {
+                    "nested_level": {"föö": lambda x: x},
+                    "target_leaf": lambda top_level__föö: top_level__föö,
+                },
+            },
+            {
+                "top_level": {"x": None},
+                "target_namespace": {"nested_level": {"x": None}},
+            },
+            "target_namespace__target_leaf",
+            "top_level__föö",
+        ),
+    ],
+)
+def test_correct_argument_names(
+    functions: NestedFunctionDict,
+    input_structure: NestedInputStructureDict,
+    qual_name_function_name_to_check: str,
+    expected_argument_name: str,
+) -> None:
+    top_level_namespace = _get_top_level_namespace_final(
+        functions=functions,
+        input_structure=input_structure,
+    )
+
+    qual_name_functions = _qual_name_functions_only_abs_paths(
+        functions=functions,
+        input_structure=input_structure,
+        top_level_namespace=top_level_namespace,
+        perform_checks=True,
+    )
+    assert (
+        expected_argument_name
+        in inspect.signature(
+            qual_name_functions[qual_name_function_name_to_check]
+        ).parameters
     )

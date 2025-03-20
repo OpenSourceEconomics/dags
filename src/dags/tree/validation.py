@@ -110,7 +110,7 @@ def fail_if_path_elements_have_trailing_undersores(
         paths = "\n".join(str(p) for p in collected_errors)
         msg = (
             "Except for the leaf name, elements of the paths in the functions tree "
-            f"must not end with an underscore. Path(s):\n\n{paths}"
+            f"must not end with an underscore. Offending path(s):\n\n{paths}"
         )
         raise ValueError(msg)
 
@@ -141,7 +141,7 @@ def fail_if_top_level_elements_repeated_in_paths(
         paths = "\n".join(str(p) for p in collected_errors)
         msg = (
             "Elements of the top-level namespace must not be repeated further down "
-            f"in the hierarchy. Path(s):\n\n{paths}\n\n\n"
+            f"in the hierarchy. Offending path(s):\n\n{paths}\n\n\n"
             f"Top-level namespace:\n\n{top_level_namespace}"
         )
         raise ValueError(msg)
