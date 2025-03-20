@@ -27,10 +27,12 @@ if TYPE_CHECKING:
     # Function-related types
     NestedFunctionDict = Mapping[str, GenericCallable | "NestedFunctionDict"]
     QualNameFunctionDict = dict[str, GenericCallable]
+    TreePathFunctionDict = dict[tuple[str, ...], GenericCallable]
 
     # Input structure types
     NestedInputStructureDict = Mapping[str, None | "NestedInputStructureDict"]
     QualNameInputStructureDict = dict[str, None]
+    TreePathInputStructureDict = dict[tuple[str, ...], None]
 
     # Target types
     NestedTargetDict = Mapping[str, None | "NestedTargetDict"]

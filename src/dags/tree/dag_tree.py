@@ -16,7 +16,10 @@ from dags.tree.tree_utils import (
     QUAL_NAME_DELIMITER,
     _is_qualified_name,
     flatten_to_qual_names,
+    flatten_to_tree_paths,
+    tree_path_from_qual_name,
     unflatten_from_qual_names,
+    unflatten_from_tree_paths,
 )
 from dags.tree.validation import (
     _check_for_parent_child_name_clashes,
@@ -38,18 +41,22 @@ if TYPE_CHECKING:
         QualNameFunctionDict,
         QualNameInputStructureDict,
         QualNameTargetList,
+        TreePathFunctionDict,
+        TreePathInputStructureDict,
     )
 
 
 def create_input_structure_tree(
     functions: NestedFunctionDict,
     targets: NestedTargetDict | None = None,
+    top_level_inputs: set[str] | list[str] | tuple[str, ...] = (),
 ) -> NestedInputStructureDict:
     """Create a nested input structure template based on the functions and targets.
 
     Args:
         functions: A nested dictionary of functions.
         targets: A nested dictionary of targets (or None).
+        top_level_inputs: Names of inputs in the top-level namespace.
 
     Returns
     -------
@@ -57,28 +64,29 @@ def create_input_structure_tree(
     """
     fail_if_path_elements_have_trailing_undersores(functions)
 
-    qual_name_functions = flatten_to_qual_names(functions)
-    qual_name_input_structure: QualNameInputStructureDict = {}
+    tree_path_functions = flatten_to_tree_paths(functions)
+    top_level_namespace = _get_top_level_namespace(
+        tree_path_functions=tree_path_functions,
+        top_level_inputs=set(top_level_inputs),
+    )
 
     import inspect
 
-    for path, func in qual_name_functions.items():
-        namespace = QUAL_NAME_DELIMITER.join(
-            path.split(QUAL_NAME_DELIMITER)[:-1],
-        )
+    tree_path_input_structure: TreePathInputStructureDict = {}
+    for path, func in tree_path_functions.items():
         parameter_names = dict(inspect.signature(func).parameters).keys()
 
         for parameter_name in parameter_names:
             parameter_path = _link_parameter_to_function_or_input(
-                qual_name_functions,
-                namespace,
-                parameter_name,
+                parameter_name=parameter_name,
+                current_namespace=path[:-1],
+                top_level_namespace=top_level_namespace,
             )
 
-            if parameter_path not in qual_name_functions:
-                qual_name_input_structure[parameter_path] = None
+            if parameter_path not in tree_path_functions:
+                tree_path_input_structure[parameter_path] = None
 
-    nested_input_structure = unflatten_from_qual_names(qual_name_input_structure)
+    nested_input_structure = unflatten_from_tree_paths(tree_path_input_structure)
 
     # If no targets are specified, all inputs are needed
     if targets is None:
@@ -172,6 +180,24 @@ def concatenate_functions_tree(
         return unflatten_from_qual_names(qual_name_outputs)
 
     return wrapper
+
+
+def _get_top_level_namespace(
+    tree_path_functions: TreePathFunctionDict,
+    top_level_inputs: set[str],
+) -> set[str]:
+    """Get the namespace of the top level.
+
+    Args:
+        tree_path_functions: A dictionary of mapping tree paths to functions.
+        top_level_inputs: A set of input names in the top-level namespace.
+
+    Returns
+    -------
+        The elements of the top-level namespace.
+    """
+    top_level_elements_from_functions = {path[0] for path in tree_path_functions}
+    return top_level_elements_from_functions | top_level_inputs
 
 
 def _flatten_functions_and_rename_parameters(
@@ -313,47 +339,34 @@ def _map_parameter(
 
 
 def _link_parameter_to_function_or_input(
-    qual_name_functions: QualNameFunctionDict,
-    namespace: str,
     parameter_name: str,
-) -> str:
+    current_namespace: tuple[str, ...],
+    top_level_namespace: set[str],
+) -> tuple[str, ...]:
     """Return the path to the function/input that the parameter points to.
 
-    If the parameter name has double underscores (e.g. "namespace1__f"), we know it
-    represents a qualified name and the path simply consists of the segments of the
-    qualified name (e.g. "namespace1, "f").
+    If the first element of the parameter's tree path can be found in the top-level
+    namespace, it will be interpreted as an absolute path.
 
-    Otherwise, we cannot be sure whether the parameter points to a function/input of
-    the current namespace or a function/input of the top level. In this case, we
-        (1) look for a function with that name in the current namespace,
-        (2) look for a function with that name in the top level, and
-        (3) assume the parameter points to an input in the current namespace.
+    Otherwise, the path is relative to the current namespace.
 
     Args:
-        qual_name_functions:
-            The flat dictionary of functions.
-        namespace:
-            The namespace that contains the function that contains the parameter.
         parameter_name:
-            The name of the parameter.
+            The name of the parameter, potentially qualified.
+        current_namespace:
+            The namespace that contains the function that contains the parameter.
+        top_level_namespace:
+            The elements of the top level namespace.
 
     Returns
     -------
         The path to the function/input that the parameter points to.
     """
-    # Parameter name is definitely a qualified name
-    if _is_qualified_name(parameter_name):
-        return parameter_name
+    parameter_tuple = tree_path_from_qual_name(parameter_name)
 
-    # (1) Look for function in the current namespace
-    namespaced_parameter = (
-        f"{namespace}__{parameter_name}" if namespace else parameter_name
-    )
-    if namespaced_parameter in qual_name_functions:
-        return namespaced_parameter
+    if parameter_tuple[0] in top_level_namespace:
+        parameter_tree_path = parameter_tuple
+    else:
+        parameter_tree_path = current_namespace + parameter_tuple
 
-    # (2) Look for function in the top level
-    if parameter_name in qual_name_functions:
-        return parameter_name
-
-    return namespaced_parameter
+    return parameter_tree_path
