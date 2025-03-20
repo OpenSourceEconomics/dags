@@ -33,7 +33,6 @@ if TYPE_CHECKING:
         FlatInputStructureDict,
         FlatTargetList,
         GenericCallable,
-        GlobalOrLocal,
         NestedFunctionDict,
         NestedInputDict,
         NestedInputStructureDict,
@@ -45,14 +44,12 @@ if TYPE_CHECKING:
 def create_input_structure_tree(
     functions: NestedFunctionDict,
     targets: NestedTargetDict | None = None,
-    namespace_of_inputs: GlobalOrLocal = "local",
 ) -> NestedInputStructureDict:
     """Create a nested input structure template based on the functions and targets.
 
     Args:
         functions: A nested dictionary of functions.
         targets: A nested dictionary of targets (or None).
-        namespace_of_inputs: Whether to use "global" or "local" namespace for inputs.
 
     Returns
     -------
@@ -76,7 +73,6 @@ def create_input_structure_tree(
                 flat_functions,
                 namespace,
                 parameter_name,
-                namespace_of_inputs,
             )
 
             if parameter_path not in flat_functions:
@@ -314,7 +310,6 @@ def _link_parameter_to_function_or_input(
     flat_functions: FlatFunctionDict,
     namespace: str,
     parameter_name: str,
-    namespace_of_inputs: GlobalOrLocal = "local",
 ) -> str:
     """Return the path to the function/input that the parameter points to.
 
@@ -326,10 +321,7 @@ def _link_parameter_to_function_or_input(
     the current namespace or a function/input of the top level. In this case, we
         (1) look for a function with that name in the current namespace,
         (2) look for a function with that name in the top level, and
-        (3) assume the parameter points to an input.
-    In the third case, `namespace_of_inputs` determines whether the parameter points
-    to an input of the current namespace ("local") or an input of the top level
-    ("global").
+        (3) assume the parameter points to an input in the current namespace.
 
     Args:
         flat_functions:
@@ -338,9 +330,6 @@ def _link_parameter_to_function_or_input(
             The namespace that contains the function that contains the parameter.
         parameter_name:
             The name of the parameter.
-        namespace_of_inputs:
-            The level of inputs to assume if the parameter name does not represent a
-            function.
 
     Returns
     -------
@@ -361,7 +350,4 @@ def _link_parameter_to_function_or_input(
     if parameter_name in flat_functions:
         return parameter_name
 
-    # (3) Assume parameter points to an unknown input
-    if namespace_of_inputs == "global":
-        return parameter_name
     return namespaced_parameter

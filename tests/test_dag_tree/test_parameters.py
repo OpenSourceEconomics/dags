@@ -15,7 +15,6 @@ from dags.tree.dag_tree import (
 if TYPE_CHECKING:
     from dags.tree.typing import (
         GenericCallable,
-        GlobalOrLocal,
         NestedFunctionDict,
         NestedInputStructureDict,
     )
@@ -171,25 +170,21 @@ def test_map_parameter_raises() -> None:
 
 
 @pytest.mark.parametrize(
-    ("level_of_inputs", "namespace", "parameter_name", "expected"),
+    ("namespace", "parameter_name", "expected"),
     [
-        ("local", "namespace1", "namespace1__f1", "namespace1__f1"),
-        ("local", "namespace1", "f1", "namespace1__f1"),
+        ("namespace1", "namespace1__f1", "namespace1__f1"),
+        ("namespace1", "f1", "namespace1__f1"),
         (
-            "local",
             "namespace1",
             "g",
             "g",
         ),
-        ("local", "namespace1", "input", "namespace1__input"),
-        ("local", "", "input", "input"),
-        ("global", "namespace1", "input", "input"),
-        ("global", "", "input", "input"),
+        ("namespace1", "input", "namespace1__input"),
+        ("", "input", "input"),
     ],
 )
 def test_link_parameter_to_function_or_input(
     functions: NestedFunctionDict,
-    level_of_inputs: GlobalOrLocal,
     namespace: str,
     parameter_name: str,
     expected: tuple[str],
@@ -202,7 +197,6 @@ def test_link_parameter_to_function_or_input(
             flat_functions,
             namespace,
             parameter_name,
-            level_of_inputs,
         )
         == expected
     )

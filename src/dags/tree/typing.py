@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
-    from typing import Any, Literal, TypeVar
+    from typing import Any, TypeVar
 
     from dags.typing import GenericCallable
 
@@ -35,6 +35,3 @@ if TYPE_CHECKING:
     # Input and output types
     NestedInputDict = Mapping[str, Any | "NestedInputDict"]
     NestedOutputDict = Mapping[str, Any | "NestedOutputDict"]
-
-    # Specifies whether inputs should be in the global or local namespace
-    GlobalOrLocal = Literal["global", "local"]

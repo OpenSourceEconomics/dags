@@ -19,7 +19,6 @@ from dags.tree.dag_tree import (
 
 if TYPE_CHECKING:
     from dags.tree.typing import (
-        GlobalOrLocal,
         NestedFunctionDict,
         NestedInputDict,
         NestedInputStructureDict,
@@ -104,11 +103,10 @@ def functions() -> NestedFunctionDict:
 
 
 @pytest.mark.parametrize(
-    ("targets", "level_of_inputs", "expected"),
+    ("targets", "expected"),
     [
         (
             None,
-            "local",
             {
                 "global_input": None,
                 "namespace1": {
@@ -122,7 +120,6 @@ def functions() -> NestedFunctionDict:
         ),
         (
             None,
-            "global",
             {
                 "global_input": None,
                 "namespace1": {
@@ -135,7 +132,6 @@ def functions() -> NestedFunctionDict:
         ),
         (
             {"f": None, "namespace2": {"f": None}},
-            "local",
             {
                 "global_input": None,
                 "namespace1": {
@@ -148,7 +144,6 @@ def functions() -> NestedFunctionDict:
         ),
         (
             {"f": None, "namespace2": {"f": None}},
-            "global",
             {
                 "global_input": None,
                 "namespace1": {
@@ -161,10 +156,9 @@ def functions() -> NestedFunctionDict:
 def test_create_input_structure_tree(
     functions: NestedFunctionDict,
     targets: NestedTargetDict | None,
-    level_of_inputs: GlobalOrLocal,
     expected: NestedInputStructureDict,
 ) -> None:
-    assert create_input_structure_tree(functions, targets, level_of_inputs) == expected
+    assert create_input_structure_tree(functions, targets) == expected
 
 
 @pytest.mark.parametrize(
