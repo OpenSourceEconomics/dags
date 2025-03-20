@@ -193,6 +193,16 @@ def test_create_input_structure_tree_nested_and_duplicate_g(
         )
 
 
+def test_create_input_structure_tree_duplicates_lower_in_hierarchy() -> None:
+    assert create_input_structure_tree(
+        functions={
+            "n1": {"a": {"f": f}},
+        },
+        targets=None,
+        top_level_inputs=set(),
+    ) == {"n1": {"a": {"a": None, "b": None, "g": None}}}
+
+
 @pytest.mark.parametrize(
     ("targets", "global_input", "expected"),
     [
