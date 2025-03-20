@@ -150,13 +150,13 @@ def test_create_parameter_name_mapper(
 ) -> None:
     from dags.tree.tree_utils import flatten_to_qual_names
 
-    flat_functions = flatten_to_qual_names(functions)
-    flat_input_structure = flatten_to_qual_names(input_structure)
+    qual_name_functions = flatten_to_qual_names(functions)
+    qual_name_input_structure = flatten_to_qual_names(input_structure)
 
     assert (
         _create_parameter_name_mapper(
-            flat_functions,
-            flat_input_structure,
+            qual_name_functions,
+            qual_name_input_structure,
             namespace,
             function,
         )
@@ -191,10 +191,10 @@ def test_link_parameter_to_function_or_input(
 ) -> None:
     from dags.tree.tree_utils import flatten_to_qual_names
 
-    flat_functions = flatten_to_qual_names(functions)
+    qual_name_functions = flatten_to_qual_names(functions)
     assert (
         _link_parameter_to_function_or_input(
-            flat_functions,
+            qual_name_functions,
             namespace,
             parameter_name,
         )

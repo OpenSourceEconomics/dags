@@ -29,15 +29,15 @@ if TYPE_CHECKING:
     import networkx as nx
 
     from dags.tree.typing import (
-        FlatFunctionDict,
-        FlatInputStructureDict,
-        FlatTargetList,
         GenericCallable,
         NestedFunctionDict,
         NestedInputDict,
         NestedInputStructureDict,
         NestedOutputDict,
         NestedTargetDict,
+        QualNameFunctionDict,
+        QualNameInputStructureDict,
+        QualNameTargetList,
     )
 
 
@@ -57,12 +57,12 @@ def create_input_structure_tree(
     """
     fail_if_path_elements_have_trailing_undersores(functions)
 
-    flat_functions = flatten_to_qual_names(functions)
-    flat_input_structure: FlatInputStructureDict = {}
+    qual_name_functions = flatten_to_qual_names(functions)
+    qual_name_input_structure: QualNameInputStructureDict = {}
 
     import inspect
 
-    for path, func in flat_functions.items():
+    for path, func in qual_name_functions.items():
         namespace = QUAL_NAME_DELIMITER.join(
             path.split(QUAL_NAME_DELIMITER)[:-1],
         )
@@ -70,29 +70,31 @@ def create_input_structure_tree(
 
         for parameter_name in parameter_names:
             parameter_path = _link_parameter_to_function_or_input(
-                flat_functions,
+                qual_name_functions,
                 namespace,
                 parameter_name,
             )
 
-            if parameter_path not in flat_functions:
-                flat_input_structure[parameter_path] = None
+            if parameter_path not in qual_name_functions:
+                qual_name_input_structure[parameter_path] = None
 
-    nested_input_structure = unflatten_from_qual_names(flat_input_structure)
+    nested_input_structure = unflatten_from_qual_names(qual_name_input_structure)
 
     # If no targets are specified, all inputs are needed
     if targets is None:
         return nested_input_structure
 
     # Compute transitive hull of inputs needed for given targets
-    flat_renamed_functions = _flatten_functions_and_rename_parameters(
+    qual_name_renamed_functions = _flatten_functions_and_rename_parameters(
         functions,
         nested_input_structure,
         name_clashes="ignore",
     )
-    flat_targets = _flatten_targets_to_qual_names(targets)
-    dag = create_dag(flat_renamed_functions, flat_targets)
-    parameters = _create_arguments_of_concatenated_function(flat_renamed_functions, dag)
+    qual_name_targets = _flatten_targets_to_qual_names(targets)
+    dag = create_dag(qual_name_renamed_functions, qual_name_targets)
+    parameters = _create_arguments_of_concatenated_function(
+        qual_name_renamed_functions, dag
+    )
 
     return unflatten_from_qual_names(dict.fromkeys(parameters))
 
@@ -115,14 +117,14 @@ def create_dag_tree(
     -------
         A networkx.DiGraph representing the DAG.
     """
-    flat_functions = _flatten_functions_and_rename_parameters(
+    qual_name_functions = _flatten_functions_and_rename_parameters(
         functions,
         input_structure,
         name_clashes,
     )
-    flat_targets = _flatten_targets_to_qual_names(targets)
+    qual_name_targets = _flatten_targets_to_qual_names(targets)
 
-    return create_dag(flat_functions, flat_targets)
+    return create_dag(qual_name_functions, qual_name_targets)
 
 
 def concatenate_functions_tree(
@@ -145,25 +147,29 @@ def concatenate_functions_tree(
     -------
         A callable that takes a NestedInputDict and returns a NestedOutputDict.
     """
-    flat_functions: FlatFunctionDict = _flatten_functions_and_rename_parameters(
-        functions,
-        input_structure,
-        name_clashes,
+    qual_name_functions: QualNameFunctionDict = (
+        _flatten_functions_and_rename_parameters(
+            functions,
+            input_structure,
+            name_clashes,
+        )
     )
-    flat_targets: FlatTargetList | None = _flatten_targets_to_qual_names(targets)
+    qual_name_targets: QualNameTargetList | None = _flatten_targets_to_qual_names(
+        targets
+    )
 
     concatenated_function = concatenate_functions(
-        flat_functions,
-        flat_targets,
+        qual_name_functions,
+        qual_name_targets,
         return_type="dict",
         enforce_signature=enforce_signature,
     )
 
     @functools.wraps(concatenated_function)
     def wrapper(inputs: NestedInputDict) -> NestedOutputDict:
-        flat_inputs = flatten_to_qual_names(inputs)
-        flat_outputs = concatenated_function(**flat_inputs)
-        return unflatten_from_qual_names(flat_outputs)
+        qual_name_inputs = flatten_to_qual_names(inputs)
+        qual_name_outputs = concatenated_function(**qual_name_inputs)
+        return unflatten_from_qual_names(qual_name_outputs)
 
     return wrapper
 
@@ -172,7 +178,7 @@ def _flatten_functions_and_rename_parameters(
     functions: NestedFunctionDict,
     input_structure: NestedInputStructureDict,
     name_clashes: Literal["raise", "warn", "ignore"] = "raise",
-) -> FlatFunctionDict:
+) -> QualNameFunctionDict:
     """Flatten the nested function dictionary and rename parameters to avoid collisions.
 
     Args:
@@ -186,36 +192,36 @@ def _flatten_functions_and_rename_parameters(
     """
     fail_if_path_elements_have_trailing_undersores(functions)
 
-    flat_functions: FlatFunctionDict = flatten_to_qual_names(functions)
-    flat_input_structure: FlatInputStructureDict = flatten_to_qual_names(
+    qual_name_functions: QualNameFunctionDict = flatten_to_qual_names(functions)
+    qual_name_input_structure: QualNameInputStructureDict = flatten_to_qual_names(
         input_structure
     )
 
     _check_for_parent_child_name_clashes(
-        flat_functions=flat_functions,
-        flat_input_structure=flat_input_structure,
+        qual_name_functions=qual_name_functions,
+        qual_name_input_structure=qual_name_input_structure,
         name_clashes_resolution=name_clashes,
     )
 
-    for name, func in flat_functions.items():
+    for name, func in qual_name_functions.items():
         namespace: str = QUAL_NAME_DELIMITER.join(name.split(QUAL_NAME_DELIMITER)[:-1])
         renamed = rename_arguments(
             func,
             mapper=_create_parameter_name_mapper(
-                flat_functions=flat_functions,
-                flat_input_structure=flat_input_structure,
+                qual_name_functions=qual_name_functions,
+                qual_name_input_structure=qual_name_input_structure,
                 namespace=namespace,
                 func=func,
             ),
         )
-        flat_functions[name] = renamed
+        qual_name_functions[name] = renamed
 
-    return flat_functions
+    return qual_name_functions
 
 
 def _flatten_targets_to_qual_names(
     targets: NestedTargetDict | None,
-) -> FlatTargetList | None:
+) -> QualNameTargetList | None:
     """Flatten targets to a list of qualified names.
 
     Args:
@@ -232,16 +238,16 @@ def _flatten_targets_to_qual_names(
 
 
 def _create_parameter_name_mapper(
-    flat_functions: FlatFunctionDict,
-    flat_input_structure: FlatInputStructureDict,
+    qual_name_functions: QualNameFunctionDict,
+    qual_name_input_structure: QualNameInputStructureDict,
     namespace: str,
     func: GenericCallable,
 ) -> dict[str, str]:
     """Create a mapping from parameter names to qualified names for a given function.
 
     Args:
-        flat_functions: A flat dictionary of functions.
-        flat_input_structure: A flat dictionary of the input structure.
+        qual_name_functions: A flat dictionary of functions.
+        qual_name_input_structure: A flat dictionary of the input structure.
         namespace: The namespace to prepend.
         func: The function whose parameters are being mapped.
 
@@ -251,8 +257,8 @@ def _create_parameter_name_mapper(
     """
     return {
         old_name: _map_parameter(
-            flat_functions,
-            flat_input_structure,
+            qual_name_functions,
+            qual_name_input_structure,
             namespace,
             old_name,
         )
@@ -261,16 +267,16 @@ def _create_parameter_name_mapper(
 
 
 def _map_parameter(
-    flat_functions: FlatFunctionDict,
-    flat_input_structure: FlatInputStructureDict,
+    qual_name_functions: QualNameFunctionDict,
+    qual_name_input_structure: QualNameInputStructureDict,
     namespace: str,
     parameter_name: str,
 ) -> str:
     """Map a single parameter name to its qualified version.
 
     Args:
-        flat_functions: A flat dictionary of functions.
-        flat_input_structure: A flat dictionary of the input structure.
+        qual_name_functions: A flat dictionary of functions.
+        qual_name_input_structure: A flat dictionary of the input structure.
         namespace: The namespace to apply.
         parameter_name: The original parameter name.
 
@@ -286,19 +292,19 @@ def _map_parameter(
     namespaced_parameter = (
         f"{namespace}__{parameter_name}" if namespace else parameter_name
     )
-    if namespaced_parameter in flat_functions:
+    if namespaced_parameter in qual_name_functions:
         return namespaced_parameter
 
     # (1.2) Look for input in the current namespace
-    if namespaced_parameter in flat_input_structure:
+    if namespaced_parameter in qual_name_input_structure:
         return namespaced_parameter
 
     # (2.1) Look for function in the top level
-    if parameter_name in flat_functions:
+    if parameter_name in qual_name_functions:
         return parameter_name
 
     # (2.2) Look for input in the top level
-    if parameter_name in flat_input_structure:
+    if parameter_name in qual_name_input_structure:
         return parameter_name
 
     # (3) Raise error
@@ -307,7 +313,7 @@ def _map_parameter(
 
 
 def _link_parameter_to_function_or_input(
-    flat_functions: FlatFunctionDict,
+    qual_name_functions: QualNameFunctionDict,
     namespace: str,
     parameter_name: str,
 ) -> str:
@@ -324,7 +330,7 @@ def _link_parameter_to_function_or_input(
         (3) assume the parameter points to an input in the current namespace.
 
     Args:
-        flat_functions:
+        qual_name_functions:
             The flat dictionary of functions.
         namespace:
             The namespace that contains the function that contains the parameter.
@@ -343,11 +349,11 @@ def _link_parameter_to_function_or_input(
     namespaced_parameter = (
         f"{namespace}__{parameter_name}" if namespace else parameter_name
     )
-    if namespaced_parameter in flat_functions:
+    if namespaced_parameter in qual_name_functions:
         return namespaced_parameter
 
     # (2) Look for function in the top level
-    if parameter_name in flat_functions:
+    if parameter_name in qual_name_functions:
         return parameter_name
 
     return namespaced_parameter

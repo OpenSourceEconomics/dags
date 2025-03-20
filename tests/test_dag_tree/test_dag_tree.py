@@ -28,7 +28,7 @@ if TYPE_CHECKING:
 
 
 def f(g, namespace1__f1, global_input, namespace1__input):
-    """Global function, duplicate simple name."""
+    """Global function, leaf name."""
     return {
         "name": "f",
         "args": {
@@ -270,22 +270,6 @@ def test_concatenate_functions_tree(
 
 
 @pytest.mark.parametrize(
-    "functions",
-    [
-        {"x_": {"x": lambda x: x}},
-        {"x": {"x_": {"x": lambda x: x}}, "y": lambda y: y},
-    ],
-)
-def test_fail_if_branches_have_trailing_underscores(
-    functions: NestedFunctionDict,
-) -> None:
-    with pytest.raises(
-        ValueError, match="Elements of the paths in the functions tree must not"
-    ):
-        _flatten_functions_and_rename_parameters(functions, {})
-
-
-@pytest.mark.parametrize(
     ("targets", "expected"),
     [
         (None, None),
@@ -325,7 +309,7 @@ def test_partialled_function_argument() -> None:
     (
         "functions_tree",
         "input_structure",
-        "flat_function_name_to_check",
+        "qual_name_function_name_to_check",
         "expected_argument_name",
     ),
     [
@@ -364,13 +348,15 @@ def test_partialled_function_argument() -> None:
 def test_correct_argument_names(
     functions_tree: NestedFunctionDict,
     input_structure: NestedInputStructureDict,
-    flat_function_name_to_check: str,
+    qual_name_function_name_to_check: str,
     expected_argument_name: str,
 ) -> None:
-    flat_functions = _flatten_functions_and_rename_parameters(
+    qual_name_functions = _flatten_functions_and_rename_parameters(
         functions_tree, input_structure
     )
     assert (
         expected_argument_name
-        in inspect.signature(flat_functions[flat_function_name_to_check]).parameters
+        in inspect.signature(
+            qual_name_functions[qual_name_function_name_to_check]
+        ).parameters
     )

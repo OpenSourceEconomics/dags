@@ -16,29 +16,29 @@ from dags.tree.tree_utils import (
 
 if TYPE_CHECKING:
     from dags.tree.typing import (
-        FlatFunctionDict,
-        FlatInputStructureDict,
         NestedFunctionDict,
+        QualNameFunctionDict,
+        QualNameInputStructureDict,
     )
 
 
 def _check_for_parent_child_name_clashes(
-    flat_functions: FlatFunctionDict,
-    flat_input_structure: FlatInputStructureDict,
+    qual_name_functions: QualNameFunctionDict,
+    qual_name_input_structure: QualNameInputStructureDict,
     name_clashes_resolution: Literal["raise", "warn", "ignore"],
 ) -> None:
     """Raise an error if name clashes exist between parent and child functions/inputs.
 
     Args:
-        flat_functions: A flat dictionary of functions.
-        flat_input_structure: A flat dictionary of the input structure.
+        qual_name_functions: A flat dictionary of functions.
+        qual_name_input_structure: A flat dictionary of the input structure.
         name_clashes_resolution: Strategy for resolving name clashes.
     """
     if name_clashes_resolution == "ignore":
         return
 
     name_clashes: list[tuple[str, str]] = _find_parent_child_name_clashes(
-        flat_functions, flat_input_structure
+        qual_name_functions, qual_name_input_structure
     )
 
     if len(name_clashes) > 0:
@@ -50,21 +50,21 @@ def _check_for_parent_child_name_clashes(
 
 
 def _find_parent_child_name_clashes(
-    flat_functions: FlatFunctionDict,
-    flat_input_structure: FlatInputStructureDict,
+    qual_name_functions: QualNameFunctionDict,
+    qual_name_input_structure: QualNameInputStructureDict,
 ) -> list[tuple[str, str]]:
     """Find and return a list of tuples representing parent-child name clashes.
 
     Args:
-        flat_functions: A flat dictionary of functions.
-        flat_input_structure: A flat dictionary of the input structure.
+        qual_name_functions: A flat dictionary of functions.
+        qual_name_input_structure: A flat dictionary of the input structure.
 
     Returns
     -------
         A list of tuples, each containing two qualified names that clash.
     """
-    _qualified_names: set[str] = set(flat_functions.keys()) | set(
-        flat_input_structure.keys()
+    _qualified_names: set[str] = set(qual_name_functions.keys()) | set(
+        qual_name_input_structure.keys()
     )
     namespace_and_simple_names: list[tuple[str, str]] = [
         _get_namespace_and_simple_name(qname) for qname in _qualified_names

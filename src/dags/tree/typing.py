@@ -14,24 +14,24 @@ if TYPE_CHECKING:
     T = TypeVar("T")
 
     # Basic nested structure types
-    NestedStrDict = Mapping[str, Any | "NestedStrDict"]
+    NestedStructureDict = Mapping[str, Any | "NestedStructureDict"]
+
+    # Input and output types (same as NestedStructureDict, but make it more specific)
+    NestedInputDict = Mapping[str, Any | "NestedInputDict"]
+    NestedOutputDict = Mapping[str, Any | "NestedOutputDict"]
 
     # Flat dictionaries with qualified names or tree paths
-    FlatQNDict = dict[str, Any]
-    FlatTPDict = dict[tuple[str, ...], Any]
+    FlatQualNameDict = dict[str, Any]
+    FlatTreePathDict = dict[tuple[str, ...], Any]
 
     # Function-related types
     NestedFunctionDict = Mapping[str, GenericCallable | "NestedFunctionDict"]
-    FlatFunctionDict = dict[str, GenericCallable]
+    QualNameFunctionDict = dict[str, GenericCallable]
 
     # Input structure types
     NestedInputStructureDict = Mapping[str, None | "NestedInputStructureDict"]
-    FlatInputStructureDict = dict[str, None]
+    QualNameInputStructureDict = dict[str, None]
 
     # Target types
     NestedTargetDict = Mapping[str, None | "NestedTargetDict"]
-    FlatTargetList = list[str]
-
-    # Input and output types
-    NestedInputDict = Mapping[str, Any | "NestedInputDict"]
-    NestedOutputDict = Mapping[str, Any | "NestedOutputDict"]
+    QualNameTargetList = list[str]

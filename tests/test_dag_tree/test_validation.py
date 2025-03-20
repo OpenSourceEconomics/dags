@@ -14,8 +14,8 @@ from dags.tree.validation import (
 
 if TYPE_CHECKING:
     from dags.tree.typing import (
-        FlatFunctionDict,
-        FlatInputStructureDict,
+        QualNameFunctionDict,
+        QualNameInputStructureDict,
     )
 
 
@@ -29,8 +29,8 @@ if TYPE_CHECKING:
     ],
 )
 def test_check_for_parent_child_name_clashes_error(
-    functions: FlatFunctionDict,
-    input_structure: FlatInputStructureDict,
+    functions: QualNameFunctionDict,
+    input_structure: QualNameInputStructureDict,
     name_clashes: Literal["raise"],
 ) -> None:
     with pytest.raises(ValueError, match="There are name clashes:"):
@@ -47,8 +47,8 @@ def test_check_for_parent_child_name_clashes_error(
     ],
 )
 def test_check_for_parent_child_name_clashes_warn(
-    functions: FlatFunctionDict,
-    input_structure: FlatInputStructureDict,
+    functions: QualNameFunctionDict,
+    input_structure: QualNameInputStructureDict,
     name_clashes: Literal["warn"],
 ) -> None:
     with pytest.warns(UserWarning, match="There are name clashes:"):
@@ -66,8 +66,8 @@ def test_check_for_parent_child_name_clashes_warn(
     ],
 )
 def test_check_for_parent_child_name_clashes_no_error(
-    functions: FlatFunctionDict,
-    input_structure: FlatInputStructureDict,
+    functions: QualNameFunctionDict,
+    input_structure: QualNameInputStructureDict,
     name_clashes: Literal["raise", "ignore"],
 ) -> None:
     _check_for_parent_child_name_clashes(functions, input_structure, name_clashes)
@@ -88,8 +88,8 @@ def test_check_for_parent_child_name_clashes_no_error(
     ],
 )
 def test_find_parent_child_name_clashes(
-    functions: FlatFunctionDict,
-    input_structure: FlatInputStructureDict,
+    functions: QualNameFunctionDict,
+    input_structure: QualNameInputStructureDict,
     expected: list[tuple[str, str]],
 ) -> None:
     actual = _find_parent_child_name_clashes(functions, input_structure)
@@ -109,7 +109,7 @@ def test_find_parent_child_name_clashes(
     ],
 )
 def test_fail_if_path_elements_have_trailing_undersores(
-    functions: FlatFunctionDict,
+    functions: QualNameFunctionDict,
     expected: Literal["raise", "pass"],
 ) -> None:
     if expected == "raise":
