@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING
 import pytest
 
 from dags.tree.dag_tree import (
-    _get_parameter_absolute_path,
     _get_parameter_rel_to_abs_mapper,
     _get_parameter_tree_path,
     _get_top_level_namespace_final,
@@ -65,7 +64,6 @@ def test_get_top_level_namespace_initial(
         "func",
         "current_namespace",
         "top_level_namespace",
-        "all_qual_names",
         "expected",
     ),
     [
@@ -73,20 +71,17 @@ def test_get_top_level_namespace_initial(
             f,
             "",
             {"f"},
-            {"f"},
             {},
         ),
         (
             f,
             ("n",),
             {"n", "a"},
-            {"n__f", "a"},
             {},
         ),
         (
             g,
             (),
-            {"g", "a", "b", "c"},
             {"g", "a", "b", "c"},
             {"a": "a", "b": "b", "c": "c"},
         ),
@@ -94,21 +89,18 @@ def test_get_top_level_namespace_initial(
             g,
             ("n",),
             {"n", "a"},
-            {"n__g", "a", "n__b", "n__c"},
             {"a": "a", "b": "n__b", "c": "n__c"},
         ),
         (
             h,
             ("n",),
             {"n", "a"},
-            {"n__h", "a", "n__b__c"},
             {"a": "a", "b__c": "n__b__c"},
         ),
         (
             h,
             ("n",),
             {"n"},
-            {"n__h", "n__a", "n__b__c"},
             {"a": "n__a", "b__c": "n__b__c"},
         ),
     ],
@@ -117,7 +109,6 @@ def test_create_parameter_name_mapper(
     func: GenericCallable,
     current_namespace: tuple[str, ...],
     top_level_namespace: set[str],
-    all_qual_names: set[str],
     expected: dict[str, str],
 ) -> None:
     assert (
@@ -125,20 +116,9 @@ def test_create_parameter_name_mapper(
             func=func,
             current_namespace=current_namespace,
             top_level_namespace=top_level_namespace,
-            all_qual_names=all_qual_names,
         )
         == expected
     )
-
-
-def test_map_parameter_raises() -> None:
-    with pytest.raises(ValueError, match="Cannot resolve parameter"):
-        _get_parameter_absolute_path(
-            parameter_name="x",
-            current_namespace=(),
-            top_level_namespace={"n"},
-            all_qual_names={"n__y"},
-        )
 
 
 @pytest.mark.parametrize(

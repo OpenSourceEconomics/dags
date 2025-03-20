@@ -11,10 +11,7 @@ if TYPE_CHECKING:
 
 # Import fixtures
 from dags.tree.tree_utils import (
-    _get_namespace_and_simple_name,
-    _get_qualified_name,
     _is_python_identifier,
-    _is_qualified_name,
     flatten_to_qual_names,
     flatten_to_tree_paths,
     qual_name_from_tree_path,
@@ -24,33 +21,6 @@ from dags.tree.tree_utils import (
     unflatten_from_qual_names,
     unflatten_from_tree_paths,
 )
-
-
-@pytest.mark.parametrize(
-    ("qualified_name", "expected"),
-    [
-        ("", ("", "")),
-        ("a", ("", "a")),
-        ("a__b", ("a", "b")),
-        ("a___b", ("a", "_b")),
-    ],
-)
-def test_get_namespace_and_simple_name(
-    qualified_name: str, expected: tuple[str, str]
-) -> None:
-    assert _get_namespace_and_simple_name(qualified_name) == expected
-
-
-@pytest.mark.parametrize(
-    ("namespace", "simple_name", "expected"),
-    [
-        ("", "", ""),
-        ("", "a", "a"),
-        ("a", "b", "a__b"),
-    ],
-)
-def test_get_qualified_name(namespace: str, simple_name: str, expected: str) -> None:
-    assert _get_qualified_name(namespace, simple_name) == expected
 
 
 @pytest.mark.parametrize(
@@ -82,20 +52,6 @@ def test_get_qualified_name(namespace: str, simple_name: str, expected: str) -> 
 )
 def test_is_python_identifier(s: str, expected: bool) -> None:
     assert _is_python_identifier(s) == expected
-
-
-@pytest.mark.parametrize(
-    ("s", "expected"),
-    [
-        ("a", False),
-        ("__", False),
-        ("a__", False),
-        ("__a", False),
-        ("a__b", True),
-    ],
-)
-def test_is_qualified_name(s: str, expected: bool) -> None:
-    assert _is_qualified_name(s) == expected
 
 
 def _bb() -> None:
