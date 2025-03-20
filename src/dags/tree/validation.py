@@ -90,8 +90,11 @@ def _find_parent_child_name_clashes(
     return result
 
 
-def _fail_if_branches_have_trailing_undersores(functions: NestedFunctionDict) -> None:
-    """Raise a ValueError if any branch of the functions tree ends with an underscore.
+def fail_if_path_elements_have_trailing_undersores(
+    functions: NestedFunctionDict,
+) -> None:
+    """
+    Check if any element of the tree path except for the leaf ends with an underscore.
 
     Args:
         functions:
@@ -102,10 +105,15 @@ def _fail_if_branches_have_trailing_undersores(functions: NestedFunctionDict) ->
         ValueError: If any branch of the functions tree ends with an underscore.
     """
     flattened_functions_tree = fd.flatten(functions, reducer="tuple")
-    for path in flattened_functions_tree:
-        if len(path) > 1 and any(name.endswith("_") for name in path[:-1]):
-            msg = (
-                "Elements of the paths in the functions tree must not end with an "
-                f"underscore. Path: {path}"
-            )
-            raise ValueError(msg)
+    collected_errors: list[str] = [
+        path
+        for path in flattened_functions_tree
+        if len(path) > 1 and any(name.endswith("_") for name in path[:-1])
+    ]
+    if collected_errors:
+        paths = "\n".join(str(p) for p in collected_errors)
+        msg = (
+            "Except for the leaf name, elements of the paths in the functions tree "
+            f"must not end with an underscore. Path(s):\n\n{paths}"
+        )
+        raise ValueError(msg)

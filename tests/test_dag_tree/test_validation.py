@@ -9,6 +9,7 @@ import pytest
 from dags.tree.validation import (
     _check_for_parent_child_name_clashes,
     _find_parent_child_name_clashes,
+    fail_if_path_elements_have_trailing_undersores,
 )
 
 if TYPE_CHECKING:
@@ -97,3 +98,22 @@ def test_find_parent_child_name_clashes(
     unordered_actual = [set(pair) for pair in actual]
 
     assert unordered_actual == unordered_expected
+
+
+@pytest.mark.parametrize(
+    ("functions", "expected"),
+    [
+        ({"a": lambda a: a, "b": {"a": lambda a: a}}, "pass"),
+        ({"a_": lambda a: a, "b": {"a_": lambda a: a}}, "pass"),
+        ({"a": lambda a: a, "b_": {"a": lambda a: a}}, "raise"),
+    ],
+)
+def test_fail_if_path_elements_have_trailing_undersores(
+    functions: FlatFunctionDict,
+    expected: Literal["raise", "pass"],
+) -> None:
+    if expected == "raise":
+        with pytest.raises(ValueError, match="Except for the leaf name, elements"):
+            fail_if_path_elements_have_trailing_undersores(functions)
+    else:
+        fail_if_path_elements_have_trailing_undersores(functions)

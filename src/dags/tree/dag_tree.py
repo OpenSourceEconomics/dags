@@ -20,7 +20,7 @@ from dags.tree.tree_utils import (
 )
 from dags.tree.validation import (
     _check_for_parent_child_name_clashes,
-    _fail_if_branches_have_trailing_undersores,
+    fail_if_path_elements_have_trailing_undersores,
 )
 
 if TYPE_CHECKING:
@@ -55,7 +55,7 @@ def create_input_structure_tree(
     -------
         A nested dictionary representing the expected input structure.
     """
-    _fail_if_branches_have_trailing_undersores(functions)
+    fail_if_path_elements_have_trailing_undersores(functions)
 
     flat_functions = flatten_to_qual_names(functions)
     flat_input_structure: FlatInputStructureDict = {}
@@ -184,7 +184,7 @@ def _flatten_functions_and_rename_parameters(
     -------
         A flat dictionary mapping function names to functions.
     """
-    _fail_if_branches_have_trailing_undersores(functions)
+    fail_if_path_elements_have_trailing_undersores(functions)
 
     flat_functions: FlatFunctionDict = flatten_to_qual_names(functions)
     flat_input_structure: FlatInputStructureDict = flatten_to_qual_names(
