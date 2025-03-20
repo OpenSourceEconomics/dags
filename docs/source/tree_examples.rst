@@ -74,9 +74,6 @@ namespace. The input structure can also be created via the
         'linear': {'x': None},
         'parabolic': {'x': None},
     }
-In order to provide the top-level input ``x`` to the function ``h``, we need to pass
-
-
 
 Finally, we combine the functions using `concatenate_functions_tree`.
 
