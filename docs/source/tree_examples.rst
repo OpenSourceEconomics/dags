@@ -2,19 +2,9 @@
 Examples with functions trees
 =============================
 
-There are two modes of using ``dags.tree``:
-
-1. Loose mode, where dags tries to infer the required inputs from the topology of the
-   functions tree alone. This means that you cannot use inputs at the top-level
-   namespace and that you cannot use relative paths. *(The reason is that we need to
-   take all paths containing double underscores as absolute paths.)*
-2. Fixed top-level namespace mode, where names of all elements in the top-level
-   namespace are fixed before attempting to infer required inputs. This means that
-   inputs in the top-level namespace and relative paths are allowed. However, no element
-   of the top level namespace may be repeated at deeper levels of nesting. *(The reason
-   is that to distinguish between absolute and relative paths, we check whether the
-   first element of a path is a key in the top-level namespace.)*
-
+It is often useful to structure code in a hierarchical way, e.g. to group related
+functions together. In ``dags``, this can be achieved by defining a so-called
+"functions tree".
 
 
 Functions from different namespaces
@@ -23,18 +13,14 @@ Functions from different namespaces
 In large projects, function names can become lengthy when they share the same namespace.
 Using dags, we can concatenate functions from different namespaces.
 
-Suppose we define the following function in the module `linear_functions.py`:
+Suppose we define the following function in the module `linear.py`:
 
 .. code-block:: python
 
-    def g(x):
+    def f(x):
         return 0.5 * x
 
-    def g_deriv(f, x):
-        return 0.5
-
-
-In another module, called `parabolic_functions.py`, we define two more functions. Note,
+In another module, called `parabolic.py`, we define two more functions. Note,
 that there is a function `f` in this module as well.
 
 .. code-block:: python
@@ -42,14 +28,14 @@ that there is a function `f` in this module as well.
     def f(x):
         return x**2
 
-    def h(f, linear_functions__f):
-        return (f + linear_functions__f) ** 2
+    def h(f, linear__f):
+        return (f + linear__f) ** 2
 
 The function `h` takes two inputs:
-- `f` from `parabolic_functions.py`, referenced directly as f within the current
+- `f` from `parabolic.py`, referenced directly as f within the current
 namespace.
-- `f` from `linear_functions.py`, referenced using its namespace with a double
-underscore separator (`linear_functions__f`).
+- `f` from `linear.py`, referenced using its namespace with a double
+underscore separator (`linear__f`).
 
 Using `concatenate_functions_tree`, we are able to combine the functions from both
 modules.
@@ -59,30 +45,37 @@ The functions tree can be nested to an arbitrary depth.
 
 .. code-block:: python
 
-    from linear_functions import f as linear_functions__f
-    from parabolic_functions import f as parabolic_functions__f
-    from parabolic_functions import h as parabolic_functions__h
+    import linear
+    import parabolic
 
     # Define functions tree
     functions = {
-        "linear_functions": {"f": linear_functions__f},
-        "parabolic_functions": {
-            "f": parabolic_functions__f,
-            "h": parabolic_functions__h
+        "linear": {"f": linear.f},
+        "parabolic": {
+            "f": parabolic.f,
+            "h": parabolic.h
         },
     }
 
-Next, we define the input structure, which maps the parameters of the functions to their
+Next, we create the input structure, which maps the parameters of the functions to their
 namespace. The input structure can also be created via the
 `create_input_structure_tree` function.
 
 .. code-block:: python
 
-    # Define input structure
-    input_structure = {
-        "linear_functions": {"x": None},
-        "parabolic_functions": {"x": None},
+    import dags.tree as dt
+
+    input_structure = dt.create_input_structure_tree(functions=functions)
+    input_structure
+
+.. code-block:: python
+
+    {
+        'linear': {'x': None},
+        'parabolic': {'x': None},
     }
+In order to provide the top-level input ``x`` to the function ``h``, we need to pass
+
 
 
 Finally, we combine the functions using `concatenate_functions_tree`.
@@ -91,89 +84,67 @@ Finally, we combine the functions using `concatenate_functions_tree`.
 
     # Get combined function
     combined = concatenate_functions_tree(
-        functions,
+        functions=functions,
         input_structure=input_structure,
-        targets={"parabolic_functions": {"h": None}},
+        targets={"parabolic": {"h": None}},
     )
 
     # Call combined function
-    combined(inputs={
-        "linear_functions": {"x": 2},
-        "parabolic_functions": {"x": 2},
-    })
+    combined(
+        inputs={
+            "linear": {"x": 1},
+            "parabolic": {"x": 2},
+        }
+    )
 
-.. code-block:: python
-
-    {"h": 3.0}
-
-Importantly, dags does not allow for branches with trailing underscores in the
-definition of the functions tree.
-
-
-The input structure and two different behaviors
------------------------------------------------
-
-
-
-You might think that in the above example, you may have the ability to pass a common
-value of `x` in the top-level namespace. Using the above default behavior this is not
-the case. The problem is that we do not have a way to tell absolute paths in the tree
-(i.e., those starting at the top-level namespace) from relative paths (i.e., those
-starting at the current namespace) when we create the input structure or when we
-concatenate the functions.
-
-Consider the following example:
-
-.. code-block:: python
-
-    def a(x):
-        return x**2
-
-    functions = {
-        "nested": {"a" a}
-    }
-
-
-When creating an input structure, both of the following could be valid:
-
-.. code-block:: python
-
-    input_structure_a = {
-        "x": None
-    }
-
-    input_structure_b = {
-        "nested": {"x": None}
-    }
-
-Default behavior
+Top-level inputs
 ________________
 
-The default behavior of ``dags.tree`` is to disallow any functions or inputs in the
-top-level namespace. That is, ``concatenate_functions_tree`` will raise an error if you
-pass ``input_structure_a`` into the above example. ``create_input_structure_tree`` will
-return ``input_structure_b``.
+Note that `create_input_structure_tree` created two inputs with leaf names ``x``. You
+might have thought that only one ``x`` should be provided at the top level. This is the
+distinction between absolute and relative paths.
 
-Technically speaking, the default behavior is to distinguish between leaf names (no
-double underscores present in an argument, clearly local to a function) and qualified
-names (has at least one double underscore in an argument). This implies two things:
+We can just provide the top-level input ``x``:
 
-1. Leaf names are not allowed in the top-level namespace, i.e., all functions and inputs
-   must be nested at least one level deep.
-2. All qualified names are interpreted as absolute paths.
+.. code-block:: python
+
+    combined_top_level = dt.concatenate_functions_tree(
+        functions,
+        input_structure={"x": None},
+        targets={"parabolic": {"h": None}},
+    )
+    combined_top_level(inputs={"x": 3})
+
+.. code-block:: python
+
+    {'parabolic': {'h': 110.25}}
+
+By default, ``create_input_structure_tree`` assumes that all required input paths are
+relative to the location where they are defined. If you need to provide paths at the top
+level, you can do so by passing the ``top_level_inputs`` argument to
+``create_input_structure_tree``:
+
+.. code-block:: python
+
+    input_structure = dt.create_input_structure_tree(
+        functions=functions,
+        top_level_inputs={"x": None},
+    )
+    input_structure
+
+.. code-block:: python
+
+    {'x': None}
 
 
-Alternative: Fixing the top-level namespace
-___________________________________________
+Caveats
+-------
 
-In complex projects, the default behavior can be limiting the usefulness of the
-hierarchical structure of the functions tree because absolute paths need to be provided
-all the time. Hence, we provide an alternative behavior that allows for the top-level
-namespace to be fixed.
+Importantly, dags does not allow trailing underscores in elements of the function tree's
+paths. Since we are using double underscores to separate elements, this would yield a
+triple underscore and the round trip would not be unique if it were allowed.
 
-In the above example, we can either fix the top-level namespace to be ``{"a", "x"}`` or
-``{"a"}``. In the first case, we need to provide ``input_structure_a``, in the second
-case, we need to provide ``input_structure_b``.
-
-What is disallowed (and checked by ``dags.tree``) is to have path elements that are
-identical to an element of the top-level namespace.
+There must not be any elements in the function tree's paths at one or more levels of
+nesting that are identical to an element of the top-level namespace. The reason is that
+in order to decide whether a path, say ``("a", "b")``, is absolute or relative, we
+check whether the first element of the path is a key in the top-level namespace.
