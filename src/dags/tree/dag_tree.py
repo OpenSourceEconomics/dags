@@ -16,7 +16,9 @@ from dags.tree.tree_utils import (
     flatten_to_qual_names,
     flatten_to_tree_paths,
     qual_name_from_tree_path,
+    qual_names,
     tree_path_from_qual_name,
+    tree_paths,
     unflatten_from_qual_names,
     unflatten_from_tree_paths,
 )
@@ -146,9 +148,7 @@ def create_dag_tree(
         top_level_namespace=top_level_namespace,
         perform_checks=perform_checks,
     )
-    qual_name_targets = (
-        list(flatten_to_qual_names(targets).keys()) if targets is not None else None
-    )
+    qual_name_targets = qual_names(targets) if targets is not None else None
 
     return create_dag(qual_name_functions, qual_name_targets)
 
@@ -177,9 +177,8 @@ def concatenate_functions_tree(
         functions=functions,
         input_structure=input_structure,
     )
-    qual_name_targets = (
-        list(flatten_to_qual_names(targets).keys()) if targets is not None else None
-    )
+    qual_name_targets = qual_names(targets) if targets is not None else None
+
     qual_name_functions = _qual_name_functions_only_abs_paths(
         functions=functions,
         input_structure=input_structure,
@@ -224,9 +223,7 @@ def _get_top_level_namespace_initial(
 def _get_top_level_namespace_final(
     functions: NestedFunctionDict, input_structure: NestedInputStructureDict
 ) -> set[str]:
-    all_tree_paths = set(flatten_to_tree_paths(functions).keys()) | set(
-        flatten_to_tree_paths(input_structure).keys()
-    )
+    all_tree_paths = set(tree_paths(functions)) | set(tree_paths(input_structure))
     return {path[0] for path in all_tree_paths}
 
 
@@ -252,14 +249,11 @@ def _qual_name_functions_only_abs_paths(
     tree_path_functions = flatten_to_tree_paths(functions)
 
     if perform_checks:
-        tree_path_input_structure = flatten_to_tree_paths(input_structure)
-        tree_paths = set(tree_path_functions.keys()) | set(
-            tree_path_input_structure.keys()
-        )
-        fail_if_path_elements_have_trailing_undersores(tree_paths)
+        all_paths = set(tree_path_functions.keys()) | set(tree_paths(input_structure))
+        fail_if_path_elements_have_trailing_undersores(all_paths)
         fail_if_top_level_elements_repeated_in_paths(
             top_level_namespace=top_level_namespace,
-            tree_paths=tree_paths,
+            tree_paths=all_paths,
         )
 
     qual_name_functions = {}
