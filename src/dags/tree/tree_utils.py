@@ -71,19 +71,17 @@ def qual_names(nested: NestedStructureDict) -> list[str]:
     return list(flatten_to_qual_names(nested).keys())
 
 
-def unflatten_from_qual_names(
-    qual_name_qual_names: FlatQualNameDict,
-) -> NestedStructureDict:
+def unflatten_from_qual_names(flat_qual_names: FlatQualNameDict) -> NestedStructureDict:
     """Return a nested dictionary from a flat dictionary with qualified names as keys.
 
     Args:
-        qual_name_qual_names: A dictionary with qualified names as keys.
+        flat_qual_names: A dictionary with qualified names as keys.
 
     Returns
     -------
         A nested dictionary.
     """
-    return fd.unflatten(qual_name_qual_names, splitter=_qualified_name_splitter)
+    return fd.unflatten(flat_qual_names, splitter=_qualified_name_splitter)
 
 
 def flatten_to_tree_paths(nested: NestedStructureDict) -> FlatTreePathDict:
