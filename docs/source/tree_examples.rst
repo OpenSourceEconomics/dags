@@ -17,6 +17,8 @@ Suppose we define the following function in the module `linear.py`:
 
 .. code-block:: python
 
+    # linear.py
+    
     def f(x):
         return 0.5 * x
 
@@ -25,6 +27,8 @@ that there is a function `f` in this module as well.
 
 .. code-block:: python
 
+    # parabolic.py
+    
     def f(x):
         return x**2
 
