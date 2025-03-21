@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import functools
+import inspect
 from typing import TYPE_CHECKING
 
 from dags.dag import (
@@ -74,8 +75,6 @@ def create_input_structure_tree(
         top_level_namespace=top_level_namespace,
         tree_paths=tree_paths,
     )
-
-    import inspect
 
     # Now go through everything that is defined via the functions' signatures.
     tree_path_input_structure: TreePathInputStructureDict = {}
