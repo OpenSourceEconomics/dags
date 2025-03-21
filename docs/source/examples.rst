@@ -109,7 +109,17 @@ We can do that as follows:
 
 .. code-block:: python
 
-    combined_standard = concatenate_functions(Functions from different namespaces
+    combined_standard = concatenate_functions(
+        {"f": f_standard, "g": g, "h": h},
+        targets="h",
+    )
+
+    combined_numpy = concatenate_functions(
+        {"f": f_numpy, "g": g, "h": h},
+        targets="h",
+    )
+
+Functions from different namespaces
 -----------------------------------
 
 In large projects, function names can become lengthy when they share the same namespace.
@@ -196,15 +206,6 @@ Finally, we combine the functions using `concatenate_functions_tree`.
 
 Importantly, dags does not allow for branches with trailing underscores in the
 definition of the functions tree.
-
-        {"f": f_standard, "g": g, "h": h},
-        targets="h",
-    )
-
-    combined_numpy = concatenate_functions(
-        {"f": f_numpy, "g": g, "h": h},
-        targets="h",
-    )
 
 In fact, this ability to switch out components was the primary reason we wrote dags.
 This functionality has, for example, been used in
