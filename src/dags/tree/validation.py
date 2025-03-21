@@ -36,7 +36,7 @@ def fail_if_top_level_elements_repeated_in_paths(
     tree_paths: set[tuple[str, ...]],
 ) -> None:
     """
-    Check if any element of the tree paths except for the leaf ends with an underscore.
+    Fail if any element of the top-level namespace is repeated elsewhere.
 
     Args:
         top_level_namespace:
@@ -46,7 +46,8 @@ def fail_if_top_level_elements_repeated_in_paths(
 
     Raises
     ------
-        ValueError: If any branch of the functions tree ends with an underscore.
+        ValueError: If any element of the top-level namespace is repeated further down
+            in the hierarchy.
     """
     collected_errors = {
         path
@@ -67,8 +68,7 @@ def fail_if_top_level_elements_repeated_in_single_path(
     top_level_namespace: set[str],
     tree_path: tuple[str, ...],
 ) -> None:
-    """
-    Check if any element of the tree path except for the leaf ends with an underscore.
+    """Fail if elements of `tree_path` repeat elements of the top-level namespace.
 
     Args:
         top_level_namespace:
@@ -78,7 +78,8 @@ def fail_if_top_level_elements_repeated_in_single_path(
 
     Raises
     ------
-        ValueError: If any branch of the functions tree ends with an underscore.
+        ValueError: If any element of `tree_path` equals an element in the top-level
+            namespace.
     """
     if len(tree_path) > 1 and any(
         (name in top_level_namespace) for name in tree_path[1:]

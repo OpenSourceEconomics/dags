@@ -107,7 +107,7 @@ def create_input_structure_tree(
         input_structure=nested_input_structure,
         perform_checks=False,
     )
-    qual_name_functions = _qual_name_functions_only_abs_paths(
+    qual_name_functions = _qual_name_functions_with_abs_path_args(
         functions=functions,
         input_structure=nested_input_structure,
         top_level_namespace=top_level_namespace,
@@ -141,7 +141,7 @@ def create_dag_tree(
         functions=functions,
         input_structure=input_structure,
     )
-    qual_name_functions = _qual_name_functions_only_abs_paths(
+    qual_name_functions = _qual_name_functions_with_abs_path_args(
         functions=functions,
         input_structure=input_structure,
         top_level_namespace=top_level_namespace,
@@ -178,7 +178,7 @@ def concatenate_functions_tree(
     )
     qual_name_targets = qual_names(targets) if targets is not None else None
 
-    qual_name_functions = _qual_name_functions_only_abs_paths(
+    qual_name_functions = _qual_name_functions_with_abs_path_args(
         functions=functions,
         input_structure=input_structure,
         top_level_namespace=top_level_namespace,
@@ -226,7 +226,7 @@ def _get_top_level_namespace_final(
     return {path[0] for path in all_tree_paths}
 
 
-def _qual_name_functions_only_abs_paths(
+def _qual_name_functions_with_abs_path_args(
     functions: NestedFunctionDict,
     input_structure: NestedInputStructureDict,
     top_level_namespace: set[str],

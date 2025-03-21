@@ -110,19 +110,17 @@ def tree_paths(nested: NestedStructureDict) -> list[tuple[str, ...]]:
     return list(flatten_to_tree_paths(nested).keys())
 
 
-def unflatten_from_tree_paths(
-    qual_name_tree_paths: FlatTreePathDict,
-) -> NestedStructureDict:
+def unflatten_from_tree_paths(flat_tree_paths: FlatTreePathDict) -> NestedStructureDict:
     """Return a nested dictionary from a flat dictionary with tree paths as keys.
 
     Args:
-        qual_name_tree_paths: A flat dictionary with tree paths (tuples) as keys.
+        flat_tree_paths: A flat dictionary with tree paths (tuples) as keys.
 
     Returns
     -------
         A nested dictionary.
     """
-    return fd.unflatten(qual_name_tree_paths, splitter="tuple")
+    return fd.unflatten(flat_tree_paths, splitter="tuple")
 
 
 def _is_python_identifier(s: str) -> bool:

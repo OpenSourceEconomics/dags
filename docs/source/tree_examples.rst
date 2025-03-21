@@ -145,3 +145,50 @@ There must not be any elements in the function tree's paths at one or more level
 nesting that are identical to an element of the top-level namespace. The reason is that
 in order to decide whether a path, say ``("a", "b")``, is absolute or relative, we
 check whether the first element of the path is a key in the top-level namespace.
+
+A note on terminology
+---------------------
+
+The basic structure of a pytree we work with is a nested dictionary, say
+
+.. code-block:: python
+
+    {
+        "a": {"b": f, "c": 2},
+        "d": {"e": {"f": 3}, "g": g},
+    }
+
+We refer to the elements of the top-level namespace as ``a`` and ``d``.
+
+The set of tree paths is ``{("a", "b"), ("a", "c"), ("d", "e", "f"), ("d", "g")}``. We can represent the
+pytree as a "flat tree paths" dictionary with tree paths as keys:
+
+.. code-block:: python
+
+    {
+        ("a", "b"): f,
+        ("a", "c"): 2,
+        ("d", "e", "f"): 3,
+        ("d", "g"): g,
+    }
+
+Tree paths thus are always tuples referring to absolute paths in the pytree.
+
+Similarly, the set of qualified names in the strict sense is ``{"a__b", "a__c",
+"d__e__f", "d__g"}``. We can represent the pytree as a "flat qualified names" dictionary
+with qualified names as keys:
+
+.. code-block:: python
+
+    {
+        "a__b": f,
+        "a__c": 2,
+        "d__e__f": 3,
+        "d__g": g,
+    }
+
+However, we can also have relative paths in function arguments provided by the user. For
+example, the function ``g`` may take the argument ``e__f``, which would resolve to the
+tree path ``("d", "e", "f")``, i.e. the qualified name in the strict sense ``d__e__f``.
+Sometimes, however, we need to refer to the relative path ``("e__f")`` as a qualified
+name.
