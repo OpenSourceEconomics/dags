@@ -96,7 +96,7 @@ def create_input_structure_tree(
     if targets is None:
         return nested_input_structure
 
-    functions_for_flat_dags = functions_for_dags_concatenate_functions(
+    functions_for_flat_dags = functions_without_tree_logic(
         functions=functions,
         input_structure=nested_input_structure,
         top_level_namespace=top_level_namespace,
@@ -134,7 +134,7 @@ def create_dag_tree(
         functions=functions,
         input_structure=input_structure,
     )
-    functions_for_flat_dags = functions_for_dags_concatenate_functions(
+    functions_for_flat_dags = functions_without_tree_logic(
         functions=functions,
         input_structure=input_structure,
         top_level_namespace=top_level_namespace,
@@ -169,7 +169,7 @@ def concatenate_functions_tree(
         functions=functions,
         input_structure=input_structure,
     )
-    functions_for_flat_dags = functions_for_dags_concatenate_functions(
+    functions_for_flat_dags = functions_without_tree_logic(
         functions=functions,
         input_structure=input_structure,
         top_level_namespace=top_level_namespace,
@@ -193,32 +193,7 @@ def concatenate_functions_tree(
     return wrapper
 
 
-def _get_top_level_namespace_initial(
-    tree_paths: set[tuple[str, ...]],
-    top_level_inputs: set[str],
-) -> set[str]:
-    """Get the namespace of the top level.
-
-    Args:
-        tree_paths: The set of tree paths.
-        top_level_inputs: A set of input names in the top-level namespace.
-
-    Returns
-    -------
-        The elements of the top-level namespace.
-    """
-    top_level_elements_from_functions = {path[0] for path in tree_paths}
-    return top_level_elements_from_functions | top_level_inputs
-
-
-def _get_top_level_namespace_final(
-    functions: NestedFunctionDict, input_structure: NestedInputStructureDict
-) -> set[str]:
-    all_tree_paths = set(tree_paths(functions)) | set(tree_paths(input_structure))
-    return {path[0] for path in all_tree_paths}
-
-
-def functions_for_dags_concatenate_functions(
+def functions_without_tree_logic(
     functions: NestedFunctionDict,
     input_structure: NestedInputStructureDict,
     top_level_namespace: set[str],
@@ -269,6 +244,31 @@ def functions_for_dags_concatenate_functions(
         qual_name_functions[qual_name_from_tree_path(path)] = renamed
 
     return qual_name_functions
+
+
+def _get_top_level_namespace_initial(
+    tree_paths: set[tuple[str, ...]],
+    top_level_inputs: set[str],
+) -> set[str]:
+    """Get the namespace of the top level.
+
+    Args:
+        tree_paths: The set of tree paths.
+        top_level_inputs: A set of input names in the top-level namespace.
+
+    Returns
+    -------
+        The elements of the top-level namespace.
+    """
+    top_level_elements_from_functions = {path[0] for path in tree_paths}
+    return top_level_elements_from_functions | top_level_inputs
+
+
+def _get_top_level_namespace_final(
+    functions: NestedFunctionDict, input_structure: NestedInputStructureDict
+) -> set[str]:
+    all_tree_paths = set(tree_paths(functions)) | set(tree_paths(input_structure))
+    return {path[0] for path in all_tree_paths}
 
 
 def _get_parameter_rel_to_abs_mapper(
