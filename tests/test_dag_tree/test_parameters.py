@@ -8,10 +8,10 @@ from typing import TYPE_CHECKING
 import pytest
 
 from dags.tree.dag_tree import (
-    _get_parameter_rel_to_abs_mapper,
     _get_parameter_tree_path,
     _get_top_level_namespace_final,
     _get_top_level_namespace_initial,
+    _map_parameters_rel_to_abs,
     functions_without_tree_logic,
 )
 
@@ -112,7 +112,7 @@ def test_create_parameter_name_mapper(
     expected: dict[str, str],
 ) -> None:
     assert (
-        _get_parameter_rel_to_abs_mapper(
+        _map_parameters_rel_to_abs(
             func=func,
             current_namespace=current_namespace,
             top_level_namespace=top_level_namespace,

@@ -233,17 +233,40 @@ def functions_without_tree_logic(
 
     qual_name_functions = {}
     for path, func in tree_path_functions.items():
-        renamed = rename_arguments(
-            func,
-            mapper=_get_parameter_rel_to_abs_mapper(
-                func=func,
-                current_namespace=path[:-1],
-                top_level_namespace=top_level_namespace,
-            ),
+        renamed = one_function_without_tree_logic(
+            function=func,
+            tree_path=path,
+            top_level_namespace=top_level_namespace,
         )
         qual_name_functions[qual_name_from_tree_path(path)] = renamed
 
     return qual_name_functions
+
+
+def one_function_without_tree_logic(
+    function: GenericCallable,
+    tree_path: tuple[str, ...],
+    top_level_namespace: set[str],
+) -> GenericCallable:
+    """Convert a single function to work without tree logic.
+
+    Args:
+        func: The function to convert.
+        path: The tree path of the function.
+        top_level_namespace: The elements of the top level namespace.
+
+    Returns
+    -------
+        A function that takes qualified absolute names as arguments.
+    """
+    return rename_arguments(
+        func=function,
+        mapper=_map_parameters_rel_to_abs(
+            func=function,
+            current_namespace=tree_path[:-1],
+            top_level_namespace=top_level_namespace,
+        ),
+    )
 
 
 def _get_top_level_namespace_initial(
@@ -271,12 +294,12 @@ def _get_top_level_namespace_final(
     return {path[0] for path in all_tree_paths}
 
 
-def _get_parameter_rel_to_abs_mapper(
+def _map_parameters_rel_to_abs(
     func: GenericCallable,
     current_namespace: tuple[str, ...],
     top_level_namespace: set[str],
 ) -> dict[str, str]:
-    """Create a mapping from potentially relative parameter names to absolute names.
+    """Map (potentially) relative parameter names to qualified absolute names.
 
     Args:
         func: The function for which the parameters are being mapped.
@@ -285,7 +308,7 @@ def _get_parameter_rel_to_abs_mapper(
 
     Returns
     -------
-        A dictionary mapping original parameter names to new qualified names.
+        A dictionary mapping original parameter names to qualified absolute names.
     """
     return {
         old_name: _get_parameter_absolute_path(
