@@ -96,20 +96,18 @@ def create_input_structure_tree(
     if targets is None:
         return nested_input_structure
 
-    qual_name_functions = functions_for_dags_concatenate_functions(
+    functions_for_flat_dags = functions_for_dags_concatenate_functions(
         functions=functions,
         input_structure=nested_input_structure,
         top_level_namespace=top_level_namespace,
         perform_checks=False,
     )
-    dag_tree = create_dag_tree(
-        functions=functions,
-        targets=targets,
-        input_structure=nested_input_structure,
-        perform_checks=False,
-    )
     parameters = dag.create_arguments_of_concatenated_function(
-        functions=qual_name_functions, dag=dag_tree
+        functions=functions_for_flat_dags,
+        dag=dag.create_dag(
+            functions=functions_for_flat_dags,
+            targets=qual_names(targets),
+        ),
     )
     return unflatten_from_qual_names(dict.fromkeys(parameters))
 
@@ -136,15 +134,15 @@ def create_dag_tree(
         functions=functions,
         input_structure=input_structure,
     )
-    qual_name_functions = functions_for_dags_concatenate_functions(
+    functions_for_flat_dags = functions_for_dags_concatenate_functions(
         functions=functions,
         input_structure=input_structure,
         top_level_namespace=top_level_namespace,
         perform_checks=perform_checks,
     )
-    qual_name_targets = qual_names(targets) if targets is not None else None
+    targets_for_flat_dags = qual_names(targets) if targets is not None else None
 
-    return dag.create_dag(qual_name_functions, qual_name_targets)
+    return dag.create_dag(functions_for_flat_dags, targets_for_flat_dags)
 
 
 def concatenate_functions_tree(
@@ -171,18 +169,17 @@ def concatenate_functions_tree(
         functions=functions,
         input_structure=input_structure,
     )
-    qual_name_targets = qual_names(targets) if targets is not None else None
-
-    qual_name_functions = functions_for_dags_concatenate_functions(
+    functions_for_flat_dags = functions_for_dags_concatenate_functions(
         functions=functions,
         input_structure=input_structure,
         top_level_namespace=top_level_namespace,
         perform_checks=perform_checks,
     )
+    targets_for_flat_dags = qual_names(targets) if targets is not None else None
 
     concatenated_function = dag.concatenate_functions(
-        qual_name_functions,
-        qual_name_targets,
+        functions=functions_for_flat_dags,
+        targets=targets_for_flat_dags,
         return_type="dict",
         enforce_signature=enforce_signature,
     )
