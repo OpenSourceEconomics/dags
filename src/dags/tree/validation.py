@@ -2,9 +2,70 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
+from dags.tree.tree_utils import tree_path_from_qual_name, tree_paths
+
+if TYPE_CHECKING:
+    from dags.tree.typing import (
+        NestedFunctionDict,
+        NestedInputDict,
+        NestedStructureDict,
+        NestedTargetDict,
+        QualNameFunctionDict,
+    )
+
+
+def fail_if_paths_are_invalid(
+    functions: NestedFunctionDict | None = None,
+    qual_abs_names_functions: QualNameFunctionDict | None = None,
+    data_tree: NestedStructureDict | None = None,
+    input_structure: NestedInputDict | None = None,
+    targets: NestedTargetDict | None = None,
+    top_level_namespace: set[str] | list[str] | tuple[str, ...] = (),
+) -> None:
+    """
+    Fail if the paths in the functions tree are invalid.
+
+    Two reasons:
+
+    1. The paths have trailing underscores.
+    2. The paths contain elements that are part of the top-level namespace.
+
+    Note: Sometimes you want to pass both `functions` and `qual_abs_names_functions`
+    because for the latter, the check for trailing underscores does not work as the
+    third consecutive underscore will be assigned to the following name.
+
+    Raises
+    ------
+        ValueError: If the paths in the functions tree are invalid.
+    """
+    if functions is None:
+        functions = {}
+    if qual_abs_names_functions is None:
+        qual_abs_names_functions = {}
+    if data_tree is None:
+        data_tree = {}
+    if input_structure is None:
+        input_structure = {}
+    if targets is None:
+        targets = {}
+    all_tree_paths = (
+        set(tree_paths(functions))
+        | {tree_path_from_qual_name(qn) for qn in qual_abs_names_functions}
+        | set(tree_paths(data_tree))
+        | set(tree_paths(input_structure))
+        | set(tree_paths(targets))
+    )
+    fail_if_path_elements_have_trailing_undersores(all_tree_paths)
+    fail_if_top_level_elements_repeated_in_paths(
+        all_tree_paths=all_tree_paths,
+        top_level_namespace=set(top_level_namespace),
+    )
+
 
 def fail_if_path_elements_have_trailing_undersores(
-    tree_paths: set[tuple[str, ...]],
+    all_tree_paths: set[tuple[str, ...]],
 ) -> None:
     """
     Check if any element of the tree path except for the leaf ends with an underscore.
@@ -19,7 +80,7 @@ def fail_if_path_elements_have_trailing_undersores(
     """
     collected_errors = {
         path
-        for path in tree_paths
+        for path in all_tree_paths
         if len(path) > 1 and any(name.endswith("_") for name in path[:-1])
     }
     if collected_errors:
@@ -32,17 +93,17 @@ def fail_if_path_elements_have_trailing_undersores(
 
 
 def fail_if_top_level_elements_repeated_in_paths(
+    all_tree_paths: set[tuple[str, ...]],
     top_level_namespace: set[str],
-    tree_paths: set[tuple[str, ...]],
 ) -> None:
     """
     Fail if any element of the top-level namespace is repeated elsewhere.
 
     Args:
+        all_tree_paths:
+            All tree paths that are to be checked.
         top_level_namespace:
             The elements of the top-level namespace.
-        tree_paths:
-            The tree paths.
 
     Raises
     ------
@@ -51,7 +112,7 @@ def fail_if_top_level_elements_repeated_in_paths(
     """
     collected_errors = {
         path
-        for path in tree_paths
+        for path in all_tree_paths
         if len(path) > 1 and any((name in top_level_namespace) for name in path[1:])
     }
     if collected_errors:

@@ -116,9 +116,8 @@ def test_concatenate_functions_tree_simple(
 ) -> None:
     f = concatenate_functions_tree(
         functions=functions_simple,
+        inputs=input_data,
         targets=targets,
-        input_structure=input_data,
-        perform_checks=True,
         enforce_signature=True,
     )
     assert f(input_data) == expected
@@ -162,8 +161,7 @@ def test_concatenate_functions_tree_nested_and_duplicate_g(
     f = concatenate_functions_tree(
         functions=functions_nested_and_duplicate_g,
         targets=targets,
-        input_structure=input_data,
-        perform_checks=True,
+        inputs=input_data,
         enforce_signature=True,
     )
     assert f(input_data) == expected
@@ -181,8 +179,7 @@ def test_partialled_function_argument() -> None:
     concatenated_func = concatenate_functions_tree(
         functions=tree,
         targets=targets,
-        input_structure=input_structure,
-        perform_checks=True,
+        inputs=input_structure,
         enforce_signature=True,
     )
     concatenated_func({"a": 1})
