@@ -6,12 +6,7 @@ import functools
 import inspect
 from typing import TYPE_CHECKING
 
-from dags.dag import (
-    _create_arguments_of_concatenated_function,
-    _get_free_arguments,
-    concatenate_functions,
-    create_dag,
-)
+from dags import dag
 from dags.signature import rename_arguments
 from dags.tree.tree_utils import (
     flatten_to_qual_names,
@@ -101,19 +96,19 @@ def create_input_structure_tree(
     if targets is None:
         return nested_input_structure
 
+    qual_name_functions = functions_for_dags_concatenate_functions(
+        functions=functions,
+        input_structure=nested_input_structure,
+        top_level_namespace=top_level_namespace,
+        perform_checks=False,
+    )
     dag_tree = create_dag_tree(
         functions=functions,
         targets=targets,
         input_structure=nested_input_structure,
         perform_checks=False,
     )
-    qual_name_functions = _qual_name_functions_with_abs_path_args(
-        functions=functions,
-        input_structure=nested_input_structure,
-        top_level_namespace=top_level_namespace,
-        perform_checks=False,
-    )
-    parameters = _create_arguments_of_concatenated_function(
+    parameters = dag.create_arguments_of_concatenated_function(
         functions=qual_name_functions, dag=dag_tree
     )
     return unflatten_from_qual_names(dict.fromkeys(parameters))
@@ -141,7 +136,7 @@ def create_dag_tree(
         functions=functions,
         input_structure=input_structure,
     )
-    qual_name_functions = _qual_name_functions_with_abs_path_args(
+    qual_name_functions = functions_for_dags_concatenate_functions(
         functions=functions,
         input_structure=input_structure,
         top_level_namespace=top_level_namespace,
@@ -149,7 +144,7 @@ def create_dag_tree(
     )
     qual_name_targets = qual_names(targets) if targets is not None else None
 
-    return create_dag(qual_name_functions, qual_name_targets)
+    return dag.create_dag(qual_name_functions, qual_name_targets)
 
 
 def concatenate_functions_tree(
@@ -178,14 +173,14 @@ def concatenate_functions_tree(
     )
     qual_name_targets = qual_names(targets) if targets is not None else None
 
-    qual_name_functions = _qual_name_functions_with_abs_path_args(
+    qual_name_functions = functions_for_dags_concatenate_functions(
         functions=functions,
         input_structure=input_structure,
         top_level_namespace=top_level_namespace,
         perform_checks=perform_checks,
     )
 
-    concatenated_function = concatenate_functions(
+    concatenated_function = dag.concatenate_functions(
         qual_name_functions,
         qual_name_targets,
         return_type="dict",
@@ -226,24 +221,33 @@ def _get_top_level_namespace_final(
     return {path[0] for path in all_tree_paths}
 
 
-def _qual_name_functions_with_abs_path_args(
+def functions_for_dags_concatenate_functions(
     functions: NestedFunctionDict,
     input_structure: NestedInputStructureDict,
     top_level_namespace: set[str],
     perform_checks: bool,
 ) -> QualNameFunctionDict:
-    """Map the qualified names to functions taking arguments that are absolute paths.
+    """Return a functions dictoary that `dags.concatenate` functions can work with.
+
+    In particular, remove all tree logic by
+    1. Flattening the set of functions and inputs to qualified absolute names
+    2. Convert all functions so they will only take qualified absolute names as
+       arguments.
+
+    The result can be put into `dags.dag.concatenate_functions`.
 
     Args:
-        functions: A nested dictionary of functions.
-        input_structure: A nested dictionary describing the input structure.
-        top_level_namespace: The elements of the top level namespace.
-        perform_checks: Check whether path elements are valid or not.
+        functions: A nested dictionary of functions. input_structure: A nested
+        dictionary describing the input structure. top_level_namespace: The elements of
+        the top level namespace. perform_checks: Check whether path elements are valid
+        or not.
 
 
     Returns
     -------
-        A flat dictionary mapping function names to functions.
+        A flat dictionary mapping qualified absolute names to functions taking
+        qualified absolute names as arguments.
+
     """
     tree_path_functions = flatten_to_tree_paths(functions)
 
@@ -292,7 +296,7 @@ def _get_parameter_rel_to_abs_mapper(
             current_namespace=current_namespace,
             top_level_namespace=top_level_namespace,
         )
-        for old_name in _get_free_arguments(func)
+        for old_name in dag.get_free_arguments(func)
     }
 
 

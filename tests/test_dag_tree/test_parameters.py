@@ -12,7 +12,7 @@ from dags.tree.dag_tree import (
     _get_parameter_tree_path,
     _get_top_level_namespace_final,
     _get_top_level_namespace_initial,
-    _qual_name_functions_with_abs_path_args,
+    functions_for_dags_concatenate_functions,
 )
 
 if TYPE_CHECKING:
@@ -197,7 +197,7 @@ def test_correct_argument_names(
         input_structure=input_structure,
     )
 
-    qual_name_functions = _qual_name_functions_with_abs_path_args(
+    qual_name_functions = functions_for_dags_concatenate_functions(
         functions=functions,
         input_structure=input_structure,
         top_level_namespace=top_level_namespace,

@@ -4,6 +4,7 @@ from dags.tree.dag_tree import (
     concatenate_functions_tree,
     create_dag_tree,
     create_input_structure_tree,
+    functions_for_dags_concatenate_functions,
 )
 from dags.tree.tree_utils import (
     QUAL_NAME_DELIMITER,
@@ -27,6 +28,7 @@ __all__ = [
     "create_input_structure_tree",
     "create_dag_tree",
     "concatenate_functions_tree",
+    "functions_for_dags_concatenate_functions",
     # Validation functions
     "fail_if_path_elements_have_trailing_undersores",
     "fail_if_top_level_elements_repeated_in_paths",
