@@ -16,12 +16,21 @@ from dags.tree.tree_utils import (
     unflatten_from_qual_names,
     unflatten_from_tree_paths,
 )
+from dags.tree.validation import (
+    fail_if_path_elements_have_trailing_undersores,
+    fail_if_top_level_elements_repeated_in_paths,
+    fail_if_top_level_elements_repeated_in_single_path,
+)
 
 __all__ = [
     # Primary functions
     "create_input_structure_tree",
     "create_dag_tree",
     "concatenate_functions_tree",
+    # Validation functions
+    "fail_if_path_elements_have_trailing_undersores",
+    "fail_if_top_level_elements_repeated_in_paths",
+    "fail_if_top_level_elements_repeated_in_single_path",
     # Qualified name utilities
     "QUAL_NAME_DELIMITER",
     "flatten_to_qual_names",

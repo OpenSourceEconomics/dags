@@ -18,6 +18,7 @@ a Directed Acyclic Graph (DAG) that is constructed from the function signatures.
 
     installation
     examples
+    tree_examples
     api
 
 Who uses dags

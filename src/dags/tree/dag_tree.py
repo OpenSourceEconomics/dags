@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import functools
-from typing import TYPE_CHECKING, Literal
+import inspect
+from typing import TYPE_CHECKING
 
 from dags.dag import (
     _create_arguments_of_concatenated_function,
@@ -13,14 +14,19 @@ from dags.dag import (
 )
 from dags.signature import rename_arguments
 from dags.tree.tree_utils import (
-    QUAL_NAME_DELIMITER,
-    _is_qualified_name,
     flatten_to_qual_names,
+    flatten_to_tree_paths,
+    qual_name_from_tree_path,
+    qual_names,
+    tree_path_from_qual_name,
+    tree_paths,
     unflatten_from_qual_names,
+    unflatten_from_tree_paths,
 )
 from dags.tree.validation import (
-    _check_for_parent_child_name_clashes,
-    _fail_if_branches_have_trailing_undersores,
+    fail_if_path_elements_have_trailing_undersores,
+    fail_if_top_level_elements_repeated_in_paths,
+    fail_if_top_level_elements_repeated_in_single_path,
 )
 
 if TYPE_CHECKING:
@@ -29,75 +35,87 @@ if TYPE_CHECKING:
     import networkx as nx
 
     from dags.tree.typing import (
-        FlatFunctionDict,
-        FlatInputStructureDict,
-        FlatTargetList,
         GenericCallable,
-        GlobalOrLocal,
         NestedFunctionDict,
         NestedInputDict,
         NestedInputStructureDict,
         NestedOutputDict,
         NestedTargetDict,
+        QualNameFunctionDict,
+        TreePathInputStructureDict,
     )
 
 
 def create_input_structure_tree(
     functions: NestedFunctionDict,
     targets: NestedTargetDict | None = None,
-    namespace_of_inputs: GlobalOrLocal = "local",
+    top_level_inputs: set[str] | list[str] | tuple[str, ...] = (),
 ) -> NestedInputStructureDict:
     """Create a nested input structure template based on the functions and targets.
 
     Args:
         functions: A nested dictionary of functions.
         targets: A nested dictionary of targets (or None).
-        namespace_of_inputs: Whether to use "global" or "local" namespace for inputs.
+        top_level_inputs: Names of inputs in the top-level namespace.
 
     Returns
     -------
         A nested dictionary representing the expected input structure.
     """
-    _fail_if_branches_have_trailing_undersores(functions)
+    tree_path_functions = flatten_to_tree_paths(functions)
+    tree_paths = set(tree_path_functions.keys())
+    top_level_namespace = _get_top_level_namespace_initial(
+        tree_paths=tree_paths,
+        top_level_inputs=set(top_level_inputs),
+    )
 
-    flat_functions = flatten_to_qual_names(functions)
-    flat_input_structure: FlatInputStructureDict = {}
+    # Check the paths defined in the functions tree
+    fail_if_path_elements_have_trailing_undersores(tree_paths)
+    fail_if_top_level_elements_repeated_in_paths(
+        top_level_namespace=top_level_namespace,
+        tree_paths=tree_paths,
+    )
 
-    import inspect
-
-    for path, func in flat_functions.items():
-        namespace = QUAL_NAME_DELIMITER.join(
-            path.split(QUAL_NAME_DELIMITER)[:-1],
-        )
+    # Now go through everything that is defined via the functions' signatures.
+    tree_path_input_structure: TreePathInputStructureDict = {}
+    for path, func in tree_path_functions.items():
         parameter_names = dict(inspect.signature(func).parameters).keys()
 
         for parameter_name in parameter_names:
-            parameter_path = _link_parameter_to_function_or_input(
-                flat_functions,
-                namespace,
-                parameter_name,
-                namespace_of_inputs,
+            parameter_path = _get_parameter_tree_path(
+                parameter_name=parameter_name,
+                current_namespace=path[:-1],
+                top_level_namespace=top_level_namespace,
             )
 
-            if parameter_path not in flat_functions:
-                flat_input_structure[parameter_path] = None
+            if parameter_path not in tree_paths:
+                fail_if_top_level_elements_repeated_in_single_path(
+                    top_level_namespace=top_level_namespace,
+                    tree_path=parameter_path,
+                )
+                tree_path_input_structure[parameter_path] = None
 
-    nested_input_structure = unflatten_from_qual_names(flat_input_structure)
+    nested_input_structure = unflatten_from_tree_paths(tree_path_input_structure)
 
     # If no targets are specified, all inputs are needed
     if targets is None:
         return nested_input_structure
 
-    # Compute transitive hull of inputs needed for given targets
-    flat_renamed_functions = _flatten_functions_and_rename_parameters(
-        functions,
-        nested_input_structure,
-        name_clashes="ignore",
+    dag_tree = create_dag_tree(
+        functions=functions,
+        targets=targets,
+        input_structure=nested_input_structure,
+        perform_checks=False,
     )
-    flat_targets = _flatten_targets_to_qual_names(targets)
-    dag = create_dag(flat_renamed_functions, flat_targets)
-    parameters = _create_arguments_of_concatenated_function(flat_renamed_functions, dag)
-
+    qual_name_functions = _qual_name_functions_with_abs_path_args(
+        functions=functions,
+        input_structure=nested_input_structure,
+        top_level_namespace=top_level_namespace,
+        perform_checks=False,
+    )
+    parameters = _create_arguments_of_concatenated_function(
+        functions=qual_name_functions, dag=dag_tree
+    )
     return unflatten_from_qual_names(dict.fromkeys(parameters))
 
 
@@ -105,7 +123,7 @@ def create_dag_tree(
     functions: NestedFunctionDict,
     targets: NestedTargetDict | None,
     input_structure: NestedInputStructureDict,
-    name_clashes: Literal["raise", "warn", "ignore"] = "raise",
+    perform_checks: bool,
 ) -> nx.DiGraph[str]:
     """Build a DAG from the given functions, targets, and input structure.
 
@@ -113,27 +131,32 @@ def create_dag_tree(
         functions: A nested dictionary of functions.
         targets: A nested dictionary of targets (or None).
         input_structure: A nested dictionary describing the input structure.
-        name_clashes: How to handle name clashes.
+        perform_checks: Check whether path elements are valid or not.
 
     Returns
     -------
         A networkx.DiGraph representing the DAG.
     """
-    flat_functions = _flatten_functions_and_rename_parameters(
-        functions,
-        input_structure,
-        name_clashes,
+    top_level_namespace = _get_top_level_namespace_final(
+        functions=functions,
+        input_structure=input_structure,
     )
-    flat_targets = _flatten_targets_to_qual_names(targets)
+    qual_name_functions = _qual_name_functions_with_abs_path_args(
+        functions=functions,
+        input_structure=input_structure,
+        top_level_namespace=top_level_namespace,
+        perform_checks=perform_checks,
+    )
+    qual_name_targets = qual_names(targets) if targets is not None else None
 
-    return create_dag(flat_functions, flat_targets)
+    return create_dag(qual_name_functions, qual_name_targets)
 
 
 def concatenate_functions_tree(
     functions: NestedFunctionDict,
     targets: NestedTargetDict | None,
     input_structure: NestedInputStructureDict,
-    name_clashes: Literal["raise", "warn", "ignore"] = "raise",
+    perform_checks: bool,
     enforce_signature: bool = True,
 ) -> Callable[[NestedInputDict], NestedOutputDict]:
     """Combine a nested dictionary of functions into a single callable.
@@ -142,226 +165,196 @@ def concatenate_functions_tree(
         functions: The nested dictionary of functions to concatenate.
         targets: The nested dictionary of targets (or None).
         input_structure: A nested dictionary that defines the expected input structure.
-        name_clashes: How to handle name clashes ("raise", "warn", or "ignore").
+        perform_checks: Check whether path elements are valid or not.
         enforce_signature: Whether to enforce the function signature strictly.
 
     Returns
     -------
         A callable that takes a NestedInputDict and returns a NestedOutputDict.
     """
-    flat_functions: FlatFunctionDict = _flatten_functions_and_rename_parameters(
-        functions,
-        input_structure,
-        name_clashes,
+    top_level_namespace = _get_top_level_namespace_final(
+        functions=functions,
+        input_structure=input_structure,
     )
-    flat_targets: FlatTargetList | None = _flatten_targets_to_qual_names(targets)
+    qual_name_targets = qual_names(targets) if targets is not None else None
+
+    qual_name_functions = _qual_name_functions_with_abs_path_args(
+        functions=functions,
+        input_structure=input_structure,
+        top_level_namespace=top_level_namespace,
+        perform_checks=perform_checks,
+    )
 
     concatenated_function = concatenate_functions(
-        flat_functions,
-        flat_targets,
+        qual_name_functions,
+        qual_name_targets,
         return_type="dict",
         enforce_signature=enforce_signature,
     )
 
     @functools.wraps(concatenated_function)
     def wrapper(inputs: NestedInputDict) -> NestedOutputDict:
-        flat_inputs = flatten_to_qual_names(inputs)
-        flat_outputs = concatenated_function(**flat_inputs)
-        return unflatten_from_qual_names(flat_outputs)
+        qual_name_inputs = flatten_to_qual_names(inputs)
+        qual_name_outputs = concatenated_function(**qual_name_inputs)
+        return unflatten_from_qual_names(qual_name_outputs)
 
     return wrapper
 
 
-def _flatten_functions_and_rename_parameters(
+def _get_top_level_namespace_initial(
+    tree_paths: set[tuple[str, ...]],
+    top_level_inputs: set[str],
+) -> set[str]:
+    """Get the namespace of the top level.
+
+    Args:
+        tree_paths: The set of tree paths.
+        top_level_inputs: A set of input names in the top-level namespace.
+
+    Returns
+    -------
+        The elements of the top-level namespace.
+    """
+    top_level_elements_from_functions = {path[0] for path in tree_paths}
+    return top_level_elements_from_functions | top_level_inputs
+
+
+def _get_top_level_namespace_final(
+    functions: NestedFunctionDict, input_structure: NestedInputStructureDict
+) -> set[str]:
+    all_tree_paths = set(tree_paths(functions)) | set(tree_paths(input_structure))
+    return {path[0] for path in all_tree_paths}
+
+
+def _qual_name_functions_with_abs_path_args(
     functions: NestedFunctionDict,
     input_structure: NestedInputStructureDict,
-    name_clashes: Literal["raise", "warn", "ignore"] = "raise",
-) -> FlatFunctionDict:
-    """Flatten the nested function dictionary and rename parameters to avoid collisions.
+    top_level_namespace: set[str],
+    perform_checks: bool,
+) -> QualNameFunctionDict:
+    """Map the qualified names to functions taking arguments that are absolute paths.
 
     Args:
         functions: A nested dictionary of functions.
         input_structure: A nested dictionary describing the input structure.
-        name_clashes: How to handle name clashes.
+        top_level_namespace: The elements of the top level namespace.
+        perform_checks: Check whether path elements are valid or not.
+
 
     Returns
     -------
         A flat dictionary mapping function names to functions.
     """
-    _fail_if_branches_have_trailing_undersores(functions)
+    tree_path_functions = flatten_to_tree_paths(functions)
 
-    flat_functions: FlatFunctionDict = flatten_to_qual_names(functions)
-    flat_input_structure: FlatInputStructureDict = flatten_to_qual_names(
-        input_structure
-    )
+    if perform_checks:
+        all_paths = set(tree_path_functions.keys()) | set(tree_paths(input_structure))
+        fail_if_path_elements_have_trailing_undersores(all_paths)
+        fail_if_top_level_elements_repeated_in_paths(
+            top_level_namespace=top_level_namespace,
+            tree_paths=all_paths,
+        )
 
-    _check_for_parent_child_name_clashes(
-        flat_functions=flat_functions,
-        flat_input_structure=flat_input_structure,
-        name_clashes_resolution=name_clashes,
-    )
-
-    for name, func in flat_functions.items():
-        namespace: str = QUAL_NAME_DELIMITER.join(name.split(QUAL_NAME_DELIMITER)[:-1])
+    qual_name_functions = {}
+    for path, func in tree_path_functions.items():
         renamed = rename_arguments(
             func,
-            mapper=_create_parameter_name_mapper(
-                flat_functions=flat_functions,
-                flat_input_structure=flat_input_structure,
-                namespace=namespace,
+            mapper=_get_parameter_rel_to_abs_mapper(
                 func=func,
+                current_namespace=path[:-1],
+                top_level_namespace=top_level_namespace,
             ),
         )
-        flat_functions[name] = renamed
+        qual_name_functions[qual_name_from_tree_path(path)] = renamed
 
-    return flat_functions
-
-
-def _flatten_targets_to_qual_names(
-    targets: NestedTargetDict | None,
-) -> FlatTargetList | None:
-    """Flatten targets to a list of qualified names.
-
-    Args:
-        targets: Nested dictionary of targets
-
-    Returns
-    -------
-        List of qualified names or None
-    """
-    if targets is None:
-        return None
-
-    return list(flatten_to_qual_names(targets).keys())
+    return qual_name_functions
 
 
-def _create_parameter_name_mapper(
-    flat_functions: FlatFunctionDict,
-    flat_input_structure: FlatInputStructureDict,
-    namespace: str,
+def _get_parameter_rel_to_abs_mapper(
     func: GenericCallable,
+    current_namespace: tuple[str, ...],
+    top_level_namespace: set[str],
 ) -> dict[str, str]:
-    """Create a mapping from parameter names to qualified names for a given function.
+    """Create a mapping from potentially relative parameter names to absolute names.
 
     Args:
-        flat_functions: A flat dictionary of functions.
-        flat_input_structure: A flat dictionary of the input structure.
-        namespace: The namespace to prepend.
-        func: The function whose parameters are being mapped.
+        func: The function for which the parameters are being mapped.
+        current_namespace: The function's namespace.
+        top_level_namespace: The elements of the top level namespace.
 
     Returns
     -------
         A dictionary mapping original parameter names to new qualified names.
     """
     return {
-        old_name: _map_parameter(
-            flat_functions,
-            flat_input_structure,
-            namespace,
-            old_name,
+        old_name: _get_parameter_absolute_path(
+            parameter_name=old_name,
+            current_namespace=current_namespace,
+            top_level_namespace=top_level_namespace,
         )
         for old_name in _get_free_arguments(func)
     }
 
 
-def _map_parameter(
-    flat_functions: FlatFunctionDict,
-    flat_input_structure: FlatInputStructureDict,
-    namespace: str,
+def _get_parameter_absolute_path(
     parameter_name: str,
+    current_namespace: tuple[str, ...],
+    top_level_namespace: set[str],
 ) -> str:
-    """Map a single parameter name to its qualified version.
+    """Map a parameter name to its qualified version. Raise an error if not present.
 
     Args:
-        flat_functions: A flat dictionary of functions.
-        flat_input_structure: A flat dictionary of the input structure.
-        namespace: The namespace to apply.
-        parameter_name: The original parameter name.
+        parameter_name:
+            The name of the parameter, potentially qualified.
+        current_namespace:
+            The namespace that contains the function that contains the parameter.
+        top_level_namespace:
+            The elements of the top level namespace.
 
     Returns
     -------
         The qualified parameter name.
+
     """
-    # Parameter name is definitely a qualified name
-    if _is_qualified_name(parameter_name):
-        return parameter_name
-
-    # (1.1) Look for function in the current namespace
-    namespaced_parameter = (
-        f"{namespace}__{parameter_name}" if namespace else parameter_name
+    return qual_name_from_tree_path(
+        _get_parameter_tree_path(
+            parameter_name=parameter_name,
+            current_namespace=current_namespace,
+            top_level_namespace=top_level_namespace,
+        )
     )
-    if namespaced_parameter in flat_functions:
-        return namespaced_parameter
-
-    # (1.2) Look for input in the current namespace
-    if namespaced_parameter in flat_input_structure:
-        return namespaced_parameter
-
-    # (2.1) Look for function in the top level
-    if parameter_name in flat_functions:
-        return parameter_name
-
-    # (2.2) Look for input in the top level
-    if parameter_name in flat_input_structure:
-        return parameter_name
-
-    # (3) Raise error
-    msg = f"Cannot resolve parameter {parameter_name}"
-    raise ValueError(msg)
 
 
-def _link_parameter_to_function_or_input(
-    flat_functions: FlatFunctionDict,
-    namespace: str,
+def _get_parameter_tree_path(
     parameter_name: str,
-    namespace_of_inputs: GlobalOrLocal = "local",
-) -> str:
+    current_namespace: tuple[str, ...],
+    top_level_namespace: set[str],
+) -> tuple[str, ...]:
     """Return the path to the function/input that the parameter points to.
 
-    If the parameter name has double underscores (e.g. "namespace1__f"), we know it
-    represents a qualified name and the path simply consists of the segments of the
-    qualified name (e.g. "namespace1, "f").
+    If the first element of the parameter's tree path can be found in the top-level
+    namespace, it will be interpreted as an absolute path.
 
-    Otherwise, we cannot be sure whether the parameter points to a function/input of
-    the current namespace or a function/input of the top level. In this case, we
-        (1) look for a function with that name in the current namespace,
-        (2) look for a function with that name in the top level, and
-        (3) assume the parameter points to an input.
-    In the third case, `namespace_of_inputs` determines whether the parameter points
-    to an input of the current namespace ("local") or an input of the top level
-    ("global").
+    Otherwise, the path is relative to the current namespace.
 
     Args:
-        flat_functions:
-            The flat dictionary of functions.
-        namespace:
-            The namespace that contains the function that contains the parameter.
         parameter_name:
-            The name of the parameter.
-        namespace_of_inputs:
-            The level of inputs to assume if the parameter name does not represent a
-            function.
+            The name of the parameter, potentially qualified.
+        current_namespace:
+            The namespace that contains the function that contains the parameter.
+        top_level_namespace:
+            The elements of the top level namespace.
 
     Returns
     -------
         The path to the function/input that the parameter points to.
     """
-    # Parameter name is definitely a qualified name
-    if _is_qualified_name(parameter_name):
-        return parameter_name
+    # Just a tuple since it could be a relative or an absolute path.
+    parameter_tuple = tree_path_from_qual_name(parameter_name)
 
-    # (1) Look for function in the current namespace
-    namespaced_parameter = (
-        f"{namespace}__{parameter_name}" if namespace else parameter_name
-    )
-    if namespaced_parameter in flat_functions:
-        return namespaced_parameter
+    if parameter_tuple[0] in top_level_namespace:
+        parameter_tree_path = parameter_tuple
+    else:
+        parameter_tree_path = current_namespace + parameter_tuple
 
-    # (2) Look for function in the top level
-    if parameter_name in flat_functions:
-        return parameter_name
-
-    # (3) Assume parameter points to an unknown input
-    if namespace_of_inputs == "global":
-        return parameter_name
-    return namespaced_parameter
+    return parameter_tree_path

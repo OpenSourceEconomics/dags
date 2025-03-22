@@ -11,11 +11,11 @@ Core functions
    :noindex:
 
 
-Signature tools
+Tree functions
 ---------------
 
 
-.. automodule:: dags.signature
+.. automodule:: dags.tree
    :members:
    :undoc-members:
    :noindex:

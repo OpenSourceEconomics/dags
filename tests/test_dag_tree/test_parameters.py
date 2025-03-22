@@ -2,207 +2,210 @@
 
 from __future__ import annotations
 
+import inspect
 from typing import TYPE_CHECKING
 
 import pytest
 
 from dags.tree.dag_tree import (
-    _create_parameter_name_mapper,
-    _link_parameter_to_function_or_input,
-    _map_parameter,
+    _get_parameter_rel_to_abs_mapper,
+    _get_parameter_tree_path,
+    _get_top_level_namespace_final,
+    _get_top_level_namespace_initial,
+    _qual_name_functions_with_abs_path_args,
 )
 
 if TYPE_CHECKING:
     from dags.tree.typing import (
         GenericCallable,
-        GlobalOrLocal,
         NestedFunctionDict,
         NestedInputStructureDict,
+        TreePathFunctionDict,
     )
 
 
-def f(g, namespace1__f1, global_input, namespace1__input):
-    """Global function, duplicate simple name."""
-    return {
-        "name": "f",
-        "args": {
-            "g": g,
-            "namespace1__f1": namespace1__f1,
-            "global_input": global_input,
-            "namespace1__input": namespace1__input,
-        },
-    }
+def f():
+    return None
 
 
-def g():
-    """Global function, unique simple name."""
-    return {"name": "g"}
+def g(a, b, c):
+    return a, b, c
 
 
-def _namespace1__f(
-    g,
-    namespace1__f1,
-    namespace2__f2,
-    namespace1__input,
-    namespace2__input2,
-):
-    """Namespaced function, duplicate simple name."""
-    return {
-        "name": "namespace1__f",
-        "args": {
-            "g": g,
-            "namespace1__f1": namespace1__f1,
-            "namespace2__f2": namespace2__f2,
-            "namespace1__input": namespace1__input,
-            "namespace2__input2": namespace2__input2,
-        },
-    }
-
-
-def _namespace1__f1():
-    """Namespaced function, unique simple name."""
-    return {"name": "namespace1__f1"}
-
-
-def _namespace2__f(f2, global_input):
-    """Namespaced function, duplicate simple name. All arguments with simple names."""
-    return {"name": "namespace2__f", "args": {"f2": f2, "global_input": global_input}}
-
-
-def _namespace2__f2():
-    """Namespaced function, unique simple name."""
-    return {"name": "namespace2__f2"}
-
-
-def _namespace1__deep__f():
-    """A deeply nested function."""
-    return {"name": "namespace1_deep__f"}
-
-
-@pytest.fixture
-def functions() -> NestedFunctionDict:
-    return {
-        "f": f,
-        "g": g,
-        "namespace1": {
-            "f": _namespace1__f,
-            "f1": _namespace1__f1,
-            "deep": {"f": _namespace1__deep__f},
-        },
-        "namespace2": {
-            "f": _namespace2__f,
-            "f2": _namespace2__f2,
-        },
-    }
+def h(a, b__c):
+    return a, b__c
 
 
 @pytest.mark.parametrize(
-    ("input_structure", "namespace", "function", "expected"),
+    ("tree_path_functions", "top_level_inputs", "expected"),
+    [
+        ({"a": lambda a: a}, {"b"}, {"a", "b"}),
+        ({"a": lambda a: a}, set(), {"a"}),
+        ({"b": {"a": lambda a: a}}, set(), {"b"}),
+        ({"b": {"a": lambda a: a}, "c": lambda c: c}, {"a"}, {"a", "b", "c"}),
+    ],
+)
+def test_get_top_level_namespace_initial(
+    tree_path_functions: TreePathFunctionDict,
+    top_level_inputs: set[str],
+    expected: set[str],
+) -> None:
+    assert (
+        _get_top_level_namespace_initial(
+            tree_paths=set(tree_path_functions.keys()),
+            top_level_inputs=top_level_inputs,
+        )
+        == expected
+    )
+
+
+@pytest.mark.parametrize(
+    (
+        "func",
+        "current_namespace",
+        "top_level_namespace",
+        "expected",
+    ),
     [
         (
-            {},
-            "",
-            g,
-            {},
-        ),
-        (
-            {"global_input": None},
-            "namespace2",
-            _namespace2__f,
-            {"f2": "namespace2__f2", "global_input": "global_input"},
-        ),
-        (
-            {"namespace2": {"global_input": None}},
-            "namespace2",
-            _namespace2__f,
-            {"f2": "namespace2__f2", "global_input": "namespace2__global_input"},
-        ),
-        (
-            {"namespace1": {"input": None}, "namespace2": {"input2": None}},
-            "namespace1",
-            _namespace1__f,
-            {
-                "g": "g",
-                "namespace1__f1": "namespace1__f1",
-                "namespace2__f2": "namespace2__f2",
-                "namespace1__input": "namespace1__input",
-                "namespace2__input2": "namespace2__input2",
-            },
-        ),
-        (
-            {"global_input": None, "namespace1": {"global_input": None}},
-            "",
             f,
-            {
-                "g": "g",
-                "namespace1__f1": "namespace1__f1",
-                "global_input": "global_input",
-                "namespace1__input": "namespace1__input",
-            },
+            "",
+            {"f"},
+            {},
+        ),
+        (
+            f,
+            ("n",),
+            {"n", "a"},
+            {},
+        ),
+        (
+            g,
+            (),
+            {"g", "a", "b", "c"},
+            {"a": "a", "b": "b", "c": "c"},
+        ),
+        (
+            g,
+            ("n",),
+            {"n", "a"},
+            {"a": "a", "b": "n__b", "c": "n__c"},
+        ),
+        (
+            h,
+            ("n",),
+            {"n", "a"},
+            {"a": "a", "b__c": "n__b__c"},
+        ),
+        (
+            h,
+            ("n",),
+            {"n"},
+            {"a": "n__a", "b__c": "n__b__c"},
         ),
     ],
 )
 def test_create_parameter_name_mapper(
-    functions: NestedFunctionDict,
-    input_structure: NestedInputStructureDict,
-    namespace: str,
-    function: GenericCallable,
+    func: GenericCallable,
+    current_namespace: tuple[str, ...],
+    top_level_namespace: set[str],
     expected: dict[str, str],
 ) -> None:
-    from dags.tree.tree_utils import flatten_to_qual_names
-
-    flat_functions = flatten_to_qual_names(functions)
-    flat_input_structure = flatten_to_qual_names(input_structure)
-
     assert (
-        _create_parameter_name_mapper(
-            flat_functions,
-            flat_input_structure,
-            namespace,
-            function,
+        _get_parameter_rel_to_abs_mapper(
+            func=func,
+            current_namespace=current_namespace,
+            top_level_namespace=top_level_namespace,
         )
         == expected
     )
 
 
-def test_map_parameter_raises() -> None:
-    with pytest.raises(ValueError, match="Cannot resolve parameter"):
-        _map_parameter({}, {}, "x", "x")
-
-
 @pytest.mark.parametrize(
-    ("level_of_inputs", "namespace", "parameter_name", "expected"),
+    ("parameter_name", "current_namespace", "top_level_namespace", "expected"),
     [
-        ("local", "namespace1", "namespace1__f1", "namespace1__f1"),
-        ("local", "namespace1", "f1", "namespace1__f1"),
-        (
-            "local",
-            "namespace1",
-            "g",
-            "g",
-        ),
-        ("local", "namespace1", "input", "namespace1__input"),
-        ("local", "", "input", "input"),
-        ("global", "namespace1", "input", "input"),
-        ("global", "", "input", "input"),
+        ("x", (), set(), ("x",)),
+        ("x", ("n",), {"n"}, ("n", "x")),
+        ("x", ("n",), {"n", "x"}, ("x",)),
+        ("n__x", ("n",), {"n"}, ("n", "x")),
     ],
 )
 def test_link_parameter_to_function_or_input(
-    functions: NestedFunctionDict,
-    level_of_inputs: GlobalOrLocal,
-    namespace: str,
     parameter_name: str,
-    expected: tuple[str],
+    current_namespace: tuple[str, ...],
+    top_level_namespace: set[str],
+    expected: tuple[str, ...],
 ) -> None:
-    from dags.tree.tree_utils import flatten_to_qual_names
-
-    flat_functions = flatten_to_qual_names(functions)
     assert (
-        _link_parameter_to_function_or_input(
-            flat_functions,
-            namespace,
-            parameter_name,
-            level_of_inputs,
+        _get_parameter_tree_path(
+            parameter_name=parameter_name,
+            current_namespace=current_namespace,
+            top_level_namespace=top_level_namespace,
         )
         == expected
+    )
+
+
+@pytest.mark.parametrize(
+    (
+        "functions",
+        "input_structure",
+        "qual_name_function_name_to_check",
+        "expected_argument_name",
+    ),
+    [
+        (
+            {
+                "top_level": {"foo": lambda x: x},
+                "target_namespace": {
+                    "nested_level": {"foo": lambda x: x},
+                    "target_leaf": lambda top_level__foo: top_level__foo,
+                },
+            },
+            {
+                "top_level": {"x": None},
+                "target_namespace": {"nested_level": {"x": None}},
+            },
+            "target_namespace__target_leaf",
+            "top_level__foo",
+        ),
+        (
+            {
+                "top_level": {"föö": lambda x: x},
+                "target_namespace": {
+                    "nested_level": {"föö": lambda x: x},
+                    "target_leaf": lambda top_level__föö: top_level__föö,
+                },
+            },
+            {
+                "top_level": {"x": None},
+                "target_namespace": {"nested_level": {"x": None}},
+            },
+            "target_namespace__target_leaf",
+            "top_level__föö",
+        ),
+    ],
+)
+def test_correct_argument_names(
+    functions: NestedFunctionDict,
+    input_structure: NestedInputStructureDict,
+    qual_name_function_name_to_check: str,
+    expected_argument_name: str,
+) -> None:
+    top_level_namespace = _get_top_level_namespace_final(
+        functions=functions,
+        input_structure=input_structure,
+    )
+
+    qual_name_functions = _qual_name_functions_with_abs_path_args(
+        functions=functions,
+        input_structure=input_structure,
+        top_level_namespace=top_level_namespace,
+        perform_checks=True,
+    )
+    assert (
+        expected_argument_name
+        in inspect.signature(
+            qual_name_functions[qual_name_function_name_to_check]
+        ).parameters
     )
