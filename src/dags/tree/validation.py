@@ -25,16 +25,40 @@ def fail_if_paths_are_invalid(
     top_level_namespace: set[str] | list[str] | tuple[str, ...] = (),
 ) -> None:
     """
-    Fail if the paths in the functions tree are invalid.
+    Fail if the paths in the (different parts of the) functions tree are invalid.
 
-    Two reasons:
+    The interface is designed so you can pass any argument you like, but none of them is
+    required (however, not passing anything does not make sense).
 
-    1. The paths have trailing underscores.
+    There are two reasons for failure:
+
+    1. Path elements have trailing underscores.
     2. The paths contain elements that are part of the top-level namespace.
 
-    Note: Sometimes you want to pass both `functions` and `qual_abs_names_functions`
-    because for the latter, the check for trailing underscores does not work as the
-    third consecutive underscore will be assigned to the following name.
+    Note: Sometimes you want to pass both `functions` (the nested function dict you will
+    start out with) and `qual_abs_names_functions` (the result of running
+    `functions_without_tree_logic` on `functions`, which contains the converted
+    parameters of functions, too). Even though the former may be seen as a subset of the
+    latter, the conversion to qualified absolute names is not innocuous when it comes to
+    the check for trailing underscores. The reason is that the conversion from qualified
+    names to tree paths assigns any third consecutive underscore to the name that comes
+    after the double underscore separating two levels of nesting.
+
+    Args:
+        functions:
+            The nested function dict.
+        qual_abs_names_functions:
+            The result of running `functions_without_tree_logic` on `functions`.
+        data_tree:
+            The tree of input data (typically not used together with `input_structure`).
+        input_structure:
+            The structure of inputs (typically not used together with `data_tree`).
+        targets:
+            The tree of targets to be computed.
+        top_level_namespace:
+            The set of top-level namespace elements (required for the check regarding
+            repetition of elements).
+
 
     Raises
     ------
