@@ -169,7 +169,7 @@ def _create_combined_function_from_dag(
         targets,
     )
 
-    _arglist = _create_arguments_of_concatenated_function(_functions, dag)
+    _arglist = create_arguments_of_concatenated_function(_functions, dag)
     _exec_info = _create_execution_info(_functions, dag)
     _concatenated = _create_concatenated_function(
         _exec_info,
@@ -333,12 +333,12 @@ def _create_complete_dag(
 
     """
     functions_arguments_dict = {
-        name: _get_free_arguments(function) for name, function in functions.items()
+        name: get_free_arguments(function) for name, function in functions.items()
     }
     return nx.DiGraph(functions_arguments_dict).reverse()  # type: ignore[arg-type]
 
 
-def _get_free_arguments(
+def get_free_arguments(
     func: GenericCallable,
 ) -> list[str]:
     arguments = list(inspect.signature(func).parameters)
@@ -379,7 +379,7 @@ def _limit_dag_to_targets_and_their_ancestors(
     return dag
 
 
-def _create_arguments_of_concatenated_function(
+def create_arguments_of_concatenated_function(
     functions: dict[str, GenericCallable],
     dag: nx.DiGraph[str],
 ) -> list[str]:
@@ -418,7 +418,7 @@ def _create_execution_info(
     out = {}
     for node in nx.topological_sort(dag):
         if node in functions:
-            arguments = _get_free_arguments(functions[node])
+            arguments = get_free_arguments(functions[node])
             out[node] = FunctionExecutionInfo(func=functions[node], arguments=arguments)
     return out
 

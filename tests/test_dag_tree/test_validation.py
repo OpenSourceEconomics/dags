@@ -33,7 +33,7 @@ def test_fail_if_path_elements_have_trailing_undersores(
 
 
 @pytest.mark.parametrize(
-    ("top_level_namespace", "tree_paths", "expected"),
+    ("top_level_namespace", "all_tree_paths", "expected"),
     [
         ({"a"}, {("a",), ("a", "b")}, "pass"),
         ({"a", "b"}, {("a",), ("b", "a")}, "raise"),
@@ -43,7 +43,7 @@ def test_fail_if_path_elements_have_trailing_undersores(
 )
 def test_fail_if_top_level_elements_repeated_in_paths(
     top_level_namespace: set[str],
-    tree_paths: set[tuple[str, ...]],
+    all_tree_paths: set[tuple[str, ...]],
     expected: Literal["raise", "pass"],
 ) -> None:
     if expected == "raise":
@@ -52,13 +52,13 @@ def test_fail_if_top_level_elements_repeated_in_paths(
             match="Elements of the top-level namespace must not be repeated",
         ):
             fail_if_top_level_elements_repeated_in_paths(
+                all_tree_paths=all_tree_paths,
                 top_level_namespace=top_level_namespace,
-                tree_paths=tree_paths,
             )
     else:
         fail_if_top_level_elements_repeated_in_paths(
+            all_tree_paths=all_tree_paths,
             top_level_namespace=top_level_namespace,
-            tree_paths=tree_paths,
         )
 
 
