@@ -234,8 +234,8 @@ def _get_top_level_namespace_initial(
     -------
         The elements of the top-level namespace.
     """
-    tree_paths = set(flatten_to_tree_paths(functions))
-    top_level_elements_from_functions = {path[0] for path in tree_paths}
+    paths = set(tree_paths(functions))
+    top_level_elements_from_functions = {path[0] for path in paths}
     return top_level_elements_from_functions | top_level_inputs
 
 
