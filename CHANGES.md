@@ -6,6 +6,7 @@ releases are available on [conda-forge](https://anaconda.org/conda-forge/dags).
 
 ## 0.3.0
 
+- :gh:`33` Simplify interfaces, expose more functions (:ghuser:`hmgaudecker`)
 - :gh:`29` Improve namespace handling, allow for relative paths (:ghuser:`hmgaudecker`)
 - :gh:`31` Refactor `dag_tree` (:ghuser:`hmgaudecker`)
 - :gh:`28` Expose relevant functions for working with function trees (:ghuser:`hmgaudecker`)
