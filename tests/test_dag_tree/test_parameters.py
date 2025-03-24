@@ -8,11 +8,11 @@ from typing import TYPE_CHECKING
 import pytest
 
 from dags.tree.dag_tree import (
-    _get_parameter_rel_to_abs_mapper,
     _get_parameter_tree_path,
     _get_top_level_namespace_final,
     _get_top_level_namespace_initial,
-    _qual_name_functions_with_abs_path_args,
+    _map_parameters_rel_to_abs,
+    functions_without_tree_logic,
 )
 
 if TYPE_CHECKING:
@@ -20,7 +20,6 @@ if TYPE_CHECKING:
         GenericCallable,
         NestedFunctionDict,
         NestedInputStructureDict,
-        TreePathFunctionDict,
     )
 
 
@@ -37,7 +36,7 @@ def h(a, b__c):
 
 
 @pytest.mark.parametrize(
-    ("tree_path_functions", "top_level_inputs", "expected"),
+    ("functions", "top_level_inputs", "expected"),
     [
         ({"a": lambda a: a}, {"b"}, {"a", "b"}),
         ({"a": lambda a: a}, set(), {"a"}),
@@ -46,13 +45,13 @@ def h(a, b__c):
     ],
 )
 def test_get_top_level_namespace_initial(
-    tree_path_functions: TreePathFunctionDict,
+    functions: NestedFunctionDict,
     top_level_inputs: set[str],
     expected: set[str],
 ) -> None:
     assert (
         _get_top_level_namespace_initial(
-            tree_paths=set(tree_path_functions.keys()),
+            functions=functions,
             top_level_inputs=top_level_inputs,
         )
         == expected
@@ -112,7 +111,7 @@ def test_create_parameter_name_mapper(
     expected: dict[str, str],
 ) -> None:
     assert (
-        _get_parameter_rel_to_abs_mapper(
+        _map_parameters_rel_to_abs(
             func=func,
             current_namespace=current_namespace,
             top_level_namespace=top_level_namespace,
@@ -194,14 +193,11 @@ def test_correct_argument_names(
 ) -> None:
     top_level_namespace = _get_top_level_namespace_final(
         functions=functions,
-        input_structure=input_structure,
+        inputs=input_structure,
     )
-
-    qual_name_functions = _qual_name_functions_with_abs_path_args(
+    qual_name_functions = functions_without_tree_logic(
         functions=functions,
-        input_structure=input_structure,
         top_level_namespace=top_level_namespace,
-        perform_checks=True,
     )
     assert (
         expected_argument_name

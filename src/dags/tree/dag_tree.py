@@ -3,14 +3,13 @@
 from __future__ import annotations
 
 import functools
-import inspect
 from typing import TYPE_CHECKING
 
 from dags.dag import (
-    _create_arguments_of_concatenated_function,
-    _get_free_arguments,
     concatenate_functions,
+    create_arguments_of_concatenated_function,
     create_dag,
+    get_free_arguments,
 )
 from dags.signature import rename_arguments
 from dags.tree.tree_utils import (
@@ -21,12 +20,9 @@ from dags.tree.tree_utils import (
     tree_path_from_qual_name,
     tree_paths,
     unflatten_from_qual_names,
-    unflatten_from_tree_paths,
 )
 from dags.tree.validation import (
-    fail_if_path_elements_have_trailing_undersores,
-    fail_if_top_level_elements_repeated_in_paths,
-    fail_if_top_level_elements_repeated_in_single_path,
+    fail_if_paths_are_invalid,
 )
 
 if TYPE_CHECKING:
@@ -42,7 +38,6 @@ if TYPE_CHECKING:
         NestedOutputDict,
         NestedTargetDict,
         QualNameFunctionDict,
-        TreePathInputStructureDict,
     )
 
 
@@ -62,76 +57,42 @@ def create_input_structure_tree(
     -------
         A nested dictionary representing the expected input structure.
     """
-    tree_path_functions = flatten_to_tree_paths(functions)
-    tree_paths = set(tree_path_functions.keys())
     top_level_namespace = _get_top_level_namespace_initial(
-        tree_paths=tree_paths,
+        functions=functions,
         top_level_inputs=set(top_level_inputs),
     )
-
-    # Check the paths defined in the functions tree
-    fail_if_path_elements_have_trailing_undersores(tree_paths)
-    fail_if_top_level_elements_repeated_in_paths(
-        top_level_namespace=top_level_namespace,
-        tree_paths=tree_paths,
-    )
-
-    # Now go through everything that is defined via the functions' signatures.
-    tree_path_input_structure: TreePathInputStructureDict = {}
-    for path, func in tree_path_functions.items():
-        parameter_names = dict(inspect.signature(func).parameters).keys()
-
-        for parameter_name in parameter_names:
-            parameter_path = _get_parameter_tree_path(
-                parameter_name=parameter_name,
-                current_namespace=path[:-1],
-                top_level_namespace=top_level_namespace,
-            )
-
-            if parameter_path not in tree_paths:
-                fail_if_top_level_elements_repeated_in_single_path(
-                    top_level_namespace=top_level_namespace,
-                    tree_path=parameter_path,
-                )
-                tree_path_input_structure[parameter_path] = None
-
-    nested_input_structure = unflatten_from_tree_paths(tree_path_input_structure)
-
-    # If no targets are specified, all inputs are needed
-    if targets is None:
-        return nested_input_structure
-
-    dag_tree = create_dag_tree(
+    functions_for_flat_dags = functions_without_tree_logic(
         functions=functions,
+        top_level_namespace=top_level_namespace,
+    )
+    fail_if_paths_are_invalid(
+        functions=functions,
+        qual_abs_names_functions=functions_for_flat_dags,
         targets=targets,
-        input_structure=nested_input_structure,
-        perform_checks=False,
-    )
-    qual_name_functions = _qual_name_functions_with_abs_path_args(
-        functions=functions,
-        input_structure=nested_input_structure,
         top_level_namespace=top_level_namespace,
-        perform_checks=False,
     )
-    parameters = _create_arguments_of_concatenated_function(
-        functions=qual_name_functions, dag=dag_tree
+
+    parameters = create_arguments_of_concatenated_function(
+        functions=functions_for_flat_dags,
+        dag=create_dag(
+            functions=functions_for_flat_dags,
+            targets=qual_names(targets) if targets is not None else None,
+        ),
     )
     return unflatten_from_qual_names(dict.fromkeys(parameters))
 
 
 def create_dag_tree(
     functions: NestedFunctionDict,
+    inputs: NestedInputDict,
     targets: NestedTargetDict | None,
-    input_structure: NestedInputStructureDict,
-    perform_checks: bool,
 ) -> nx.DiGraph[str]:
     """Build a DAG from the given functions, targets, and input structure.
 
     Args:
         functions: A nested dictionary of functions.
+        inputs: A nested dictionary with the inputs or their structure.
         targets: A nested dictionary of targets (or None).
-        input_structure: A nested dictionary describing the input structure.
-        perform_checks: Check whether path elements are valid or not.
 
     Returns
     -------
@@ -139,33 +100,29 @@ def create_dag_tree(
     """
     top_level_namespace = _get_top_level_namespace_final(
         functions=functions,
-        input_structure=input_structure,
+        inputs=inputs,
     )
-    qual_name_functions = _qual_name_functions_with_abs_path_args(
+    functions_for_flat_dags = functions_without_tree_logic(
         functions=functions,
-        input_structure=input_structure,
         top_level_namespace=top_level_namespace,
-        perform_checks=perform_checks,
     )
-    qual_name_targets = qual_names(targets) if targets is not None else None
+    targets_for_flat_dags = qual_names(targets) if targets is not None else None
 
-    return create_dag(qual_name_functions, qual_name_targets)
+    return create_dag(functions_for_flat_dags, targets_for_flat_dags)
 
 
 def concatenate_functions_tree(
     functions: NestedFunctionDict,
+    inputs: NestedInputDict,
     targets: NestedTargetDict | None,
-    input_structure: NestedInputStructureDict,
-    perform_checks: bool,
     enforce_signature: bool = True,
 ) -> Callable[[NestedInputDict], NestedOutputDict]:
     """Combine a nested dictionary of functions into a single callable.
 
     Args:
         functions: The nested dictionary of functions to concatenate.
+        inputs: A nested dictionary that defines the (structure of) inputs.
         targets: The nested dictionary of targets (or None).
-        input_structure: A nested dictionary that defines the expected input structure.
-        perform_checks: Check whether path elements are valid or not.
         enforce_signature: Whether to enforce the function signature strictly.
 
     Returns
@@ -174,20 +131,17 @@ def concatenate_functions_tree(
     """
     top_level_namespace = _get_top_level_namespace_final(
         functions=functions,
-        input_structure=input_structure,
+        inputs=inputs,
     )
-    qual_name_targets = qual_names(targets) if targets is not None else None
-
-    qual_name_functions = _qual_name_functions_with_abs_path_args(
+    functions_for_flat_dags = functions_without_tree_logic(
         functions=functions,
-        input_structure=input_structure,
         top_level_namespace=top_level_namespace,
-        perform_checks=perform_checks,
     )
+    targets_for_flat_dags = qual_names(targets) if targets is not None else None
 
     concatenated_function = concatenate_functions(
-        qual_name_functions,
-        qual_name_targets,
+        functions=functions_for_flat_dags,
+        targets=targets_for_flat_dags,
         return_type="dict",
         enforce_signature=enforce_signature,
     )
@@ -201,81 +155,103 @@ def concatenate_functions_tree(
     return wrapper
 
 
-def _get_top_level_namespace_initial(
-    tree_paths: set[tuple[str, ...]],
-    top_level_inputs: set[str],
-) -> set[str]:
-    """Get the namespace of the top level.
-
-    Args:
-        tree_paths: The set of tree paths.
-        top_level_inputs: A set of input names in the top-level namespace.
-
-    Returns
-    -------
-        The elements of the top-level namespace.
-    """
-    top_level_elements_from_functions = {path[0] for path in tree_paths}
-    return top_level_elements_from_functions | top_level_inputs
-
-
-def _get_top_level_namespace_final(
-    functions: NestedFunctionDict, input_structure: NestedInputStructureDict
-) -> set[str]:
-    all_tree_paths = set(tree_paths(functions)) | set(tree_paths(input_structure))
-    return {path[0] for path in all_tree_paths}
-
-
-def _qual_name_functions_with_abs_path_args(
+def functions_without_tree_logic(
     functions: NestedFunctionDict,
-    input_structure: NestedInputStructureDict,
     top_level_namespace: set[str],
-    perform_checks: bool,
 ) -> QualNameFunctionDict:
-    """Map the qualified names to functions taking arguments that are absolute paths.
+    """Return a functions dictionary that `dags.concatenate` functions can work with.
+
+    In particular, remove all tree logic by
+    1. Flattening the set of functions and inputs to qualified absolute names
+    2. Convert all functions so they will only take qualified absolute names as
+       arguments.
+
+    The result can be put into `dags.dag.concatenate_functions`.
 
     Args:
-        functions: A nested dictionary of functions.
-        input_structure: A nested dictionary describing the input structure.
-        top_level_namespace: The elements of the top level namespace.
-        perform_checks: Check whether path elements are valid or not.
+        functions: A nested dictionary of functions. input_structure: A nested
+        dictionary describing the input structure. top_level_namespace: The elements of
+        or not.
 
 
     Returns
     -------
-        A flat dictionary mapping function names to functions.
+        A flat dictionary mapping qualified absolute names to functions taking
+        qualified absolute names as arguments.
+
     """
     tree_path_functions = flatten_to_tree_paths(functions)
 
-    if perform_checks:
-        all_paths = set(tree_path_functions.keys()) | set(tree_paths(input_structure))
-        fail_if_path_elements_have_trailing_undersores(all_paths)
-        fail_if_top_level_elements_repeated_in_paths(
-            top_level_namespace=top_level_namespace,
-            tree_paths=all_paths,
-        )
-
     qual_name_functions = {}
     for path, func in tree_path_functions.items():
-        renamed = rename_arguments(
-            func,
-            mapper=_get_parameter_rel_to_abs_mapper(
-                func=func,
-                current_namespace=path[:-1],
-                top_level_namespace=top_level_namespace,
-            ),
+        renamed = one_function_without_tree_logic(
+            function=func,
+            tree_path=path,
+            top_level_namespace=top_level_namespace,
         )
         qual_name_functions[qual_name_from_tree_path(path)] = renamed
 
     return qual_name_functions
 
 
-def _get_parameter_rel_to_abs_mapper(
+def one_function_without_tree_logic(
+    function: GenericCallable,
+    tree_path: tuple[str, ...],
+    top_level_namespace: set[str],
+) -> GenericCallable:
+    """Convert a single function to work without tree logic.
+
+    Args:
+        func: The function to convert.
+        path: The tree path of the function.
+        top_level_namespace: The elements of the top level namespace.
+
+    Returns
+    -------
+        A function that takes qualified absolute names as arguments.
+    """
+    return rename_arguments(
+        func=function,
+        mapper=_map_parameters_rel_to_abs(
+            func=function,
+            current_namespace=tree_path[:-1],
+            top_level_namespace=top_level_namespace,
+        ),
+    )
+
+
+def _get_top_level_namespace_initial(
+    functions: NestedFunctionDict,
+    top_level_inputs: set[str],
+) -> set[str]:
+    """Get the elements of the top-level namespace.
+
+    Args:
+        functions: The nested dictionary of functions.
+        top_level_inputs: A set of input names in the top-level namespace.
+
+    Returns
+    -------
+        The elements of the top-level namespace.
+    """
+    paths = set(tree_paths(functions))
+    top_level_elements_from_functions = {path[0] for path in paths}
+    return top_level_elements_from_functions | top_level_inputs
+
+
+def _get_top_level_namespace_final(
+    functions: NestedFunctionDict, inputs: NestedInputStructureDict
+) -> set[str]:
+    all_tree_paths = set(tree_paths(functions)) | set(tree_paths(inputs))
+    return {path[0] for path in all_tree_paths}
+
+
+def _map_parameters_rel_to_abs(
     func: GenericCallable,
     current_namespace: tuple[str, ...],
     top_level_namespace: set[str],
 ) -> dict[str, str]:
-    """Create a mapping from potentially relative parameter names to absolute names.
+    """Map (potentially) relative parameter names to qualified absolute names.
 
     Args:
         func: The function for which the parameters are being mapped.
@@ -284,7 +260,7 @@ def _get_parameter_rel_to_abs_mapper(
 
     Returns
     -------
-        A dictionary mapping original parameter names to new qualified names.
+        A dictionary mapping original parameter names to qualified absolute names.
     """
     return {
         old_name: _get_parameter_absolute_path(
@@ -292,7 +268,7 @@ def _get_parameter_rel_to_abs_mapper(
             current_namespace=current_namespace,
             top_level_namespace=top_level_namespace,
         )
-        for old_name in _get_free_arguments(func)
+        for old_name in get_free_arguments(func)
     }
 
 
