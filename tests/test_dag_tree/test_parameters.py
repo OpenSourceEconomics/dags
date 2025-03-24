@@ -9,11 +9,11 @@ import pytest
 
 from dags.tree.dag_tree import (
     _get_parameter_tree_path,
+    _get_top_level_namespace_final,
     _get_top_level_namespace_initial,
     _map_parameters_rel_to_abs,
     functions_without_tree_logic,
 )
-from src.dags.tree.dag_tree import _get_top_level_namespace_final
 
 if TYPE_CHECKING:
     from dags.tree.typing import (
