@@ -5,7 +5,6 @@ requires-python = ">=3.10"
 dynamic = ["version"]
 dependencies = [
     "networkx",
-    "types-networkx",
     "flatten-dict",
 ]
 classifiers = [
@@ -93,6 +92,7 @@ mypy = "~=1.15"
 
 [tool.pixi.pypi-dependencies]
 dags = {path = ".", editable = true}
+types-networkx = "*"
 pdbp = "*"
 
 # Features and Tasks
