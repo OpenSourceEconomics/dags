@@ -12,8 +12,9 @@ from dags.tree.dag_tree import (
     _get_top_level_namespace_final,
     _get_top_level_namespace_initial,
     _map_parameters_rel_to_abs,
-    functions_without_tree_logic,
+    expand_arguments_to_qualified_names,
 )
+from dags.tree.tree_utils import flatten_to_qual_names
 
 if TYPE_CHECKING:
     from dags.tree.typing import (
@@ -195,8 +196,8 @@ def test_correct_argument_names(
         functions=functions,
         inputs=input_structure,
     )
-    qual_name_functions = functions_without_tree_logic(
-        functions=functions,
+    qual_name_functions = expand_arguments_to_qualified_names(
+        functions=flatten_to_qual_names(functions),
         top_level_namespace=top_level_namespace,
     )
     assert (

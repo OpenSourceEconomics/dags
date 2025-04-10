@@ -14,7 +14,6 @@ from dags.dag import (
 from dags.signature import rename_arguments
 from dags.tree.tree_utils import (
     flatten_to_qual_names,
-    flatten_to_tree_paths,
     qual_name_from_tree_path,
     qual_names,
     tree_path_from_qual_name,
@@ -61,8 +60,8 @@ def create_input_structure_tree(
         functions=functions,
         top_level_inputs=set(top_level_inputs),
     )
-    functions_for_flat_dags = functions_without_tree_logic(
-        functions=functions,
+    functions_for_flat_dags = expand_arguments_to_qualified_names(
+        functions=flatten_to_qual_names(functions),
         top_level_namespace=top_level_namespace,
     )
     fail_if_paths_are_invalid(
@@ -102,8 +101,8 @@ def create_dag_tree(
         functions=functions,
         inputs=inputs,
     )
-    functions_for_flat_dags = functions_without_tree_logic(
-        functions=functions,
+    functions_for_flat_dags = expand_arguments_to_qualified_names(
+        functions=flatten_to_qual_names(functions),
         top_level_namespace=top_level_namespace,
     )
     targets_for_flat_dags = qual_names(targets) if targets is not None else None
@@ -133,8 +132,8 @@ def concatenate_functions_tree(
         functions=functions,
         inputs=inputs,
     )
-    functions_for_flat_dags = functions_without_tree_logic(
-        functions=functions,
+    functions_for_flat_dags = expand_arguments_to_qualified_names(
+        functions=flatten_to_qual_names(functions),
         top_level_namespace=top_level_namespace,
     )
     targets_for_flat_dags = qual_names(targets) if targets is not None else None
@@ -155,8 +154,8 @@ def concatenate_functions_tree(
     return wrapper
 
 
-def functions_without_tree_logic(
-    functions: NestedFunctionDict,
+def expand_arguments_to_qualified_names(
+    functions: QualNameFunctionDict,
     top_level_namespace: set[str],
 ) -> QualNameFunctionDict:
     """Return a functions dictionary that `dags.concatenate` functions can work with.
@@ -169,10 +168,10 @@ def functions_without_tree_logic(
     The result can be put into `dags.dag.concatenate_functions`.
 
     Args:
-        functions: A nested dictionary of functions. input_structure: A nested
-        dictionary describing the input structure. top_level_namespace: The elements of
-        or not.
-
+        functions:
+            Qualified names mapped to functions with short names.
+        top_level_namespace:
+            The elements of the top-level namespace.
 
     Returns
     -------
@@ -180,18 +179,16 @@ def functions_without_tree_logic(
         qualified absolute names as arguments.
 
     """
-    tree_path_functions = flatten_to_tree_paths(functions)
-
-    qual_name_functions = {}
-    for path, func in tree_path_functions.items():
+    converted = {}
+    for qual_name, func in functions.items():
         renamed = one_function_without_tree_logic(
             function=func,
-            tree_path=path,
+            tree_path=tree_path_from_qual_name(qual_name),
             top_level_namespace=top_level_namespace,
         )
-        qual_name_functions[qual_name_from_tree_path(path)] = renamed
+        converted[qual_name] = renamed
 
-    return qual_name_functions
+    return converted
 
 
 def one_function_without_tree_logic(
