@@ -36,6 +36,8 @@ class FunctionExecutionInfo:
 
     func: GenericCallable
     arguments: list[str]
+    argument_types: dict[str, type]
+    return_type: type
 
 
 def concatenate_functions(
@@ -419,8 +421,31 @@ def _create_execution_info(
     for node in nx.topological_sort(dag):
         if node in functions:
             arguments = get_free_arguments(functions[node])
-            out[node] = FunctionExecutionInfo(func=functions[node], arguments=arguments)
+            argument_types = _get_argument_types(
+                functions[node],
+                free_arguments=arguments,
+            )
+            return_type = _get_return_type(functions[node])
+
+            out[node] = FunctionExecutionInfo(
+                func=functions[node],
+                arguments=arguments,
+                argument_types=argument_types,
+                return_type=return_type,
+            )
     return out
+
+
+def _get_argument_types(
+    func: GenericCallable,
+    free_arguments: list[str],
+) -> dict[str, type]:
+    parameters = inspect.signature(func).parameters
+    return {arg: parameters[arg].annotation for arg in free_arguments}
+
+
+def _get_return_type(func: GenericCallable) -> type:
+    return inspect.signature(func).return_annotation
 
 
 def _create_concatenated_function(
