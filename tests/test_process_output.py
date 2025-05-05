@@ -1,28 +1,45 @@
+import inspect
+
 from dags.output import aggregated_output, dict_output, list_output, single_output
 
 
 def test_single_output_decorator() -> None:
     @single_output
-    def f():
+    def f() -> tuple[int, ...]:
         return (1,)
 
     assert f() == 1
 
+    def expected_signature() -> int:
+        return 1
+
+    assert inspect.signature(f) == inspect.signature(expected_signature)
+
 
 def test_dict_output_decorator() -> None:
     @dict_output(keys=["a", "b"])
-    def f():
-        return (1, 2)
+    def f() -> tuple[int, float]:
+        return (1, 2.0)
 
-    assert f() == {"a": 1, "b": 2}
+    assert f() == {"a": 1, "b": 2.0}
+
+    def expected_signature() -> dict[str, int | float]:
+        return {"a": 1, "b": 2.0}
+
+    assert inspect.signature(f) == inspect.signature(expected_signature)
 
 
 def test_list_output_decorator() -> None:
     @list_output
-    def f():
-        return (1, 2)
+    def f() -> tuple[int, float]:
+        return (1, 2.0)
 
-    assert f() == [1, 2]
+    assert f() == [1, 2.0]
+
+    def expected_signature() -> list[int | float]:
+        return [1, 2.0]
+
+    assert inspect.signature(f) == inspect.signature(expected_signature)
 
 
 def test_aggregated_output_decorator() -> None:
