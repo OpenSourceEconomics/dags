@@ -68,12 +68,12 @@ def test_concatenate_functions_no_target() -> None:
 
     assert calculated_args == expected_args
 
-    def expected(
-        working_hours: int,  # noqa: ARG001
-        wage: float,  # noqa: ARG001
-        leisure_weight: float,  # noqa: ARG001
+    def expected(  # type: ignore[empty-body]
+        working_hours: int,
+        wage: float,
+        leisure_weight: float,
     ) -> tuple[float, int, float]:
-        return (1.0, 1, 1.0)
+        pass
 
     assert inspect.signature(concatenated) == inspect.signature(expected)
 
@@ -95,12 +95,8 @@ def test_concatenate_functions_single_target() -> None:
 
     assert calculated_args == expected_args
 
-    def expected(
-        working_hours: int,  # noqa: ARG001
-        wage: float,  # noqa: ARG001
-        leisure_weight: float,  # noqa: ARG001
-    ) -> float:
-        return 1.0
+    def expected(working_hours: int, wage: float, leisure_weight: float) -> float:  # type: ignore[empty-body]
+        pass
 
     assert inspect.signature(concatenated) == inspect.signature(expected)
 
@@ -118,40 +114,27 @@ def test_concatenate_functions_multi_target(
 
     calculated_result = concatenated(wage=5, working_hours=8, leisure_weight=2)
 
-    expected_result = {
+    _expected_result = {
         "_utility": _complete_utility(wage=5, working_hours=8, leisure_weight=2),
         "_consumption": _consumption(wage=5, working_hours=8),
     }
+
+    return_annotation: type[object]
+    expected_result: tuple[float, ...] | list[float] | dict[str, float]
     if return_type == "tuple":
-
-        def expected(
-            working_hours: int,  # noqa: ARG001
-            wage: float,  # noqa: ARG001
-            leisure_weight: float,  # noqa: ARG001
-        ) -> tuple[float, float]:
-            return (1.0, 1.0)
-
-        expected_result = tuple(expected_result.values())
+        return_annotation = tuple[float, float]
+        expected_result = tuple(_expected_result.values())
     elif return_type == "list":
-
-        def expected(
-            working_hours: int,  # noqa: ARG001
-            wage: float,  # noqa: ARG001
-            leisure_weight: float,  # noqa: ARG001
-        ) -> list[float]:
-            return [1.0, 1.0]
-
-        expected_result = list(expected_result.values())
+        return_annotation = list[float]
+        expected_result = list(_expected_result.values())
     elif return_type == "dict":
+        return_annotation = dict[str, float]
+        expected_result = dict(_expected_result)
 
-        def expected(
-            working_hours: int,  # noqa: ARG001
-            wage: float,  # noqa: ARG001
-            leisure_weight: float,  # noqa: ARG001
-        ) -> dict[str, float]:
-            return {"_utility": 1.0, "_consumption": 1.0}
-
-        expected_result = dict(expected_result)
+    def expected(
+        working_hours: int, wage: float, leisure_weight: float
+    ) -> return_annotation:  # type: ignore[valid-type]
+        pass
 
     assert calculated_result == expected_result
     assert inspect.signature(concatenated) == inspect.signature(expected)
@@ -224,7 +207,7 @@ def test_partialled_argument_is_ignored() -> None:
     def expected(c: bool, d: int) -> float:
         return 1 + 2 + float(c) + d
 
-    assert concatenated(3, 4) == expected(c=3, d=4)
+    assert concatenated(c=True, d=4) == expected(c=True, d=4)
     assert inspect.signature(concatenated) == inspect.signature(expected)
 
 
