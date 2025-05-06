@@ -1,16 +1,15 @@
 import functools
 import inspect
 from collections.abc import Callable
-from types import GenericAlias
 from typing import Any, cast, overload
 
 from dags.typing import P, R
 
 
 def create_signature(
-    args: dict[str, GenericAlias] | list[str] | None = None,
-    kwargs: dict[str, GenericAlias] | list[str] | None = None,
-    return_annotation: GenericAlias = inspect.Parameter.empty,
+    args: dict[str, type] | list[str] | None = None,
+    kwargs: dict[str, type] | list[str] | None = None,
+    return_annotation: type = inspect.Parameter.empty,
 ) -> inspect.Signature:
     """Create a inspect.Signature object based on args and kwargs.
 
@@ -55,30 +54,30 @@ def create_signature(
 def with_signature(
     func: Callable[P, R],
     *,
-    args: dict[str, GenericAlias] | list[str] | None = None,
-    kwargs: dict[str, GenericAlias] | list[str] | None = None,
+    args: dict[str, type] | list[str] | None = None,
+    kwargs: dict[str, type] | list[str] | None = None,
     enforce: bool = True,
-    return_annotation: GenericAlias = inspect.Parameter.empty,
+    return_annotation: type = inspect.Parameter.empty,
 ) -> Callable[P, R]: ...
 
 
 @overload
 def with_signature(
     *,
-    args: dict[str, GenericAlias] | list[str] | None = None,
-    kwargs: dict[str, GenericAlias] | list[str] | None = None,
+    args: dict[str, type] | list[str] | None = None,
+    kwargs: dict[str, type] | list[str] | None = None,
     enforce: bool = True,
-    return_annotation: GenericAlias = inspect.Parameter.empty,
+    return_annotation: type = inspect.Parameter.empty,
 ) -> Callable[[Callable[P, R]], Callable[P, R]]: ...
 
 
 def with_signature(
     func: Callable[P, R] | None = None,
     *,
-    args: dict[str, GenericAlias] | list[str] | None = None,
-    kwargs: dict[str, GenericAlias] | list[str] | None = None,
+    args: dict[str, type] | list[str] | None = None,
+    kwargs: dict[str, type] | list[str] | None = None,
     enforce: bool = True,
-    return_annotation: GenericAlias = inspect.Parameter.empty,
+    return_annotation: type = inspect.Parameter.empty,
 ) -> Callable[P, R] | Callable[[Callable[P, R]], Callable[P, R]]:
     """Add a signature to a function of type `f(*args, **kwargs)` (decorator).
 
@@ -241,8 +240,8 @@ def rename_arguments(
 
 
 def _convert_to_type_dict(
-    arg: dict[str, GenericAlias] | list[str] | None,
-) -> dict[str, GenericAlias]:
+    arg: dict[str, type] | list[str] | None,
+) -> dict[str, type]:
     if arg is None:
         return {}
     if isinstance(arg, list):

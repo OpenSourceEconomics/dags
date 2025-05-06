@@ -4,7 +4,6 @@ import functools
 import inspect
 import textwrap
 from dataclasses import dataclass
-from types import GenericAlias
 from typing import TYPE_CHECKING, Any, cast
 
 import networkx as nx
@@ -38,8 +37,8 @@ class FunctionExecutionInfo:
 
     func: GenericCallable
     arguments: list[str]
-    argument_types: dict[str, GenericAlias]
-    return_type: GenericAlias
+    argument_types: dict[str, type]
+    return_type: type
 
 
 def concatenate_functions(
@@ -452,12 +451,12 @@ def _create_execution_info(
 def _get_argument_types(
     func: GenericCallable,
     free_arguments: list[str],
-) -> dict[str, GenericAlias]:
+) -> dict[str, type]:
     parameters = inspect.signature(func).parameters
     return {arg: parameters[arg].annotation for arg in free_arguments}
 
 
-def _get_return_type(func: GenericCallable) -> GenericAlias:
+def _get_return_type(func: GenericCallable) -> type:
     return inspect.signature(func).return_annotation
 
 
@@ -488,8 +487,8 @@ def _create_concatenated_function(
         The concatenated function
 
     """
-    args: list[str] | dict[str, GenericAlias]
-    return_annotation: GenericAlias | tuple[GenericAlias, ...]
+    args: list[str] | dict[str, type]
+    return_annotation: type | tuple[type, ...]
 
     if set_annotations:
         args, return_annotation = _get_annotations(execution_info, arglist, targets)
@@ -516,7 +515,7 @@ def _get_annotations(
     execution_info: dict[str, FunctionExecutionInfo],
     arglist: list[str],
     targets: list[str],
-) -> tuple[dict[str, GenericAlias], tuple[GenericAlias, ...]]:
+) -> tuple[dict[str, type], tuple[type, ...]]:
     """Get the (argument and return) annotations of the concatenated function.
 
     Args:
@@ -536,7 +535,7 @@ def _get_annotations(
             the functions are not consistent.
 
     """
-    types_dict: dict[str, GenericAlias] = {}
+    types_dict: dict[str, type] = {}
     for name, info in execution_info.items():
         if name in types_dict:
             exp_type = types_dict[name]
