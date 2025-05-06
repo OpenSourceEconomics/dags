@@ -11,6 +11,7 @@ from dags.dag import (
 from dags.typing import (
     CombinedFunctionReturnType,
     FunctionCollection,
+    GenericCallable,
 )
 
 
@@ -46,12 +47,28 @@ def _complete_utility(wage: float, working_hours: int, leisure_weight: float) ->
     return _utility(cons, leis, leisure_weight)
 
 
-def test_concatenate_functions_no_target() -> None:
-    concatenated = concatenate_functions(
+@pytest.fixture
+def concatenated_no_target() -> GenericCallable:
+    return concatenate_functions(
         functions=[_utility, _leisure, _consumption], set_annotations=True
     )
 
-    calculated_result = concatenated(wage=5, working_hours=8, leisure_weight=2)
+
+@pytest.fixture
+def concatenated_utility_target() -> GenericCallable:
+    return concatenate_functions(
+        functions=[_utility, _unrelated, _leisure, _consumption],
+        targets="_utility",
+        set_annotations=True,
+    )
+
+
+def test_concatenate_functions_no_target_results(
+    concatenated_no_target: GenericCallable,
+) -> None:
+    calculated_result = concatenated_no_target(
+        wage=5, working_hours=8, leisure_weight=2
+    )
 
     expected_utility = _complete_utility(wage=5, working_hours=8, leisure_weight=2)
     expected_leisure = _leisure(working_hours=8)
@@ -63,11 +80,10 @@ def test_concatenate_functions_no_target() -> None:
         expected_consumption,
     )
 
-    calculated_args = set(inspect.signature(concatenated).parameters)
-    expected_args = {"leisure_weight", "wage", "working_hours"}
 
-    assert calculated_args == expected_args
-
+def test_concatenate_functions_no_target_signature(
+    concatenated_no_target: GenericCallable,
+) -> None:
     def expected(  # type: ignore[empty-body]
         working_hours: int,
         wage: float,
@@ -75,30 +91,27 @@ def test_concatenate_functions_no_target() -> None:
     ) -> tuple[float, int, float]:
         pass
 
-    assert inspect.signature(concatenated) == inspect.signature(expected)
+    assert inspect.signature(concatenated_no_target) == inspect.signature(expected)
 
 
-def test_concatenate_functions_single_target() -> None:
-    concatenated = concatenate_functions(
-        functions=[_utility, _unrelated, _leisure, _consumption],
-        targets="_utility",
-        set_annotations=True,
+def test_concatenate_functions_single_target_results(
+    concatenated_utility_target: GenericCallable,
+) -> None:
+    calculated_result = concatenated_utility_target(
+        wage=5, working_hours=8, leisure_weight=2
     )
-
-    calculated_result = concatenated(wage=5, working_hours=8, leisure_weight=2)
-
     expected_result = _complete_utility(wage=5, working_hours=8, leisure_weight=2)
+
     assert calculated_result == expected_result
 
-    calculated_args = set(inspect.signature(concatenated).parameters)
-    expected_args = {"leisure_weight", "wage", "working_hours"}
 
-    assert calculated_args == expected_args
-
+def test_concatenate_functions_single_target_signature(
+    concatenated_utility_target: GenericCallable,
+) -> None:
     def expected(working_hours: int, wage: float, leisure_weight: float) -> float:  # type: ignore[empty-body]
         pass
 
-    assert inspect.signature(concatenated) == inspect.signature(expected)
+    assert inspect.signature(concatenated_utility_target) == inspect.signature(expected)
 
 
 @pytest.mark.parametrize("return_type", ["tuple", "list", "dict"])
