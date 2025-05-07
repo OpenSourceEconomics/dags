@@ -51,7 +51,7 @@ def test_aggregated_output_decorator() -> None:
 
 
 def test_single_output_direct_call() -> None:
-    def f():
+    def f() -> tuple[int, ...]:
         return (1,)
 
     g = single_output(f)
