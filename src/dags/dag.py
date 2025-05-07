@@ -497,7 +497,9 @@ def _create_concatenated_function(
         return_annotation = inspect.Parameter.empty
 
     @with_signature(
-        args=args, enforce=enforce_signature, return_annotation=return_annotation
+        args=args,
+        enforce=enforce_signature,
+        return_annotation=return_annotation,  # type: ignore[arg-type]
     )
     def concatenated(*args: Any, **kwargs: Any) -> tuple[Any, ...]:  # noqa: ANN401
         results = {**dict(zip(arglist, args, strict=False)), **kwargs}
