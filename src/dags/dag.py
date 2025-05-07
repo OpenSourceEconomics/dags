@@ -539,16 +539,11 @@ def _get_annotations(
     """
     types_dict: dict[str, type] = {}
     for name, info in execution_info.items():
-        if name in types_dict:
-            exp_type = types_dict[name]
-            got_type = info.return_type
-            if exp_type != got_type:
-                raise AnnotationMismatchError(
-                    f"function {name} has return type {exp_type.__name__}, but type "
-                    f"annotation '{name}: {got_type.__name__}' is used elsewhere."
-                )
-        else:
-            types_dict[name] = info.return_type
+        # We do not need to check whether name is already in types_dict, because the
+        # functions in execution_info are topologically sorted, and hence, it is
+        # impossible for a function to appear as a dependency of another function
+        # before appearing as a function itself.
+        types_dict[name] = info.return_type
 
         for arg in set(info.arguments).intersection(types_dict.keys()):
             exp_type = types_dict[arg]

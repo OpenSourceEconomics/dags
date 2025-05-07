@@ -1,5 +1,7 @@
 from collections.abc import Callable
-from typing import Any, Literal, ParamSpec, TypeVar, TypeVarTuple
+from typing import Any, Literal, ParamSpec, TypeVar
+
+from typing_extensions import TypeVarTuple
 
 GenericCallable = Callable[..., Any]
 FunctionCollection = dict[str, GenericCallable] | list[GenericCallable]
