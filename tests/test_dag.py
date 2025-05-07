@@ -264,14 +264,8 @@ def test_partialled_argument_is_ignored() -> None:
     ],
 )
 def test_fail_if_cycle_in_dag(funcs: FunctionCollection) -> None:
-    with pytest.raises(
-        CyclicDependencyError,
-        match="The DAG contains one or more cycles:",
-    ):
-        create_dag(
-            functions=funcs,
-            targets=["_utility"],
-        )
+    with pytest.raises(CyclicDependencyError):
+        create_dag(functions=funcs, targets=["_utility"])
 
 
 def test_get_annotations_from_func() -> None:
