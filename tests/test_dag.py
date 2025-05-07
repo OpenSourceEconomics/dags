@@ -5,6 +5,7 @@ from typing import TypedDict, get_type_hints
 import pytest
 
 from dags.dag import (
+    _get_annotations_from_func,
     concatenate_functions,
     create_dag,
     get_ancestors,
@@ -270,3 +271,12 @@ def test_fail_if_cycle_in_dag(funcs: FunctionCollection) -> None:
             functions=funcs,
             targets=["_utility"],
         )
+
+
+def test_get_annotations_from_func() -> None:
+    def f(a: int, b: float, c: bool) -> float:
+        return 1.0
+
+    got = _get_annotations_from_func(f, free_arguments=["a", "b"])
+    exp = {"a": int, "b": float}, float
+    assert got == exp

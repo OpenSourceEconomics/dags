@@ -37,8 +37,8 @@ class FunctionExecutionInfo:
 
     func: GenericCallable
     arguments: list[str]
-    argument_types: dict[str, type]
-    return_type: type
+    argument_annotations: dict[str, type]
+    return_annotation: type
 
 
 def concatenate_functions(
@@ -433,31 +433,18 @@ def _create_execution_info(
     for node in nx.topological_sort(dag):
         if node in functions:
             arguments = get_free_arguments(functions[node])
-            argument_types = _get_argument_types(
+            argument_annotations, return_annotation = _get_annotations_from_func(
                 functions[node],
                 free_arguments=arguments,
             )
-            return_type = _get_return_type(functions[node])
 
             out[node] = FunctionExecutionInfo(
                 func=functions[node],
                 arguments=arguments,
-                argument_types=argument_types,
-                return_type=return_type,
+                argument_annotations=argument_annotations,
+                return_annotation=return_annotation,
             )
     return out
-
-
-def _get_argument_types(
-    func: GenericCallable,
-    free_arguments: list[str],
-) -> dict[str, type]:
-    parameters = inspect.signature(func).parameters
-    return {arg: parameters[arg].annotation for arg in free_arguments}
-
-
-def _get_return_type(func: GenericCallable) -> type:
-    return inspect.signature(func).return_annotation
 
 
 def _create_concatenated_function(
@@ -491,7 +478,11 @@ def _create_concatenated_function(
     return_annotation: type | tuple[type, ...]
 
     if set_annotations:
-        args, return_annotation = _get_annotations(execution_info, arglist, targets)
+        args, return_annotation = _get_annotations_from_execution_list(
+            execution_info,
+            arglist=arglist,
+            targets=targets,
+        )
     else:
         args = arglist
         return_annotation = inspect.Parameter.empty
@@ -513,7 +504,29 @@ def _create_concatenated_function(
     return concatenated
 
 
-def _get_annotations(
+def _get_annotations_from_func(
+    func: GenericCallable,
+    free_arguments: list[str],
+) -> tuple[dict[str, type], type]:
+    """Get the (argument and return) annotations of a function.
+
+    Args:
+        func: The function to get the annotations from.
+        free_arguments: The list of free arguments of the function. For the case of
+            functools.partial objects, these are the arguments that are not partialled.
+
+    Returns
+    -------
+        - Dictionary with argnames as keys and their expected types as values
+        - The expected type of the return value(s) as a tuple.
+    """
+    signature = inspect.signature(func)
+    parameters = signature.parameters
+    argument_types = {arg: parameters[arg].annotation for arg in free_arguments}
+    return argument_types, signature.return_annotation
+
+
+def _get_annotations_from_execution_list(
     execution_info: dict[str, FunctionExecutionInfo],
     arglist: list[str],
     targets: list[str],
@@ -543,11 +556,11 @@ def _get_annotations(
         # functions in execution_info are topologically sorted, and hence, it is
         # impossible for a function to appear as a dependency of another function
         # before appearing as a function itself.
-        types_dict[name] = info.return_type
+        types_dict[name] = info.return_annotation
 
         for arg in set(info.arguments).intersection(types_dict.keys()):
             exp_type = types_dict[arg]
-            got_type = info.argument_types[arg]
+            got_type = info.argument_annotations[arg]
             if exp_type != got_type:
                 arg_is_function = arg in execution_info
                 if arg_is_function:
@@ -566,15 +579,15 @@ def _get_annotations(
                 )
 
         new_argument_types = {
-            arg: info.argument_types[arg]
+            arg: info.argument_annotations[arg]
             for arg in info.arguments
             if arg not in types_dict
         }
         types_dict.update(new_argument_types)
 
     args = {k: v for k, v in types_dict.items() if k in arglist}
-    return_type = tuple[tuple(types_dict[target] for target in targets)]  # type: ignore[misc,valid-type]
-    return args, cast("tuple[type, ...]", return_type)
+    return_annotation = tuple[tuple(types_dict[target] for target in targets)]  # type: ignore[misc,valid-type]
+    return args, cast("tuple[type, ...]", return_annotation)
 
 
 def _format_list_linewise(
