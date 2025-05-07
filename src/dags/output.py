@@ -2,7 +2,7 @@ import functools
 import inspect
 import operator
 from collections.abc import Callable
-from typing import get_args, overload
+from typing import TypedDict, get_args, overload
 
 from typing_extensions import TypeVarTuple, Unpack
 
@@ -63,10 +63,12 @@ def dict_output(
 
         signature = inspect.signature(func)
         if signature.return_annotation is not inspect.Parameter.empty:
-            element_type = _union_from_types_tuple(
-                get_args(signature.return_annotation)
-            )
-            signature = signature.replace(return_annotation=dict[str, element_type])  # type: ignore[valid-type]
+            element_types = get_args(signature.return_annotation)
+            td_name = f"{func.__name__.title()}Return"
+            annotations = dict(zip(keys, element_types, strict=True))
+            return_annotation = TypedDict(td_name, annotations)  # type: ignore[misc]
+            signature = signature.replace(return_annotation=return_annotation)
+
         wrapper_dict_output.__signature__ = signature  # type: ignore[attr-defined]
 
         return wrapper_dict_output

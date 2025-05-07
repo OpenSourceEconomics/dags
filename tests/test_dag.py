@@ -1,5 +1,6 @@
 import inspect
 from functools import partial
+from typing import TypedDict, get_type_hints
 
 import pytest
 
@@ -141,7 +142,12 @@ def test_concatenate_functions_multi_target(
         return_annotation = list[float]
         expected_result = list(_expected_result.values())
     elif return_type == "dict":
-        return_annotation = dict[str, float]
+
+        class ConcatenatedReturn(TypedDict):
+            _utility: float
+            _consumption: float
+
+        return_annotation = ConcatenatedReturn
         expected_result = dict(_expected_result)
 
     def expected(
@@ -150,7 +156,23 @@ def test_concatenate_functions_multi_target(
         pass
 
     assert calculated_result == expected_result
-    assert inspect.signature(concatenated) == inspect.signature(expected)
+
+    exp_signature = inspect.signature(expected)
+    got_signature = inspect.signature(concatenated)
+    assert exp_signature.parameters == got_signature.parameters
+    if return_type == "dict":
+        # In the "dict" case, the return annotation is a TypedDict. This cannot be
+        # compared using ==, so we compare the name and implied dictionary of type
+        # hints.
+        assert (
+            got_signature.return_annotation.__name__
+            == exp_signature.return_annotation.__name__
+        )
+        assert get_type_hints(exp_signature.return_annotation) == get_type_hints(
+            got_signature.return_annotation
+        )
+    else:
+        assert exp_signature.return_annotation == got_signature.return_annotation
 
 
 def test_get_ancestors_many_ancestors() -> None:
