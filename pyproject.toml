@@ -171,6 +171,7 @@ extend-ignore = [
 "docs/source/conf.py" = ["INP001", "ERA001", "RUF100"]
 "src/dags/tree/__init__.py" = ["RUF022"]
 "tests/*" = ["D401", "FBT001", "INP001", "PLC2401"]
+"tests/test_dag.py" = ["ARG001"]
 
 
 [tool.ruff.lint.pydocstyle]

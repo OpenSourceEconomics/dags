@@ -15,9 +15,34 @@ def example_signature() -> inspect.Signature:
     return inspect.Signature(parameters=parameters)
 
 
+@pytest.fixture
+def example_signature_annotated() -> inspect.Signature:
+    parameters = [
+        inspect.Parameter(
+            name="a", kind=inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=int
+        ),
+        inspect.Parameter(
+            name="b", kind=inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=float
+        ),
+        inspect.Parameter(
+            name="c", kind=inspect.Parameter.KEYWORD_ONLY, annotation=bool
+        ),
+    ]
+    return inspect.Signature(parameters=parameters, return_annotation=float)
+
+
 def test_create_signature(example_signature: inspect.Signature) -> None:
     created = create_signature(args=["a", "b"], kwargs=["c"])
     assert created == example_signature
+
+
+def test_create_signature_annotated(
+    example_signature_annotated: inspect.Signature,
+) -> None:
+    created = create_signature(
+        args={"a": int, "b": float}, kwargs={"c": bool}, return_annotation=float
+    )
+    assert created == example_signature_annotated
 
 
 def test_with_signature_decorator_valid(example_signature: inspect.Signature) -> None:
@@ -30,6 +55,18 @@ def test_with_signature_decorator_valid(example_signature: inspect.Signature) ->
     assert f(1, 2, c=3) == 6
 
 
+def test_with_signature_decorator_valid_annotated(
+    example_signature_annotated: inspect.Signature,
+) -> None:
+    @with_signature(
+        args={"a": int, "b": float}, kwargs={"c": bool}, return_annotation=float
+    )
+    def f(*args, **kwargs):
+        return sum(args) + sum(kwargs.values())
+
+    assert inspect.signature(f) == example_signature_annotated
+
+
 def test_with_signature_direct_call_valid(example_signature: inspect.Signature) -> None:
     def f(*args, **kwargs):
         return sum(args) + sum(kwargs.values())
@@ -39,6 +76,19 @@ def test_with_signature_direct_call_valid(example_signature: inspect.Signature) 
     assert inspect.signature(g) == example_signature
 
     assert g(1, 2, c=3) == 6
+
+
+def test_with_signature_direct_call_valid_annotated(
+    example_signature_annotated: inspect.Signature,
+) -> None:
+    def f(*args, **kwargs):
+        return sum(args) + sum(kwargs.values())
+
+    g = with_signature(
+        f, args={"a": int, "b": float}, kwargs={"c": bool}, return_annotation=float
+    )
+
+    assert inspect.signature(g) == example_signature_annotated
 
 
 def test_with_signature_args_used_as_kwargs() -> None:
@@ -99,6 +149,17 @@ def test_rename_arguments_decorator(example_signature: inspect.Signature) -> Non
     assert f(b=2, c=3, a=1) == (1, 2, 3)  # type: ignore[call-arg]
 
 
+def test_rename_arguments_decorator_annotated() -> None:
+    @rename_arguments(mapper={"e": "b", "d": "a", "f": "c"})
+    def f(d: int, e: float, *, f: bool) -> float:
+        return d + e + f
+
+    def expected(a: int, b: float, *, c: bool) -> float:
+        return a + b + c
+
+    assert inspect.signature(f) == inspect.signature(expected)
+
+
 def test_rename_arguments_direct_call(example_signature: inspect.Signature) -> None:
     def f(d, e, *, f):
         return (d, e, f)
@@ -109,3 +170,15 @@ def test_rename_arguments_direct_call(example_signature: inspect.Signature) -> N
 
     # Note: mypy can't handle the rename arguments here.
     assert g(b=2, c=3, a=1) == (1, 2, 3)  # type: ignore[call-arg]
+
+
+def test_rename_arguments_direct_call_annotated() -> None:
+    def f(d: int, e: float, *, f: bool) -> float:
+        return d + e + f
+
+    g = rename_arguments(f, mapper={"e": "b", "d": "a", "f": "c"})
+
+    def expected(a: int, b: float, *, c: bool) -> float:
+        return a + b + c
+
+    assert inspect.signature(g) == inspect.signature(expected)
