@@ -17,10 +17,6 @@ class CyclicDependencyError(DagsError):
     """Raised when the DAG contains a cycle."""
 
 
-class OutputTypeError(DagsError):
-    """Raised when there's an issue with output types."""
-
-
 class FunctionArgumentsError(DagsError):
     """Raised when there's an issue with function signatures or arguments."""
 
