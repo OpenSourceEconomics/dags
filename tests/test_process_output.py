@@ -1,7 +1,13 @@
 import inspect
 from typing import TypedDict, get_type_hints
 
-from dags.output import aggregated_output, dict_output, list_output, single_output
+from dags.output import (
+    _union_from_types_tuple,
+    aggregated_output,
+    dict_output,
+    list_output,
+    single_output,
+)
 
 
 def test_single_output_decorator() -> None:
@@ -100,3 +106,7 @@ def test_aggregated_output_direct_call() -> None:
 
     g = aggregated_output(f, aggregator=lambda x, y: x + y)
     assert g() == 3
+
+
+def test_union_from_types_tuple() -> None:
+    assert _union_from_types_tuple((int, float)) == int | float
