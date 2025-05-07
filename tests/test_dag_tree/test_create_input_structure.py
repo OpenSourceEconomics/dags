@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from dags.exceptions import RepeatedTopLevelElementError
 from dags.tree import create_input_structure_tree
 
 if TYPE_CHECKING:
@@ -117,7 +118,8 @@ def test_create_input_structure_tree_simple(
 ) -> None:
     if "raises_error" in expected:
         with pytest.raises(
-            ValueError, match="Elements of the top-level namespace must not be repeated"
+            RepeatedTopLevelElementError,
+            match="Elements of the top-level namespace must not be repeated",
         ):
             create_input_structure_tree(functions_simple, targets, top_level_inputs)
     else:
@@ -169,7 +171,8 @@ def test_create_input_structure_tree_nested_and_duplicate_g(
 ) -> None:
     if "raises_error" in expected:
         with pytest.raises(
-            ValueError, match="Elements of the top-level namespace must not be repeated"
+            RepeatedTopLevelElementError,
+            match="Elements of the top-level namespace must not be repeated",
         ):
             create_input_structure_tree(
                 functions_nested_and_duplicate_g, targets, top_level_inputs

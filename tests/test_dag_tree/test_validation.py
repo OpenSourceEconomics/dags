@@ -6,6 +6,11 @@ from typing import Literal
 
 import pytest
 
+from dags.exceptions import (
+    RepeatedElementInPathError,
+    RepeatedTopLevelElementError,
+    TrailingUnderscoreError,
+)
 from dags.tree.validation import (
     fail_if_path_elements_have_trailing_undersores,
     fail_if_top_level_elements_repeated_in_paths,
@@ -26,7 +31,13 @@ def test_fail_if_path_elements_have_trailing_undersores(
     expected: Literal["raise", "pass"],
 ) -> None:
     if expected == "raise":
-        with pytest.raises(ValueError, match="Except for the leaf name, elements"):
+        with pytest.raises(
+            TrailingUnderscoreError,
+            match=(
+                "Except for the leaf name, elements of the paths in the functions tree "
+                "must not end with an underscore."
+            ),
+        ):
             fail_if_path_elements_have_trailing_undersores(tree_paths)
     else:
         fail_if_path_elements_have_trailing_undersores(tree_paths)
@@ -48,7 +59,7 @@ def test_fail_if_top_level_elements_repeated_in_paths(
 ) -> None:
     if expected == "raise":
         with pytest.raises(
-            ValueError,
+            RepeatedTopLevelElementError,
             match="Elements of the top-level namespace must not be repeated",
         ):
             fail_if_top_level_elements_repeated_in_paths(
@@ -83,7 +94,7 @@ def test_fail_if_top_level_elements_repeated_in_single_path(
 ) -> None:
     if expected == "raise":
         with pytest.raises(
-            ValueError,
+            RepeatedElementInPathError,
             match="Elements of the top-level namespace must not be repeated",
         ):
             fail_if_top_level_elements_repeated_in_single_path(
