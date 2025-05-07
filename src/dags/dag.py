@@ -31,14 +31,23 @@ class FunctionExecutionInfo:
     Attributes
     ----------
         func: The function to execute.
+        argument_annotations: The argument annotations of the function.
+        return_annotation: The return annotation of the function.
+
+    Properties
+    ----------
         arguments: The names of the arguments of the function.
 
     """
 
     func: GenericCallable
-    arguments: list[str]
     argument_annotations: dict[str, type]
     return_annotation: type
+
+    @property
+    def arguments(self) -> list[str]:
+        """The names of the arguments of the function."""
+        return list(self.argument_annotations)
 
 
 def concatenate_functions(
@@ -440,7 +449,6 @@ def _create_execution_info(
 
             out[node] = FunctionExecutionInfo(
                 func=functions[node],
-                arguments=arguments,
                 argument_annotations=argument_annotations,
                 return_annotation=return_annotation,
             )
@@ -559,7 +567,7 @@ def _get_annotations_from_execution_info(
         # before appearing as a function itself.
         types[name] = info.return_annotation
 
-        for arg in set(info.arguments).intersection(types.keys()):
+        for arg in set(info.argument_annotations).intersection(types.keys()):
             # Verify that the type information on arg that was retrieved up to this
             # point (earlier_type) is consistent with the type information on arg from
             # the current function info (current_type).
