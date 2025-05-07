@@ -4,15 +4,13 @@ import operator
 from collections.abc import Callable
 from typing import TypedDict, get_args, overload
 
-from typing_extensions import TypeVarTuple, Unpack
+from typing_extensions import Unpack
 
-from dags.typing import P, T
-
-Ts = TypeVarTuple("Ts")
+from dags.typing import HetTupleType, P, T
 
 
 def single_output(
-    func: Callable[P, tuple[T, Unpack[Ts]]] | Callable[P, tuple[T, ...]],
+    func: Callable[P, tuple[T, Unpack[HetTupleType]]] | Callable[P, tuple[T, ...]],
 ) -> Callable[P, T]:
     """Convert tuple output to single output; i.e. the first element of the tuple."""
 
