@@ -5,8 +5,6 @@ from dags.exceptions import (
     DagsError,
     InvalidFunctionArgumentsError,
     MissingFunctionsError,
-    RepeatedTopLevelElementError,
-    TrailingUnderscoreError,
     ValidationError,
 )
 from dags.signature import rename_arguments

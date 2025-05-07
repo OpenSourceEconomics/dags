@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from dags.exceptions import (
+from dags.tree.exceptions import (
     RepeatedTopLevelElementError,
     TrailingUnderscoreError,
 )

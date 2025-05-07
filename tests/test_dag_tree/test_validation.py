@@ -6,7 +6,7 @@ from typing import Literal
 
 import pytest
 
-from dags.exceptions import (
+from dags.tree.exceptions import (
     RepeatedTopLevelElementError,
     TrailingUnderscoreError,
 )

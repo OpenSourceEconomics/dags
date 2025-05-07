@@ -6,8 +6,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from dags.exceptions import RepeatedTopLevelElementError
-from dags.tree import create_input_structure_tree
+from dags.tree import RepeatedTopLevelElementError, create_input_structure_tree
 
 if TYPE_CHECKING:
     from dags.tree.typing import (
