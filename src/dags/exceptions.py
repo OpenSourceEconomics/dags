@@ -17,7 +17,7 @@ class CyclicDependencyError(DagsError):
     """Raised when the DAG contains a cycle."""
 
 
-class FunctionArgumentsError(DagsError):
+class InvalidFunctionArgumentsError(DagsError):
     """Raised when there's an issue with function signatures or arguments."""
 
 
