@@ -478,7 +478,7 @@ def _create_concatenated_function(
     return_annotation: type | tuple[type, ...]
 
     if set_annotations:
-        args, return_annotation = _get_annotations_from_execution_list(
+        args, return_annotation = _get_annotations_from_execution_info(
             execution_info,
             arglist=arglist,
             targets=targets,
@@ -527,7 +527,7 @@ def _get_annotations_from_func(
     return argument_types, signature.return_annotation
 
 
-def _get_annotations_from_execution_list(
+def _get_annotations_from_execution_info(
     execution_info: dict[str, FunctionExecutionInfo],
     arglist: list[str],
     targets: list[str],
@@ -583,12 +583,7 @@ def _get_annotations_from_execution_list(
                     f"{current_type.__name__}', but {explanation}"
                 )
 
-        new_argument_types = {
-            arg: info.argument_annotations[arg]
-            for arg in info.arguments
-            if arg not in types
-        }
-        types.update(new_argument_types)
+        types.update(info.argument_annotations)
 
     args = {k: v for k, v in types.items() if k in arglist}
     return_annotation = tuple[tuple(types[target] for target in targets)]  # type: ignore[misc,valid-type]
