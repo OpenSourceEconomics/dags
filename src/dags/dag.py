@@ -8,7 +8,12 @@ from typing import TYPE_CHECKING, Any, cast
 
 import networkx as nx
 
-from dags.exceptions import AnnotationMismatchError
+from dags.exceptions import (
+    AnnotationMismatchError,
+    CyclicDependencyError,
+    DagsError,
+    MissingFunctionsError,
+)
 from dags.output import aggregated_output, dict_output, list_output, single_output
 from dags.signature import with_signature
 
@@ -219,7 +224,7 @@ def _create_combined_function_from_dag(
             f"Invalid return type {return_type}. Must be 'list', 'tuple', or 'dict'. "
             f"You provided {return_type}."
         )
-        raise ValueError(msg)
+        raise DagsError(msg)
 
     return out
 
@@ -315,7 +320,7 @@ def _fail_if_targets_have_wrong_types(
     not_strings = [target for target in targets if not isinstance(target, str)]
     if not_strings:
         msg = f"Targets must be strings. The following targets are not: {not_strings}"
-        raise ValueError(msg)
+        raise DagsError(msg)
 
 
 def _fail_if_functions_are_missing(
@@ -326,7 +331,7 @@ def _fail_if_functions_are_missing(
     if targets_not_in_functions:
         formatted = _format_list_linewise(list(targets_not_in_functions))
         msg = f"The following targets have no corresponding function:\n{formatted}"
-        raise ValueError(msg)
+        raise MissingFunctionsError(msg)
 
 
 def _fail_if_dag_contains_cycle(dag: nx.DiGraph[str]) -> None:
@@ -336,7 +341,7 @@ def _fail_if_dag_contains_cycle(dag: nx.DiGraph[str]) -> None:
     if len(cycles) > 0:
         formatted = _format_list_linewise(cycles)
         msg = f"The DAG contains one or more cycles:\n{formatted}"
-        raise ValueError(msg)
+        raise CyclicDependencyError(msg)
 
 
 def _create_complete_dag(

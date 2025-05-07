@@ -7,6 +7,10 @@ from dags.tree.dag_tree import (
     functions_without_tree_logic,
     one_function_without_tree_logic,
 )
+from dags.tree.exceptions import (
+    RepeatedTopLevelElementError,
+    TrailingUnderscoreError,
+)
 from dags.tree.tree_utils import (
     QUAL_NAME_DELIMITER,
     flatten_to_qual_names,
@@ -37,6 +41,9 @@ __all__ = [
     "fail_if_path_elements_have_trailing_undersores",
     "fail_if_top_level_elements_repeated_in_paths",
     "fail_if_top_level_elements_repeated_in_single_path",
+    # Exceptions
+    "RepeatedTopLevelElementError",
+    "TrailingUnderscoreError",
     # Qualified name utilities
     "QUAL_NAME_DELIMITER",
     "flatten_to_qual_names",

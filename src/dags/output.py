@@ -6,6 +6,7 @@ from typing import TypedDict, get_args, overload
 
 from typing_extensions import Unpack
 
+from dags.exceptions import DagsError
 from dags.typing import HetTupleType, P, T
 
 
@@ -49,7 +50,10 @@ def dict_output(
 ):
     """Convert tuple output to dict output."""
     if keys is None:
-        raise ValueError("keys is required")
+        raise DagsError(
+            "The 'keys' parameter is required for dict_output. Please provide a list "
+            "of strings to be used as dictionary keys for the output values."
+        )
 
     def decorator_dict_output(
         func: Callable[P, tuple[T, ...]],
@@ -114,7 +118,11 @@ def aggregated_output(
 ) -> Callable[P, T] | Callable[[Callable[P, tuple[T, ...]]], Callable[P, T]]:
     """Aggregate tuple output."""
     if aggregator is None:
-        raise ValueError("aggregator is required")
+        raise DagsError(
+            "The 'aggregator' parameter is required for aggregated_output. Please "
+            "provide a function (e.g., sum, max, or a custom function) that will be "
+            "used to combine the output values."
+        )
 
     def decorator_aggregated_output(func: Callable[P, tuple[T, ...]]) -> Callable[P, T]:
         @functools.wraps(func)

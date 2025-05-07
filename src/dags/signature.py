@@ -3,6 +3,7 @@ import inspect
 from collections.abc import Callable
 from typing import Any, cast, overload
 
+from dags.exceptions import DagsError, InvalidFunctionArgumentsError
 from dags.typing import P, R
 
 
@@ -135,7 +136,7 @@ def _fail_if_too_many_positional_arguments(
             f"{funcname}() takes {len(argnames)} positional arguments "
             f"but {len(present_args)} were given"
         )
-        raise TypeError(msg)
+        raise InvalidFunctionArgumentsError(msg)
 
 
 def _fail_if_duplicated_arguments(
@@ -146,7 +147,7 @@ def _fail_if_duplicated_arguments(
         s = "s" if len(problematic) >= 2 else ""
         problem_str = ", ".join(list(problematic))
         msg = f"{funcname}() got multiple values for argument{s} {problem_str}"
-        raise TypeError(msg)
+        raise InvalidFunctionArgumentsError(msg)
 
 
 def _fail_if_invalid_keyword_arguments(
@@ -157,7 +158,7 @@ def _fail_if_invalid_keyword_arguments(
         s = "s" if len(problematic) >= 2 else ""
         problem_str = ", ".join(list(problematic))
         msg = f"{funcname}() got unexpected keyword argument{s} {problem_str}"
-        raise TypeError(msg)
+        raise InvalidFunctionArgumentsError(msg)
 
 
 @overload
@@ -245,4 +246,4 @@ def _map_names_to_types(
         return dict.fromkeys(arg, inspect.Parameter.empty)
     if isinstance(arg, dict):
         return arg
-    raise ValueError(f"Invalid type for arg: {type(arg)}")
+    raise DagsError(f"Invalid type for arg: {type(arg)}. Expected dict, list, or None.")
