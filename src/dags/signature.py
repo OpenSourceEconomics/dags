@@ -25,11 +25,8 @@ def create_signature(
         The signature
 
     """
-    _args = _map_names_to_types(args)
-    _kwargs = _map_names_to_types(kwargs)
-
     parameter_objects = []
-    for arg, arg_type in _args.items():
+    for arg, arg_type in _map_names_to_types(args).items():
         param = inspect.Parameter(
             name=arg,
             kind=inspect.Parameter.POSITIONAL_OR_KEYWORD,
@@ -37,7 +34,7 @@ def create_signature(
         )
         parameter_objects.append(param)
 
-    for kwarg, kwarg_type in _kwargs.items():
+    for kwarg, kwarg_type in _map_names_to_types(kwargs).items():
         param = inspect.Parameter(
             name=kwarg,
             kind=inspect.Parameter.KEYWORD_ONLY,
