@@ -10,6 +10,7 @@ from dags.dag import (
     create_dag,
     get_ancestors,
 )
+from dags.exceptions import CyclicDependencyError
 from dags.typing import (
     CombinedFunctionReturnType,
     FunctionCollection,
@@ -264,7 +265,7 @@ def test_partialled_argument_is_ignored() -> None:
 )
 def test_fail_if_cycle_in_dag(funcs: FunctionCollection) -> None:
     with pytest.raises(
-        ValueError,
+        CyclicDependencyError,
         match="The DAG contains one or more cycles:",
     ):
         create_dag(
