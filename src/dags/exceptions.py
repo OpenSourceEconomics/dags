@@ -21,6 +21,10 @@ class OutputTypeError(DagsError):
     """Raised when there's an issue with output types."""
 
 
+class FunctionArgumentsError(DagsError):
+    """Raised when there's an issue with function signatures or arguments."""
+
+
 class ValidationError(DagsError):
     """Base exception for validation errors."""
 
