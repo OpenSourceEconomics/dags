@@ -31,7 +31,3 @@ class TrailingUnderscoreError(ValidationError):
 
 class RepeatedTopLevelElementError(ValidationError):
     """Raised when top-level elements are repeated in paths."""
-
-
-class RepeatedElementInPathError(ValidationError):
-    """Raised when elements are repeated in a single path."""

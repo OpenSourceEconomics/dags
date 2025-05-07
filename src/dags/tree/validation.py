@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from dags.exceptions import (
-    RepeatedElementInPathError,
     RepeatedTopLevelElementError,
     TrailingUnderscoreError,
 )
@@ -69,7 +68,6 @@ def fail_if_paths_are_invalid(
     ------
         TrailingUnderscoreError: If the paths in the functions tree are invalid.
         RepeatedTopLevelElementError: If the paths in the functions tree are invalid.
-        RepeatedElementInPathError: If the paths in the functions tree are invalid.
     """
     if functions is None:
         functions = {}
@@ -158,8 +156,8 @@ def fail_if_top_level_elements_repeated_in_paths(
 
 
 def fail_if_top_level_elements_repeated_in_single_path(
-    top_level_namespace: set[str],
     tree_path: tuple[str, ...],
+    top_level_namespace: set[str],
 ) -> None:
     """Fail if elements of `tree_path` repeat elements of the top-level namespace.
 
@@ -171,7 +169,7 @@ def fail_if_top_level_elements_repeated_in_single_path(
 
     Raises
     ------
-        RepeatedElementInPathError: If any element of `tree_path` equals an element in
+        RepeatedTopLevelElementError: If any element of `tree_path` equals an element in
             the top-level namespace.
     """
     if len(tree_path) > 1 and any(
@@ -182,4 +180,4 @@ def fail_if_top_level_elements_repeated_in_single_path(
             f"in the hierarchy. Path:\n\n{tree_path}\n\n\n"
             f"Top-level namespace:\n\n{top_level_namespace}"
         )
-        raise RepeatedElementInPathError(msg)
+        raise RepeatedTopLevelElementError(msg)

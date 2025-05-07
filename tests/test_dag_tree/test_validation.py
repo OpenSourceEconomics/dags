@@ -7,7 +7,6 @@ from typing import Literal
 import pytest
 
 from dags.exceptions import (
-    RepeatedElementInPathError,
     RepeatedTopLevelElementError,
     TrailingUnderscoreError,
 )
@@ -94,7 +93,7 @@ def test_fail_if_top_level_elements_repeated_in_single_path(
 ) -> None:
     if expected == "raise":
         with pytest.raises(
-            RepeatedElementInPathError,
+            RepeatedTopLevelElementError,
             match="Elements of the top-level namespace must not be repeated",
         ):
             fail_if_top_level_elements_repeated_in_single_path(
