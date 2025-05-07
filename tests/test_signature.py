@@ -2,6 +2,7 @@ import inspect
 
 import pytest
 
+from dags.exceptions import InvalidFunctionArgumentsError
 from dags.signature import create_signature, rename_arguments, with_signature
 
 
@@ -116,7 +117,10 @@ def test_with_signature_decorator_too_many_positional_arguments() -> None:
     def f(*args, **kwargs):
         return sum(args) + sum(kwargs.values())
 
-    with pytest.raises(TypeError, match="takes 2 positional arguments "):
+    with pytest.raises(
+        InvalidFunctionArgumentsError,
+        match="takes 2 positional arguments but 3 were given",
+    ):
         f(1, 2, 3)
 
 
@@ -125,7 +129,10 @@ def test_with_signature_decorator_duplicated_arguments() -> None:
     def f(*args, **kwargs):
         return sum(args) + sum(kwargs.values())
 
-    with pytest.raises(TypeError, match="got multiple values for"):
+    with pytest.raises(
+        InvalidFunctionArgumentsError,
+        match=r"f\(\) got multiple values for argument b",
+    ):
         f(1, 2, b=3)
 
 
@@ -134,7 +141,10 @@ def test_with_signature_decorator_invalid_keyword_arguments() -> None:
     def f(*args, **kwargs):
         return sum(args) + sum(kwargs.values())
 
-    with pytest.raises(TypeError, match="got unexpected keyword argument"):
+    with pytest.raises(
+        InvalidFunctionArgumentsError,
+        match=r"f\(\) got unexpected keyword argument d",
+    ):
         f(1, 2, d=4)
 
 
