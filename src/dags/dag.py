@@ -521,8 +521,9 @@ def _get_annotations_from_func(
         - The expected type of the return value(s) as a tuple.
     """
     signature = inspect.signature(func)
-    parameters = signature.parameters
-    argument_types = {arg: parameters[arg].annotation for arg in free_arguments}
+    argument_types = {
+        arg: signature.parameters[arg].annotation for arg in free_arguments
+    }
     return argument_types, signature.return_annotation
 
 
@@ -550,43 +551,47 @@ def _get_annotations_from_execution_list(
             the functions are not consistent.
 
     """
-    types_dict: dict[str, type] = {}
+    types: dict[str, type] = {}
     for name, info in execution_info.items():
         # We do not need to check whether name is already in types_dict, because the
         # functions in execution_info are topologically sorted, and hence, it is
         # impossible for a function to appear as a dependency of another function
         # before appearing as a function itself.
-        types_dict[name] = info.return_annotation
+        types[name] = info.return_annotation
 
-        for arg in set(info.arguments).intersection(types_dict.keys()):
-            exp_type = types_dict[arg]
-            got_type = info.argument_annotations[arg]
-            if exp_type != got_type:
+        for arg in set(info.arguments).intersection(types.keys()):
+            # Verify that the type information on arg that was retrieved up to this
+            # point (earlier_type) is consistent with the type information on arg from
+            # the current function info (current_type).
+            earlier_type = types[arg]
+            current_type = info.argument_annotations[arg]
+
+            if earlier_type != current_type:
                 arg_is_function = arg in execution_info
                 if arg_is_function:
                     explanation = (
-                        f"function {arg} has return type: {exp_type.__name__}."
+                        f"function {arg} has return type: {earlier_type.__name__}."
                     )
                 else:
                     explanation = (
-                        f"type annotation '{arg}: {exp_type.__name__}' is used "
+                        f"type annotation '{arg}: {earlier_type.__name__}' is used "
                         "elsewhere."
                     )
 
                 raise AnnotationMismatchError(
                     f"function {name} has the argument type annotation '{arg}: "
-                    f"{got_type.__name__}', but {explanation}"
+                    f"{current_type.__name__}', but {explanation}"
                 )
 
         new_argument_types = {
             arg: info.argument_annotations[arg]
             for arg in info.arguments
-            if arg not in types_dict
+            if arg not in types
         }
-        types_dict.update(new_argument_types)
+        types.update(new_argument_types)
 
-    args = {k: v for k, v in types_dict.items() if k in arglist}
-    return_annotation = tuple[tuple(types_dict[target] for target in targets)]  # type: ignore[misc,valid-type]
+    args = {k: v for k, v in types.items() if k in arglist}
+    return_annotation = tuple[tuple(types[target] for target in targets)]  # type: ignore[misc,valid-type]
     return args, cast("tuple[type, ...]", return_annotation)
 
 

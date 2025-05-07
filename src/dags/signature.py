@@ -25,8 +25,8 @@ def create_signature(
         The signature
 
     """
-    _args = _convert_to_type_dict(args)
-    _kwargs = _convert_to_type_dict(kwargs)
+    _args = _map_names_to_types(args)
+    _kwargs = _map_names_to_types(kwargs)
 
     parameter_objects = []
     for arg, arg_type in _args.items():
@@ -102,8 +102,8 @@ def with_signature(
     """
 
     def decorator_with_signature(func: Callable[P, R]) -> Callable[P, R]:
-        _args = _convert_to_type_dict(args)
-        _kwargs = _convert_to_type_dict(kwargs)
+        _args = _map_names_to_types(args)
+        _kwargs = _map_names_to_types(kwargs)
         signature = create_signature(
             _args, _kwargs, return_annotation=return_annotation
         )
@@ -239,7 +239,7 @@ def rename_arguments(
     return decorator_rename_arguments
 
 
-def _convert_to_type_dict(
+def _map_names_to_types(
     arg: dict[str, type] | list[str] | None,
 ) -> dict[str, type]:
     if arg is None:
