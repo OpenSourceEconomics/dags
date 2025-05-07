@@ -550,7 +550,7 @@ def _get_annotations(
         else:
             types_dict[name] = info.return_type
 
-        for arg in info.arguments & types_dict.keys():
+        for arg in set(info.arguments).intersection(types_dict.keys()):
             exp_type = types_dict[arg]
             got_type = info.argument_types[arg]
             if exp_type != got_type:
