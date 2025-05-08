@@ -163,9 +163,8 @@ def functions_without_tree_logic(
 
     In particular, remove all tree logic by
 
-        1. Flattening the set of functions and inputs to qualified absolute names
-        2. Convert all functions so they will only take qualified absolute names as
-           arguments.
+    1. Flattening the set of functions and inputs to qualified absolute names.
+    2. Convert all functions so they take only qualified absolute names as arguments.
 
     The result can be put into `dags.concatenate_functions`.
 
@@ -178,8 +177,8 @@ def functions_without_tree_logic(
 
     Returns
     -------
-        A flat dictionary mapping qualified absolute names to functions taking qualified
-        absolute names as arguments.
+    A flat dictionary mapping qualified absolute names to functions taking qualified
+    absolute names as arguments.
 
     """
     tree_path_functions = flatten_to_tree_paths(functions)
