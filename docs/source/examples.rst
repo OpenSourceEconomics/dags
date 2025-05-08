@@ -258,11 +258,10 @@ Utilizing type annotations
 --------------------------
 
 If your functions have type annotations, dags can use this information to infer the
-types of the inputs and outputs of the combined function. To activate this feature, you
-can set the ``set_annotations`` parameter to ``True`` when calling
-``concatenate_functions``.
+types of the inputs and outputs of the combined function. To activate this feature, set
+the ``set_annotations`` parameter to ``True`` when calling ``concatenate_functions``.
 
-Let's look at the first example again, but this time with type annotations:
+Let's return to the first example and add type annotations:
 
 
 .. code-block:: python
@@ -300,9 +299,21 @@ We can inspect the signature of the combined function to see the type annotation
 .. note::
 
     If the type annotations are not consistent across the functions, dags will raise an
-    error. In the above example, this could happen if the type hint for argument ``y``
-    in function ``f`` would be different from the type hint for argument ``y`` in
-    function ``g``.
+    error. In the above example, if instead of ``g(y: int, z: int)`` we had written:
+
+    .. code-block:: python
+
+        def g(y: bool, z: int) -> int:
+            return 0.5 * y * z
+
+
+    the result would have been:
+
+    .. code-block:: pytb
+
+        dags.exceptions.AnnotationMismatchError:
+        function g has the argument type annotation 'y: bool',
+        but type annotation 'y: int' is used elsewhere.
 
 In many cases, it is useful to get the type annotations of the input arguments of the
 combined function in form of a dictionary. This can be achieved easily using the
