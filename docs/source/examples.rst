@@ -252,3 +252,69 @@ We can simply rename the arguments programmatically:
 .. code-block:: python
 
     0.6
+
+
+Utilizing type annotations
+--------------------------
+
+If your functions have type annotations, dags can use this information to infer the
+types of the inputs and outputs of the combined function. To activate this feature, you
+can set the ``set_annotations`` parameter to ``True`` when calling
+``concatenate_functions``.
+
+Let's look at the first example again, but this time with type annotations:
+
+
+.. code-block:: python
+
+    def f(x: float, y: int) -> float:
+        return x**2 + y**2
+
+
+    def g(y: int, z: int) -> int:
+        return 0.5 * y * z
+
+
+    def h(f: float, g: int) -> float:
+        return g / f
+
+    combined = concatenate_functions(
+        [f, g, h],
+        targets="h",
+        set_annotations=True,
+    )
+
+
+We can inspect the signature of the combined function to see the type annotations:
+
+.. code-block:: python
+
+    import inspect
+    inspect.signature(combined)
+
+
+.. code-block:: python
+
+    <Signature (x: float, y: int, z: int) -> float>
+
+.. note::
+
+    If the type annotations are not consistent across the functions, dags will raise an
+    error. In the above example, this could happen if the type hint for argument ``y``
+    in function ``f`` would be different from the type hint for argument ``y`` in
+    function ``g``.
+
+In many cases, it is useful to get the type annotations of the input arguments of the
+combined function in form of a dictionary. This can be achieved easily using the
+``get_input_types`` function:
+
+.. code-block:: python
+
+    from dags import get_input_types
+
+    get_input_types(combined)
+
+
+.. code-block:: python
+
+    {"x": float, "y": int, "z": int}
