@@ -36,10 +36,10 @@ that there is a function `f` in this module as well.
         return (f + linear__f) ** 2
 
 The function `h` takes two inputs:
-* `f` from `parabolic.py`, referenced directly as f within the current
-namespace.
-* `f` from `linear.py`, referenced using its namespace with a double
-  underscore separator (`linear__f`).
+
+- `f` from `parabolic.py`, referenced directly as f within the current namespace.
+- `f` from `linear.py`, referenced using its namespace with a double underscore
+  separator (`linear__f`).
 
 Using `concatenate_functions_tree`, we are able to combine the functions from both
 modules.

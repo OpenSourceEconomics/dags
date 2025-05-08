@@ -614,3 +614,17 @@ def _format_list_linewise(
         ]
         """,
     ).format(formatted_list=formatted_list)
+
+
+def get_input_types(func: GenericCallable) -> dict[str, type]:
+    """Get the input types annotations of a function.
+
+    Args:
+        func: The function to get the input types annotations of.
+
+    Returns
+    -------
+        dict: The argument names and their types annotations of the function.
+    """
+    free_arguments = get_free_arguments(func)
+    return _get_annotations_from_func(func, free_arguments)[0]

@@ -9,6 +9,7 @@ from dags.dag import (
     concatenate_functions,
     create_dag,
     get_ancestors,
+    get_input_types,
 )
 from dags.exceptions import CyclicDependencyError
 from dags.typing import (
@@ -274,4 +275,23 @@ def test_get_annotations_from_func() -> None:
 
     got = _get_annotations_from_func(f, free_arguments=["a", "b"])
     exp = {"a": int, "b": float}, float
+    assert got == exp
+
+
+def test_get_input_types() -> None:
+    def f(a: int, b: float) -> float:
+        return 1.0
+
+    got = get_input_types(f)
+    exp = {"a": int, "b": float}
+    assert got == exp
+
+
+def test_get_input_types_partial() -> None:
+    def f(a: int, b: float) -> float:
+        return 1.0
+
+    partial_f = partial(f, a=1)
+    got = get_input_types(partial_f)
+    exp = {"b": float}
     assert got == exp
