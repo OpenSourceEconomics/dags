@@ -159,25 +159,27 @@ def functions_without_tree_logic(
     functions: NestedFunctionDict,
     top_level_namespace: set[str],
 ) -> QualNameFunctionDict:
-    """Return a functions dictionary that `dags.concatenate` functions can work with.
+    """Return a functions dictionary that `dags.concatenate_functions` can work with.
 
     In particular, remove all tree logic by
-    1. Flattening the set of functions and inputs to qualified absolute names
-    2. Convert all functions so they will only take qualified absolute names as
-       arguments.
 
-    The result can be put into `dags.dag.concatenate_functions`.
+        1. Flattening the set of functions and inputs to qualified absolute names
+        2. Convert all functions so they will only take qualified absolute names as
+           arguments.
+
+    The result can be put into `dags.concatenate_functions`.
 
     Args:
-        functions: A nested dictionary of functions. input_structure: A nested
-        dictionary describing the input structure. top_level_namespace: The elements of
-        or not.
+        functions:
+            A nested dictionary of functions.
+        top_level_namespace:
+            The elements of the top-level namespace.
 
 
     Returns
     -------
-        A flat dictionary mapping qualified absolute names to functions taking
-        qualified absolute names as arguments.
+        A flat dictionary mapping qualified absolute names to functions taking qualified
+        absolute names as arguments.
 
     """
     tree_path_functions = flatten_to_tree_paths(functions)
