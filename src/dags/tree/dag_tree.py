@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import functools
+import inspect
 from typing import TYPE_CHECKING
 
 from dags.dag import (
@@ -10,6 +10,7 @@ from dags.dag import (
     create_arguments_of_concatenated_function,
     create_dag,
     get_free_arguments,
+    get_input_types,
 )
 from dags.signature import rename_arguments
 from dags.tree.tree_utils import (
@@ -116,7 +117,8 @@ def concatenate_functions_tree(
     inputs: NestedInputDict,
     targets: NestedTargetDict | None,
     enforce_signature: bool = True,
-) -> Callable[[NestedInputDict], NestedOutputDict]:
+    set_annotations: bool = True,
+) -> tuple[Callable[[NestedInputDict], NestedOutputDict], NestedInputStructureDict]:
     """Combine a nested dictionary of functions into a single callable.
 
     Args:
@@ -124,6 +126,9 @@ def concatenate_functions_tree(
         inputs: A nested dictionary that defines the (structure of) inputs.
         targets: The nested dictionary of targets (or None).
         enforce_signature: Whether to enforce the function signature strictly.
+        set_annotations (bool): If True, we set the annotations of the concatenated
+            function using the annotations of the functions that are used to generate
+            the targets. In case of a type mismatch, an error is raised.
 
     Returns
     -------
@@ -144,15 +149,27 @@ def concatenate_functions_tree(
         targets=targets_for_flat_dags,
         return_type="dict",
         enforce_signature=enforce_signature,
+        set_annotations=set_annotations,
     )
 
-    @functools.wraps(concatenated_function)
     def wrapper(inputs: NestedInputDict) -> NestedOutputDict:
         qual_name_inputs = flatten_to_qual_names(inputs)
         qual_name_outputs = concatenated_function(**qual_name_inputs)
         return unflatten_from_qual_names(qual_name_outputs)
 
-    return wrapper
+    input_types_flat = get_input_types(concatenated_function)
+    input_types_empty_replaced = {
+        k: _mark_unavailable_if_empty(v) for k, v in input_types_flat.items()
+    }
+    input_types_tree = unflatten_from_qual_names(input_types_empty_replaced)
+
+    return wrapper, input_types_tree
+
+
+def _mark_unavailable_if_empty(value: type) -> str | type:
+    if value is inspect.Parameter.empty:
+        return "unavailable_type"
+    return value
 
 
 def functions_without_tree_logic(
