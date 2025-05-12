@@ -132,7 +132,8 @@ def concatenate_functions_tree(
 
     Returns
     -------
-        A callable that takes a NestedInputDict and returns a NestedOutputDict.
+        - A callable that takes a NestedInputDict and returns a NestedOutputDict.
+        - A NestedInputStructureDict that describes the structure of the inputs.
     """
     top_level_namespace = _get_top_level_namespace_final(
         functions=functions,

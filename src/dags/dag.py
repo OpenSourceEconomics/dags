@@ -484,8 +484,7 @@ def _create_concatenated_function(
 
     Returns
     -------
-        - The concatenated function
-        - The input types of the concatenated function
+        The concatenated function
 
     """
     args: list[str] | dict[str, type]
