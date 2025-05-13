@@ -13,6 +13,7 @@ from dags.exceptions import (
     CyclicDependencyError,
     DagsError,
     MissingFunctionsError,
+    NonStringAnnotationError,
 )
 from dags.output import aggregated_output, dict_output, list_output, single_output
 from dags.signature import with_signature
@@ -36,23 +37,37 @@ class FunctionExecutionInfo:
     Attributes
     ----------
         func: The function to execute.
-        argument_annotations: The argument annotations of the function.
-        return_annotation: The return annotation of the function.
+        annotations: The annotations of the function. For standard functions this
+            coincides with the __annotations__ attribute of the function. For partialled
+            functions, this is a dictionary with the names of the free arguments as keys
+            and their expected types as values, as well as the return type of the
+            function stored under the key "return".
 
     Properties
     ----------
         arguments: The names of the arguments of the function.
+        argument_annotations: The argument annotations of the function.
+        return_annotation: The return annotation of the function.
 
     """
 
     func: GenericCallable
-    argument_annotations: dict[str, type]
-    return_annotation: type
+    annotations: dict[str, type]
 
     @property
     def arguments(self) -> list[str]:
         """The names of the arguments of the function."""
-        return list(self.argument_annotations)
+        return list(set(self.annotations) - {"return"})
+
+    @property
+    def argument_annotations(self) -> dict[str, type]:
+        """The argument annotations of the function."""
+        return {arg: self.annotations[arg] for arg in self.arguments}
+
+    @property
+    def return_annotation(self) -> type:
+        """The return annotation of the function."""
+        return self.annotations["return"]
 
 
 def concatenate_functions(
@@ -446,16 +461,8 @@ def _create_execution_info(
     out = {}
     for node in nx.topological_sort(dag):
         if node in functions:
-            arguments = get_free_arguments(functions[node])
-            argument_annotations, return_annotation = _get_annotations_from_func(
-                functions[node],
-                free_arguments=arguments,
-            )
-
             out[node] = FunctionExecutionInfo(
-                func=functions[node],
-                argument_annotations=argument_annotations,
-                return_annotation=return_annotation,
+                func=functions[node], annotations=get_annotations(functions[node])
             )
     return out
 
@@ -515,29 +522,6 @@ def _create_concatenated_function(
         return tuple(results[target] for target in targets)
 
     return concatenated
-
-
-def _get_annotations_from_func(
-    func: GenericCallable,
-    free_arguments: list[str],
-) -> tuple[dict[str, type], type]:
-    """Get the (argument and return) annotations of a function.
-
-    Args:
-        func: The function to get the annotations from.
-        free_arguments: The list of free arguments of the function. For the case of
-            functools.partial objects, these are the arguments that are not partialled.
-
-    Returns
-    -------
-        - Dictionary with argnames as keys and their expected types as values
-        - The expected type of the return value(s) as a tuple.
-    """
-    signature = inspect.signature(func)
-    argument_types = {
-        arg: signature.parameters[arg].annotation for arg in free_arguments
-    }
-    return argument_types, signature.return_annotation
 
 
 def _get_annotations_from_execution_info(
@@ -616,15 +600,35 @@ def _format_list_linewise(
     ).format(formatted_list=formatted_list)
 
 
-def get_input_types(func: GenericCallable) -> dict[str, type]:
-    """Get the input types annotations of a function.
+def get_annotations(func: GenericCallable) -> dict[str, str]:
+    """Thin wrapper around inspect.get_annotations to also handle partialled funcs."""
+    if isinstance(func, functools.partial):
+        annotations = _get_annotations_partialled_func(func)
+    else:
+        annotations = inspect.get_annotations(func, eval_str=False)
+
+    all_strings = all(isinstance(v, str) for v in annotations.values())
+    if not all_strings:
+        raise NonStringAnnotationError(
+            "All annotations must be strings. This can be achieved by adding\n\n"
+            "\tfrom __future__ import annotations\n\n"
+            "to the top of the file from which dags is called."
+        )
+
+    return annotations
+
+
+def _get_annotations_partialled_func(func: functools.partial) -> dict[str, str]:
+    """Get annotations of a partialled function.
 
     Args:
-        func: The function to get the input types annotations of.
+        func: The function to get annotations from. Must be a partialled function.
 
     Returns
     -------
-        dict: The argument names and their types annotations of the function.
+        A dictionary of annotations.
+
     """
+    annotations = inspect.get_annotations(func.func, eval_str=False)
     free_arguments = get_free_arguments(func)
-    return _get_annotations_from_func(func, free_arguments)[0]
+    return {arg: annotations[arg] for arg in free_arguments}

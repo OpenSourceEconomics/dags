@@ -2,9 +2,8 @@ from __future__ import annotations
 
 import functools
 import inspect
-import operator
 from collections.abc import Callable
-from typing import TypedDict, get_args, overload
+from typing import TypedDict, Union, get_args, overload
 
 from typing_extensions import Unpack
 
@@ -23,11 +22,15 @@ def single_output(
         return raw[0]
 
     signature = inspect.signature(func)
+    annotations = inspect.get_annotations(func)
+
     if signature.return_annotation is not inspect.Parameter.empty:
-        signature = signature.replace(
-            return_annotation=get_args(signature.return_annotation)[0]
-        )
+        return_annotation = get_args(signature.return_annotation)[0]
+        signature = signature.replace(return_annotation=return_annotation)
+        annotations["return"] = return_annotation
+
     wrapper_single_output.__signature__ = signature  # type: ignore[attr-defined]
+    wrapper_single_output.__annotations__ = annotations
 
     return wrapper_single_output
 
@@ -66,15 +69,16 @@ def dict_output(
             return dict(zip(keys, raw, strict=True))
 
         signature = inspect.signature(func)
+        annotations = inspect.get_annotations(func)
         if signature.return_annotation is not inspect.Parameter.empty:
             element_types = get_args(signature.return_annotation)
             td_name = f"{func.__name__.title()}Return"
             annotations = dict(zip(keys, element_types, strict=True))
             return_annotation = TypedDict(td_name, annotations)  # type: ignore[misc]
             signature = signature.replace(return_annotation=return_annotation)
-
+            annotations["return"] = return_annotation
         wrapper_dict_output.__signature__ = signature  # type: ignore[attr-defined]
-
+        wrapper_dict_output.__annotations__ = annotations
         return wrapper_dict_output
 
     if callable(func):
@@ -91,13 +95,14 @@ def list_output(func: Callable[P, tuple[T, ...]]) -> Callable[P, list[T]]:
         return list(raw)
 
     signature = inspect.signature(func)
+    annotations = inspect.get_annotations(func)
     if signature.return_annotation is not inspect.Parameter.empty:
-        element_type = _union_from_types_tuple(get_args(signature.return_annotation))
-        signature = signature.replace(
-            return_annotation=list[element_type]  # type: ignore[valid-type]
-        )
+        element_type = Union[get_args(signature.return_annotation)]
+        return_annotation = list[element_type]  # type: ignore[valid-type]
+        signature = signature.replace(return_annotation=return_annotation)
+        annotations["return"] = return_annotation
     wrapper_list_output.__signature__ = signature  # type: ignore[attr-defined]
-
+    wrapper_list_output.__annotations__ = annotations
     return wrapper_list_output
 
 
@@ -140,8 +145,3 @@ def aggregated_output(
     if callable(func):
         return decorator_aggregated_output(func)
     return decorator_aggregated_output
-
-
-def _union_from_types_tuple(t: tuple[type, ...]) -> type:
-    """Union of types in a tuple."""
-    return functools.reduce(operator.or_, t)

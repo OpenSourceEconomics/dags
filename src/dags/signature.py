@@ -9,23 +9,23 @@ from dags.exceptions import DagsError, InvalidFunctionArgumentsError
 from dags.typing import P, R
 
 
-def create_signature(
-    args: dict[str, type] | list[str] | None = None,
-    kwargs: dict[str, type] | list[str] | None = None,
-    return_annotation: type = inspect.Parameter.empty,
+def _create_signature(
+    args: dict[str, str] | list[str] | None = None,
+    kwargs: dict[str, str] | list[str] | None = None,
+    return_annotation: str = inspect.Parameter.empty,
 ) -> inspect.Signature:
-    """Create a inspect.Signature object based on args and kwargs.
+    """Create an inspect.Signature object based on args and kwargs.
 
     Args:
         args: If a list, the names of positional or keyword arguments. If a dict,
-            the names of positional or keyword arguments and their types.
+            the names of positional or keyword arguments and their types as string.
         kwargs: If a list, the names of keyword only arguments. If a dict,
-            the names of keyword only arguments and their types.
-        return_annotation: The return annotation.
+            the names of keyword only arguments and their types as string.
+        return_annotation: The return annotation as string.
 
     Returns
     -------
-        The signature
+        The signature.
 
     """
     parameter_objects = []
@@ -50,34 +50,42 @@ def create_signature(
     )
 
 
+def _create_annotations(
+    args_types: dict[str, str],
+    kwargs_types: dict[str, str],
+    return_annotation: str,
+) -> dict[str, str]:
+    return args_types | kwargs_types | {"return": return_annotation}
+
+
 @overload
 def with_signature(
     func: Callable[P, R],
     *,
-    args: dict[str, type] | list[str] | None = None,
-    kwargs: dict[str, type] | list[str] | None = None,
+    args: dict[str, str] | list[str] | None = None,
+    kwargs: dict[str, str] | list[str] | None = None,
     enforce: bool = True,
-    return_annotation: type = inspect.Parameter.empty,
+    return_annotation: str = inspect.Parameter.empty,
 ) -> Callable[P, R]: ...
 
 
 @overload
 def with_signature(
     *,
-    args: dict[str, type] | list[str] | None = None,
-    kwargs: dict[str, type] | list[str] | None = None,
+    args: dict[str, str] | list[str] | None = None,
+    kwargs: dict[str, str] | list[str] | None = None,
     enforce: bool = True,
-    return_annotation: type = inspect.Parameter.empty,
+    return_annotation: str = inspect.Parameter.empty,
 ) -> Callable[[Callable[P, R]], Callable[P, R]]: ...
 
 
 def with_signature(
     func: Callable[P, R] | None = None,
     *,
-    args: dict[str, type] | list[str] | None = None,
-    kwargs: dict[str, type] | list[str] | None = None,
+    args: dict[str, str] | list[str] | None = None,
+    kwargs: dict[str, str] | list[str] | None = None,
     enforce: bool = True,
-    return_annotation: type = inspect.Parameter.empty,
+    return_annotation: str = inspect.Parameter.empty,
 ) -> Callable[P, R] | Callable[[Callable[P, R]], Callable[P, R]]:
     """Add a signature to a function of type `f(*args, **kwargs)` (decorator).
 
@@ -88,13 +96,13 @@ def with_signature(
         func: The function to be decorated. Should take `*args`
             and `**kwargs` as only arguments.
         args: If a list, the names of positional or keyword arguments. If a dict,
-            the names of positional or keyword arguments and their types.
+            the names of positional or keyword arguments and their types as strings.
         kwargs: If a list, the names of keyword only arguments. If a dict,
-            the names of keyword only arguments and their types.
+            the names of keyword only arguments and their types as strings.
         enforce: Whether the signature should be enforced or just
             added to the function for introspection. This creates runtime
             overhead.
-        return_annotation: The return annotation.
+        return_annotation: The return annotation as string.
 
     Returns
     -------
@@ -104,9 +112,8 @@ def with_signature(
     def decorator_with_signature(func: Callable[P, R]) -> Callable[P, R]:
         _args = _map_names_to_types(args)
         _kwargs = _map_names_to_types(kwargs)
-        signature = create_signature(
-            _args, _kwargs, return_annotation=return_annotation
-        )
+        signature = _create_signature(_args, _kwargs, return_annotation)
+        annotations = _create_annotations(_args, _kwargs, return_annotation)
         valid_kwargs: set[str] = set(_kwargs) | set(_args)
         funcname: str = getattr(func, "__name__", "function")
 
@@ -123,6 +130,7 @@ def with_signature(
             return func(*args, **kwargs)
 
         wrapper_with_signature.__signature__ = signature  # type: ignore[attr-defined]
+        wrapper_with_signature.__annotations__ = annotations
         return wrapper_with_signature
 
     if func is not None:
@@ -240,8 +248,8 @@ def rename_arguments(
 
 
 def _map_names_to_types(
-    arg: dict[str, type] | list[str] | None,
-) -> dict[str, type]:
+    arg: dict[str, str] | list[str] | None,
+) -> dict[str, str | inspect.Parameter.empty]:
     if arg is None:
         return {}
     if isinstance(arg, list):

@@ -5,7 +5,7 @@ import inspect
 import pytest
 
 from dags.exceptions import InvalidFunctionArgumentsError
-from dags.signature import create_signature, rename_arguments, with_signature
+from dags.signature import _create_signature, rename_arguments, with_signature
 
 
 @pytest.fixture
@@ -35,14 +35,14 @@ def example_signature_annotated() -> inspect.Signature:
 
 
 def test_create_signature(example_signature: inspect.Signature) -> None:
-    created = create_signature(args=["a", "b"], kwargs=["c"])
+    created = _create_signature(args=["a", "b"], kwargs=["c"])
     assert created == example_signature
 
 
 def test_create_signature_annotated(
     example_signature_annotated: inspect.Signature,
 ) -> None:
-    created = create_signature(
+    created = _create_signature(
         args={"a": int, "b": float}, kwargs={"c": bool}, return_annotation=float
     )
     assert created == example_signature_annotated

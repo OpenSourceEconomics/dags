@@ -11,6 +11,10 @@ class AnnotationMismatchError(DagsError):
     """Raised when there is a mismatch between annotations."""
 
 
+class NonStringAnnotationError(DagsError):
+    """Raised when a non-string annotation is encountered."""
+
+
 class MissingFunctionsError(DagsError):
     """Raised when required functions are missing from the DAG."""
 

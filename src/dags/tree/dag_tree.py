@@ -9,8 +9,8 @@ from dags.dag import (
     concatenate_functions,
     create_arguments_of_concatenated_function,
     create_dag,
+    get_annotations,
     get_free_arguments,
-    get_input_types,
 )
 from dags.signature import rename_arguments
 from dags.tree.tree_utils import (
@@ -158,7 +158,7 @@ def concatenate_functions_tree(
         qual_name_outputs = concatenated_function(**qual_name_inputs)
         return unflatten_from_qual_names(qual_name_outputs)
 
-    input_types_flat = get_input_types(concatenated_function)
+    input_types_flat = get_annotations(concatenated_function)
     input_types_empty_replaced = {
         k: _mark_unavailable_if_empty(v) for k, v in input_types_flat.items()
     }

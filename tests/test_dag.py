@@ -7,11 +7,10 @@ from typing import TypedDict, get_type_hints
 import pytest
 
 from dags.dag import (
-    _get_annotations_from_func,
     concatenate_functions,
     create_dag,
     get_ancestors,
-    get_input_types,
+    get_annotations,
 )
 from dags.exceptions import CyclicDependencyError
 from dags.typing import (
@@ -271,29 +270,20 @@ def test_fail_if_cycle_in_dag(funcs: FunctionCollection) -> None:
         create_dag(functions=funcs, targets=["_utility"])
 
 
-def test_get_annotations_from_func() -> None:
-    def f(a: int, b: float, c: bool) -> float:
-        return 1.0
-
-    got = _get_annotations_from_func(f, free_arguments=["a", "b"])
-    exp = {"a": int, "b": float}, float
-    assert got == exp
-
-
-def test_get_input_types() -> None:
+def test_get_annotations() -> None:
     def f(a: int, b: float) -> float:
         return 1.0
 
-    got = get_input_types(f)
-    exp = {"a": int, "b": float}
+    got = get_annotations(f)
+    exp = {"a": int, "b": float, "return": float}
     assert got == exp
 
 
-def test_get_input_types_partial() -> None:
+def test_get_annotations_partial() -> None:
     def f(a: int, b: float) -> float:
         return 1.0
 
     partial_f = partial(f, a=1)
-    got = get_input_types(partial_f)
-    exp = {"b": float}
+    got = get_annotations(partial_f)
+    exp = {"b": float, "return": float}
     assert got == exp
