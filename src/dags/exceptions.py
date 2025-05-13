@@ -1,5 +1,7 @@
 """Custom exceptions for the dags library."""
 
+from __future__ import annotations
+
 
 class DagsError(Exception):
     """Base exception for all dags-specific errors."""

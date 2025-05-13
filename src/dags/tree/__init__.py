@@ -1,4 +1,5 @@
 """Module for handling DAG trees with nested dictionaries and qualified names."""
+from __future__ import annotations
 
 from dags.tree.dag_tree import (
     concatenate_functions_tree,

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import inspect
 from functools import partial
 from typing import TypedDict, get_type_hints

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import inspect
 from typing import TypedDict, get_type_hints
 
