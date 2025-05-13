@@ -18,7 +18,7 @@ from dags.output import aggregated_output, dict_output, list_output, single_outp
 from dags.signature import with_signature
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Sequence
 
     from dags.typing import (
         CombinedFunctionReturnType,
@@ -329,7 +329,7 @@ def _fail_if_functions_are_missing(
 ) -> None:
     targets_not_in_functions = set(targets) - set(functions)
     if targets_not_in_functions:
-        formatted = _format_list_linewise(list(targets_not_in_functions))
+        formatted = format_list_linewise(list(targets_not_in_functions))
         msg = f"The following targets have no corresponding function:\n{formatted}"
         raise MissingFunctionsError(msg)
 
@@ -339,7 +339,7 @@ def _fail_if_dag_contains_cycle(dag: nx.DiGraph[str]) -> None:
     cycles = list(nx.simple_cycles(dag))
 
     if len(cycles) > 0:
-        formatted = _format_list_linewise(cycles)
+        formatted = format_list_linewise(cycles)
         msg = f"The DAG contains one or more cycles:\n{formatted}"
         raise CyclicDependencyError(msg)
 
@@ -603,10 +603,8 @@ def _get_annotations_from_execution_info(
     return args, cast("tuple[type, ...]", return_annotation)
 
 
-def _format_list_linewise(
-    list_: list[object],
-) -> str:
-    formatted_list = '",\n    "'.join([str(c) for c in list_])
+def format_list_linewise(seq: Sequence[object]) -> str:
+    formatted_list = '",\n    "'.join([str(c) for c in seq])
     return textwrap.dedent(
         """
         [

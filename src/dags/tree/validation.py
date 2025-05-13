@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from dags.dag import format_list_linewise
 from dags.tree.exceptions import (
     RepeatedTopLevelElementError,
     TrailingUnderscoreError,
@@ -150,7 +151,8 @@ def fail_if_top_level_elements_repeated_in_paths(
         msg = (
             "Elements of the top-level namespace must not be repeated further down "
             f"in the hierarchy. Offending path(s):\n\n{paths}\n\n\n"
-            f"Top-level namespace:\n\n{top_level_namespace}"
+            "Top-level namespace:\n\n"
+            f"{format_list_linewise(sorted(top_level_namespace))}"
         )
         raise RepeatedTopLevelElementError(msg)
 
