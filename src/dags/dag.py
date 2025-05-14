@@ -698,19 +698,19 @@ def _verify_annotations_are_strings(
     else:
         invalid_arg_msg = ""
 
-    invalid_annotation_msg = ""
+    invalid_annotations_msg = ""
     if invalid_arg_msg and "return" in non_string_annotations:
-        invalid_annotation_msg = f"{invalid_arg_msg} and the return annotation"
+        invalid_annotations_msg = f"{invalid_arg_msg} and the return annotation"
     elif invalid_arg_msg:
-        invalid_annotation_msg = invalid_arg_msg
+        invalid_annotations_msg = invalid_arg_msg
     elif "return" in non_string_annotations:
-        invalid_annotation_msg = "the return annotation"
+        invalid_annotations_msg = "the return annotation"
 
     # Raise the error
     # ----------------------------------------------------------------------------------
     raise NonStringAnnotationError(
         f"All function annotations must be strings. The annotations for the "
-        f"{invalid_annotation_msg} are not strings.\nA simple way for Python to treat "
+        f"{invalid_annotations_msg} are not strings.\nA simple way for Python to treat "
         "type annotations as strings is to add\n\n\tfrom __future__ import annotations"
         "\n\nat the top of your file. Alternatively, you can do it manually by "
         f"enclosing the annotations in quotes:\n\n\t{stringified_signature}."
