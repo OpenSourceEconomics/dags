@@ -655,7 +655,7 @@ def _get_annotations_partialled_func(
     """
     annotations = inspect.get_annotations(func.func, eval_str=eval_str)
     free_arguments = get_free_arguments(func)
-    return {arg: annotations[arg] for arg in free_arguments}
+    return {arg: annotations[arg] for arg in ["return", *free_arguments]}
 
 
 def _verify_annotations_are_strings(

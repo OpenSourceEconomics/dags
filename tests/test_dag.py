@@ -295,7 +295,16 @@ def test_get_annotations() -> None:
     def f(a: int, b: float) -> float:
         return 1.0
 
-    got = get_annotations(f)
+    got = get_annotations(f, eval_str=False)
+    exp = {"a": "int", "b": "float", "return": "float"}
+    assert got == exp
+
+
+def test_get_annotations_eval_str() -> None:
+    def f(a: int, b: float) -> float:
+        return 1.0
+
+    got = get_annotations(f, eval_str=True)
     exp = {"a": int, "b": float, "return": float}
     assert got == exp
 
@@ -305,6 +314,16 @@ def test_get_annotations_partial() -> None:
         return 1.0
 
     partial_f = partial(f, a=1)
-    got = get_annotations(partial_f)
+    got = get_annotations(partial_f, eval_str=False)
+    exp = {"b": "float", "return": "float"}
+    assert got == exp
+
+
+def test_get_annotations_partial_eval_str() -> None:
+    def f(a: int, b: float) -> float:
+        return 1.0
+
+    partial_f = partial(f, a=1)
+    got = get_annotations(partial_f, eval_str=True)
     exp = {"b": float, "return": float}
     assert got == exp
