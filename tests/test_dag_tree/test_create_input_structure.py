@@ -187,3 +187,20 @@ def test_create_input_structure_tree_duplicates_lower_in_hierarchy() -> None:
         targets=None,
         top_level_inputs=set(),
     ) == {"n1": {"a": {"a": None, "b": None, "g": None}}}
+
+
+def test_partialled_function_input_types() -> None:
+    def f(a: int, b: float) -> float:
+        return a + b
+
+    tree = {"f": f}
+    input_structure = {"a": None, "b": None}
+    targets = {"f": None}
+
+    input_types = concatenate_functions_tree(
+        functions=tree,
+        targets=targets,
+        inputs=input_structure,
+        enforce_signature=True,
+    )
+    assert input_types == {"a": int, "b": float}

@@ -2,11 +2,15 @@ from __future__ import annotations
 
 import functools
 import inspect
-from collections.abc import Callable
-from typing import Any, cast, overload
+from typing import TYPE_CHECKING, Any, cast, overload
 
+from dags.annotations import get_annotations
 from dags.exceptions import DagsError, InvalidFunctionArgumentsError
-from dags.typing import P, R
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from dags.typing import P, R
 
 
 def _create_signature(
@@ -215,6 +219,12 @@ def rename_arguments(
             parameters=parameters, return_annotation=old_signature.return_annotation
         )
 
+        old_annotations = get_annotations(func)
+        new_argument_annotations = {
+            new_name: old_annotations[old_name] for old_name, new_name in mapper.items()
+        }
+        annotations = {"return": old_annotations["return"]} | new_argument_annotations
+
         reverse_mapper: dict[str, str] = (
             {v: k for k, v in mapper.items()} if mapper is not None else {}
         )
@@ -230,6 +240,7 @@ def rename_arguments(
             return func(*args, **internal_kwargs)
 
         wrapper_rename_arguments.__signature__ = signature  # type: ignore[attr-defined]
+        wrapper_rename_arguments.__annotations__ = annotations
 
         # Preserve function type
         if isinstance(func, functools.partial):

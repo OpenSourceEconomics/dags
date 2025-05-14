@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, cast
 
 import networkx as nx
 
+from dags.annotations import get_annotations, get_free_arguments
 from dags.exceptions import (
     AnnotationMismatchError,
     CyclicDependencyError,
@@ -401,19 +402,6 @@ def _create_complete_dag(
     return nx.DiGraph(functions_arguments_dict).reverse()  # type: ignore[arg-type]
 
 
-def get_free_arguments(
-    func: GenericCallable,
-) -> list[str]:
-    arguments = list(inspect.signature(func).parameters)
-    if isinstance(func, functools.partial):
-        # arguments that are partialled by position are not part of the signature
-        # anyways, so they do not need special handling.
-        non_free = set(func.keywords)
-        arguments = [arg for arg in arguments if arg not in non_free]
-
-    return arguments
-
-
 def _limit_dag_to_targets_and_their_ancestors(
     dag: nx.DiGraph[str],
     targets: list[str],
@@ -611,51 +599,6 @@ def format_list_linewise(seq: Sequence[object]) -> str:
         ]
         """,
     ).format(formatted_list=formatted_list)
-
-
-def get_annotations(
-    func: GenericCallable,
-    eval_str: bool = False,
-) -> dict[str, str]:
-    """Thin wrapper around inspect.get_annotations to also handle partialled funcs.
-
-    Args:
-        func: The function to get annotations from.
-        eval_str: If True, the string type annotations are evaluated.
-
-    Returns
-    -------
-        A dictionary with the argument names as keys and the type annotations as values.
-        The type annotations are strings.
-
-    Raises
-    ------
-        NonStringAnnotationError: If the type annotations are not strings.
-
-    """
-    if isinstance(func, functools.partial):
-        return _get_annotations_partialled_func(func, eval_str)
-    return inspect.get_annotations(func, eval_str=eval_str)
-
-
-def _get_annotations_partialled_func(
-    func: functools.partial,
-    eval_str: bool,
-) -> dict[str, str]:
-    """Get annotations of a partialled function.
-
-    Args:
-        func: The function to get annotations from. Must be a partialled function.
-        eval_str: If True, the string type annotations are evaluated.
-
-    Returns
-    -------
-        A dictionary of annotations.
-
-    """
-    annotations = inspect.get_annotations(func.func, eval_str=eval_str)
-    free_arguments = get_free_arguments(func)
-    return {arg: annotations[arg] for arg in ["return", *free_arguments]}
 
 
 def _verify_annotations_are_strings(

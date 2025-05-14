@@ -3,18 +3,19 @@
 from __future__ import annotations
 
 import functools
+from typing import TYPE_CHECKING
 
 import pytest
 
-from dags.tree import (
-    concatenate_functions_tree,
-)
-from dags.tree.typing import (
-    NestedFunctionDict,
-    NestedInputDict,
-    NestedOutputDict,
-    NestedTargetDict,
-)
+from dags.tree import concatenate_functions_tree
+
+if TYPE_CHECKING:
+    from dags.tree.typing import (
+        NestedFunctionDict,
+        NestedInputDict,
+        NestedOutputDict,
+        NestedTargetDict,
+    )
 
 
 def f(g: int, a: int, b: float) -> float:
@@ -116,7 +117,7 @@ def test_concatenate_functions_tree_simple(
         inputs=input_data,
         targets=targets,
         enforce_signature=True,
-    )[0]
+    )
     assert f(input_data) == expected
 
 
@@ -160,7 +161,7 @@ def test_concatenate_functions_tree_nested_and_duplicate_g(
         targets=targets,
         inputs=input_data,
         enforce_signature=True,
-    )[0]
+    )
     assert f(input_data) == expected
 
 
@@ -178,23 +179,5 @@ def test_partialled_function_argument() -> None:
         targets=targets,
         inputs=input_structure,
         enforce_signature=True,
-    )[0]
-    concatenated_func({"a": 1})
-
-
-def test_partialled_function_input_types() -> None:
-    def f(a: int, b: float) -> float:
-        return a + b
-
-    tree = {"f": f}
-    input_structure = {"a": None, "b": None}
-    targets = {"f": None}
-
-    input_types = concatenate_functions_tree(
-        functions=tree,
-        targets=targets,
-        inputs=input_structure,
-        enforce_signature=True,
-        set_annotations=True,
-    )[1]
-    assert input_types == {"a": int, "b": float}
+    )
+    assert concatenated_func({"a": 1}) == 2
