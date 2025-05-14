@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import inspect
 from functools import partial
-from typing import TYPE_CHECKING, TypedDict, get_type_hints
+from typing import TYPE_CHECKING
 
 import pytest
 
@@ -165,7 +165,7 @@ def test_concatenate_functions_multi_target_result(
 
 
 @pytest.mark.parametrize("return_type", ["tuple", "list", "dict"])
-def test_concatenate_functions_multi_target_annotations(
+def test_concatenate_functions_multi_target_signature_and_annotations(
     return_type: CombinedFunctionReturnType,
 ) -> None:
     concatenated = concatenate_functions(
@@ -175,40 +175,29 @@ def test_concatenate_functions_multi_target_annotations(
         set_annotations=True,
     )
 
-    return_annotation: type[object]
     if return_type == "tuple":
-        return_annotation = tuple[float, float]
+
+        def expected(
+            working_hours: int, wage: float, leisure_weight: float
+        ) -> tuple[float, float]:
+            pass
     elif return_type == "list":
-        return_annotation = list[float]
+
+        def expected(
+            working_hours: int, wage: float, leisure_weight: float
+        ) -> list[float]:
+            pass
     elif return_type == "dict":
 
-        class ConcatenatedReturn(TypedDict):
-            _utility: float
-            _consumption: float
+        def expected(
+            working_hours: int, wage: float, leisure_weight: float
+        ) -> {"_utility": float, "_consumption": float}:  # type: ignore[valid-type]  # noqa: UP037
+            pass
 
-        return_annotation = ConcatenatedReturn
-
-    def expected(
-        working_hours: int, wage: float, leisure_weight: float
-    ) -> return_annotation:  # type: ignore[valid-type]
-        pass
-
-    exp_signature = inspect.signature(expected)
-    got_signature = inspect.signature(concatenated)
-    assert exp_signature.parameters == got_signature.parameters
-    if return_type == "dict":
-        # In the "dict" case, the return annotation is a TypedDict. This cannot be
-        # compared using ==, so we compare the name and implied dictionary of type
-        # hints.
-        assert (
-            got_signature.return_annotation.__name__
-            == exp_signature.return_annotation.__name__
-        )
-        assert get_type_hints(exp_signature.return_annotation) == get_type_hints(
-            got_signature.return_annotation
-        )
-    else:
-        assert exp_signature.return_annotation == got_signature.return_annotation
+    assert inspect.signature(expected) == inspect.signature(concatenated)
+    assert inspect.get_annotations(expected, eval_str=True) == inspect.get_annotations(
+        concatenated, eval_str=True
+    )
 
 
 def test_get_ancestors_many_ancestors() -> None:

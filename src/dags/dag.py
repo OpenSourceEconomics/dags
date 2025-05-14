@@ -234,17 +234,26 @@ def _create_combined_function_from_dag(
 
     # Return function in specified format.
     if isinstance(targets, str) or (aggregator is not None and len(_targets) == 1):
-        out = cast("GenericCallable", single_output(_concatenated))
+        out = cast(
+            "GenericCallable",
+            single_output(_concatenated, set_annotations=set_annotations),
+        )
     elif aggregator is not None:
         out = cast(
             "GenericCallable", aggregated_output(_concatenated, aggregator=aggregator)
         )
     elif return_type == "list":
-        out = cast("GenericCallable", list_output(_concatenated))
+        out = cast(
+            "GenericCallable",
+            list_output(_concatenated, set_annotations=set_annotations),
+        )
     elif return_type == "tuple":
         out = _concatenated
     elif return_type == "dict":
-        out = cast("GenericCallable", dict_output(_concatenated, keys=_targets))
+        out = cast(
+            "GenericCallable",
+            dict_output(_concatenated, keys=_targets, set_annotations=set_annotations),
+        )
     else:
         msg = (
             f"Invalid return type {return_type}. Must be 'list', 'tuple', or 'dict'. "
