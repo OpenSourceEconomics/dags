@@ -30,29 +30,40 @@ if TYPE_CHECKING:
     )
 
 
-@dataclass
+@dataclass(frozen=True)
 class FunctionExecutionInfo:
     """Information about a function that is needed to execute it.
 
     Attributes
     ----------
+        name: The name of the function.
         func: The function to execute.
+
+    Properties
+    ----------
         annotations: The annotations of the function. For standard functions this
             coincides with the __annotations__ attribute of the function. For partialled
             functions, this is a dictionary with the names of the free arguments as keys
             and their expected types as values, as well as the return type of the
-            function stored under the key "return".
-
-    Properties
-    ----------
+            function stored under the key "return". We assume that the type annotations
+            are strings.
         arguments: The names of the arguments of the function.
         argument_annotations: The argument annotations of the function.
         return_annotation: The return annotation of the function.
 
     """
 
+    name: str
     func: GenericCallable
-    annotations: dict[str, type]
+
+    def __post_init__(self) -> None:
+        """Verify that the annotations are strings."""
+        _verify_annotations_are_strings(self.annotations, self.name)
+
+    @functools.cached_property
+    def annotations(self) -> dict[str, str]:
+        """The annotations of the function."""
+        return get_annotations(self.func)
 
     @property
     def arguments(self) -> list[str]:
@@ -60,12 +71,12 @@ class FunctionExecutionInfo:
         return list(set(self.annotations) - {"return"})
 
     @property
-    def argument_annotations(self) -> dict[str, type]:
+    def argument_annotations(self) -> dict[str, str]:
         """The argument annotations of the function."""
         return {arg: self.annotations[arg] for arg in self.arguments}
 
     @property
-    def return_annotation(self) -> type:
+    def return_annotation(self) -> str:
         """The return annotation of the function."""
         return self.annotations["return"]
 
@@ -461,9 +472,7 @@ def _create_execution_info(
     out = {}
     for node in nx.topological_sort(dag):
         if node in functions:
-            out[node] = FunctionExecutionInfo(
-                func=functions[node], annotations=get_annotations(functions[node])
-            )
+            out[node] = FunctionExecutionInfo(name=node, func=functions[node])
     return out
 
 
@@ -494,8 +503,8 @@ def _create_concatenated_function(
         The concatenated function
 
     """
-    args: list[str] | dict[str, type]
-    return_annotation: type | tuple[type, ...]
+    args: list[str] | dict[str, str]
+    return_annotation: str | tuple[str, ...]
 
     if set_annotations:
         args, return_annotation = _get_annotations_from_execution_info(
@@ -528,7 +537,7 @@ def _get_annotations_from_execution_info(
     execution_info: dict[str, FunctionExecutionInfo],
     arglist: list[str],
     targets: list[str],
-) -> tuple[dict[str, type], tuple[type, ...]]:
+) -> tuple[dict[str, str], tuple[str, ...]]:
     """Get the (argument and return) annotations of the concatenated function.
 
     Args:
@@ -548,7 +557,7 @@ def _get_annotations_from_execution_info(
             the functions are not consistent.
 
     """
-    types: dict[str, type] = {}
+    types: dict[str, str] = {}
     for name, info in execution_info.items():
         # We do not need to check whether name is already in types_dict, because the
         # functions in execution_info are topologically sorted, and hence, it is
@@ -566,25 +575,22 @@ def _get_annotations_from_execution_info(
             if earlier_type != current_type:
                 arg_is_function = arg in execution_info
                 if arg_is_function:
-                    explanation = (
-                        f"function {arg} has return type: {earlier_type.__name__}."
-                    )
+                    explanation = f"function {arg} has return type: {earlier_type}."
                 else:
                     explanation = (
-                        f"type annotation '{arg}: {earlier_type.__name__}' is used "
-                        "elsewhere."
+                        f"type annotation '{arg}: {earlier_type}' is used elsewhere."
                     )
 
                 raise AnnotationMismatchError(
                     f"function {name} has the argument type annotation '{arg}: "
-                    f"{current_type.__name__}', but {explanation}"
+                    f"{current_type}', but {explanation}"
                 )
 
         types.update(info.argument_annotations)
 
     args = {k: v for k, v in types.items() if k in arglist}
-    return_annotation = tuple[tuple(types[target] for target in targets)]  # type: ignore[misc,valid-type]
-    return args, cast("tuple[type, ...]", return_annotation)
+    return_annotation = f"tuple[{', '.join(types[target] for target in targets)}]"
+    return args, return_annotation
 
 
 def format_list_linewise(seq: Sequence[object]) -> str:
@@ -598,35 +604,105 @@ def format_list_linewise(seq: Sequence[object]) -> str:
     ).format(formatted_list=formatted_list)
 
 
-def get_annotations(func: GenericCallable) -> dict[str, str]:
-    """Thin wrapper around inspect.get_annotations to also handle partialled funcs."""
+def get_annotations(
+    func: GenericCallable,
+    eval_str: bool = False,
+) -> dict[str, str]:
+    """Thin wrapper around inspect.get_annotations to also handle partialled funcs.
+
+    Args:
+        func: The function to get annotations from.
+        eval_str: If True, the string type annotations are evaluated.
+
+    Returns
+    -------
+        A dictionary with the argument names as keys and the type annotations as values.
+        The type annotations are strings.
+
+    Raises
+    ------
+        NonStringAnnotationError: If the type annotations are not strings.
+
+    """
     if isinstance(func, functools.partial):
-        annotations = _get_annotations_partialled_func(func)
-    else:
-        annotations = inspect.get_annotations(func, eval_str=False)
-
-    all_strings = all(isinstance(v, str) for v in annotations.values())
-    if not all_strings:
-        raise NonStringAnnotationError(
-            "All annotations must be strings. This can be achieved by adding\n\n"
-            "\tfrom __future__ import annotations\n\n"
-            "to the top of the file from which dags is called."
-        )
-
-    return annotations
+        return _get_annotations_partialled_func(func, eval_str)
+    return inspect.get_annotations(func, eval_str=eval_str)
 
 
-def _get_annotations_partialled_func(func: functools.partial) -> dict[str, str]:
+def _get_annotations_partialled_func(
+    func: functools.partial,
+    eval_str: bool,
+) -> dict[str, str]:
     """Get annotations of a partialled function.
 
     Args:
         func: The function to get annotations from. Must be a partialled function.
+        eval_str: If True, the string type annotations are evaluated.
 
     Returns
     -------
         A dictionary of annotations.
 
     """
-    annotations = inspect.get_annotations(func.func, eval_str=False)
+    annotations = inspect.get_annotations(func.func, eval_str=eval_str)
     free_arguments = get_free_arguments(func)
     return {arg: annotations[arg] for arg in free_arguments}
+
+
+def _verify_annotations_are_strings(
+    annotations: dict[str, str], function_name: str
+) -> None:
+    # If all annotations are strings, we are done.
+    if all(isinstance(v, str) for v in annotations.values()):
+        return
+
+    non_string_annotations = [k for k, v in annotations.items() if isinstance(v, type)]
+    arg_annotations = {k: v for k, v in annotations.items() if k != "return"}
+    return_annotation = annotations["return"]
+
+    # Create a representation of the signature with string annotations
+    # ----------------------------------------------------------------------------------
+    stringified_arg_annotations = []
+    for k, v in arg_annotations.items():
+        if k in non_string_annotations:
+            stringified_arg_annotations.append(f"{k}: '{v.__name__}'")
+        else:
+            annot = f"{k}: '{v}'"
+            stringified_arg_annotations.append(annot)
+
+    if "return" in non_string_annotations:
+        stringified_return_annotation = f"'{return_annotation.__name__}'"
+    else:
+        stringified_return_annotation = f"'{return_annotation}'"
+
+    stringified_signature = (
+        f"{function_name}({', '.join(stringified_arg_annotations)}) -> "
+        f"{stringified_return_annotation}"
+    )
+
+    # Create message on which argument and/or return annotation is invalid
+    # ----------------------------------------------------------------------------------
+    invalid_arg_annotations = [k for k in non_string_annotations if k != "return"]
+    if invalid_arg_annotations:
+        s = "s" if len(invalid_arg_annotations) > 1 else ""
+        invalid_arg_msg = f"argument{s} ({', '.join(invalid_arg_annotations)})"
+    else:
+        invalid_arg_msg = ""
+
+    invalid_annotation_msg = ""
+    if invalid_arg_msg and "return" in non_string_annotations:
+        invalid_annotation_msg = f"{invalid_arg_msg} and the return annotation"
+    elif invalid_arg_msg:
+        invalid_annotation_msg = invalid_arg_msg
+    elif "return" in non_string_annotations:
+        invalid_annotation_msg = "the return annotation"
+
+    # Raise the error
+    # ----------------------------------------------------------------------------------
+    raise NonStringAnnotationError(
+        f"All function annotations must be strings. The annotations for the "
+        f"{invalid_annotation_msg} are not strings.\nA simple way for Python to treat "
+        "type annotations as strings is to add\n\n\tfrom __future__ import annotations"
+        "\n\nat the top of your file. Alternatively, you can do it manually by "
+        f"enclosing the annotations in quotes:\n\n\t{stringified_signature}."
+    )

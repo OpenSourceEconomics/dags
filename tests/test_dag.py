@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import inspect
 from functools import partial
-from typing import TypedDict, get_type_hints
+from typing import TYPE_CHECKING, TypedDict, get_type_hints
 
 import pytest
 
@@ -13,11 +13,13 @@ from dags.dag import (
     get_annotations,
 )
 from dags.exceptions import CyclicDependencyError
-from dags.typing import (
-    CombinedFunctionReturnType,
-    FunctionCollection,
-    GenericCallable,
-)
+
+if TYPE_CHECKING:
+    from dags.typing import (
+        CombinedFunctionReturnType,
+        FunctionCollection,
+        GenericCallable,
+    )
 
 
 def _utility(_consumption: float, _leisure: int, leisure_weight: float) -> float:
@@ -99,6 +101,23 @@ def test_concatenate_functions_no_target_signature(
     assert inspect.signature(concatenated_no_target) == inspect.signature(expected)
 
 
+@pytest.mark.parametrize("eval_str", [True, False])
+def test_concatenate_functions_no_target_annotations(
+    concatenated_no_target: GenericCallable,
+    eval_str: bool,
+) -> None:
+    def expected(  # type: ignore[empty-body]
+        working_hours: int,
+        wage: float,
+        leisure_weight: float,
+    ) -> tuple[float, int, float]:
+        pass
+
+    assert inspect.get_annotations(
+        concatenated_no_target, eval_str=eval_str
+    ) == inspect.get_annotations(expected, eval_str=eval_str)
+
+
 def test_concatenate_functions_single_target_results(
     concatenated_utility_target: GenericCallable,
 ) -> None:
@@ -120,7 +139,33 @@ def test_concatenate_functions_single_target_signature(
 
 
 @pytest.mark.parametrize("return_type", ["tuple", "list", "dict"])
-def test_concatenate_functions_multi_target(
+def test_concatenate_functions_multi_target_result(
+    return_type: CombinedFunctionReturnType,
+) -> None:
+    concatenated = concatenate_functions(
+        functions=[_utility, _unrelated, _leisure, _consumption],
+        targets=["_utility", "_consumption"],
+        return_type=return_type,
+        set_annotations=True,
+    )
+    calculated_result = concatenated(wage=5, working_hours=8, leisure_weight=2)
+    _expected_result = {
+        "_utility": _complete_utility(wage=5, working_hours=8, leisure_weight=2),
+        "_consumption": _consumption(wage=5, working_hours=8),
+    }
+    expected_result: tuple[float, ...] | list[float] | dict[str, float]
+    if return_type == "tuple":
+        expected_result = tuple(_expected_result.values())
+    elif return_type == "list":
+        expected_result = list(_expected_result.values())
+    elif return_type == "dict":
+        expected_result = dict(_expected_result)
+
+    assert calculated_result == expected_result
+
+
+@pytest.mark.parametrize("return_type", ["tuple", "list", "dict"])
+def test_concatenate_functions_multi_target_annotations(
     return_type: CombinedFunctionReturnType,
 ) -> None:
     concatenated = concatenate_functions(
@@ -130,21 +175,11 @@ def test_concatenate_functions_multi_target(
         set_annotations=True,
     )
 
-    calculated_result = concatenated(wage=5, working_hours=8, leisure_weight=2)
-
-    _expected_result = {
-        "_utility": _complete_utility(wage=5, working_hours=8, leisure_weight=2),
-        "_consumption": _consumption(wage=5, working_hours=8),
-    }
-
     return_annotation: type[object]
-    expected_result: tuple[float, ...] | list[float] | dict[str, float]
     if return_type == "tuple":
         return_annotation = tuple[float, float]
-        expected_result = tuple(_expected_result.values())
     elif return_type == "list":
         return_annotation = list[float]
-        expected_result = list(_expected_result.values())
     elif return_type == "dict":
 
         class ConcatenatedReturn(TypedDict):
@@ -152,14 +187,11 @@ def test_concatenate_functions_multi_target(
             _consumption: float
 
         return_annotation = ConcatenatedReturn
-        expected_result = dict(_expected_result)
 
     def expected(
         working_hours: int, wage: float, leisure_weight: float
     ) -> return_annotation:  # type: ignore[valid-type]
         pass
-
-    assert calculated_result == expected_result
 
     exp_signature = inspect.signature(expected)
     got_signature = inspect.signature(concatenated)
