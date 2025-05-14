@@ -180,4 +180,4 @@ def test_partialled_function_argument() -> None:
         inputs=input_structure,
         enforce_signature=True,
     )
-    assert concatenated_func({"a": 1}) == 2
+    assert concatenated_func({"a": 1}) == {"f": 2}
