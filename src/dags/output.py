@@ -173,5 +173,5 @@ def _create_dict_return_annotation(
 
 def _create_list_return_annotation(tuple_of_types: tuple[str | type, ...]) -> str:
     tuple_of_types_str = [get_str_repr(t) for t in tuple_of_types]
-    union_type = " | ".join(set(tuple_of_types_str))
+    union_type = " | ".join(sorted(set(tuple_of_types_str)))
     return f"list[{union_type}]"

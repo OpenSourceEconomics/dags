@@ -124,6 +124,13 @@ def concatenate_functions(
         function: A function that produces targets when called with suitable arguments.
 
     """
+    if set_annotations and not isinstance(targets, str) and aggregator is not None:
+        raise DagsError(
+            "Cannot set annotations when using an aggregator on multiple targets. "
+            "Please set set_annotations to False, or use a single target, or do not "
+            "use an aggregator."
+        )
+
     # Create the DAG.
     dag = create_dag(functions, targets)
 

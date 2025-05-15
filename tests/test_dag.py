@@ -13,7 +13,7 @@ from dags.dag import (
     get_ancestors,
     get_annotations,
 )
-from dags.exceptions import CyclicDependencyError
+from dags.exceptions import CyclicDependencyError, DagsError
 
 if TYPE_CHECKING:
     from dags.typing import (
@@ -345,3 +345,13 @@ def test_get_str_repr() -> None:
     assert get_str_repr("int") == "int"
     assert get_str_repr(int) == "int"
     assert get_str_repr(1) == "1"
+
+
+def test_concatenate_functions_with_aggregator_and_multiple_targets() -> None:
+    with pytest.raises(DagsError):
+        concatenate_functions(
+            functions={},
+            targets=["f1", "f2"],
+            aggregator=lambda a, b: a + b,
+            set_annotations=True,
+        )

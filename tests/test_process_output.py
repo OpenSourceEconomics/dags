@@ -124,4 +124,4 @@ def test_create_dict_return_annotation() -> None:
 
 def test_create_list_return_annotation() -> None:
     tuple_of_types = ("int", float)
-    assert _create_list_return_annotation(tuple_of_types) == "list[int | float]"
+    assert _create_list_return_annotation(tuple_of_types) == "list[float | int]"

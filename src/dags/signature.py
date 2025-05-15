@@ -223,7 +223,7 @@ def rename_arguments(  # noqa: C901
                 parameters.append(param)
 
         # annotations do not contain information on partialled arguments, and therefore
-        # must be updated separately.
+        # do not exactly align with the parameters.
         for name, annotation in old_annotations.items():
             if mapper is not None and name in mapper:
                 annotations[mapper[name]] = annotation
