@@ -22,16 +22,16 @@ def example_signature() -> inspect.Signature:
 def example_signature_annotated() -> inspect.Signature:
     parameters = [
         inspect.Parameter(
-            name="a", kind=inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=int
+            name="a", kind=inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation="int"
         ),
         inspect.Parameter(
-            name="b", kind=inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=float
+            name="b", kind=inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation="float"
         ),
         inspect.Parameter(
-            name="c", kind=inspect.Parameter.KEYWORD_ONLY, annotation=bool
+            name="c", kind=inspect.Parameter.KEYWORD_ONLY, annotation="bool"
         ),
     ]
-    return inspect.Signature(parameters=parameters, return_annotation=float)
+    return inspect.Signature(parameters=parameters, return_annotation="float")
 
 
 def test_create_signature(example_signature: inspect.Signature) -> None:
