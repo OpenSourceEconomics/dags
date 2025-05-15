@@ -43,7 +43,7 @@ if TYPE_CHECKING:
     )
 
 
-def create_input_types_tree(
+def create_tree_with_input_types(
     functions: NestedFunctionDict,
     targets: NestedTargetDict | None = None,
     top_level_inputs: set[str] | list[str] | tuple[str, ...] = (),

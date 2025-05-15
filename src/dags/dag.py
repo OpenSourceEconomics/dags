@@ -46,11 +46,15 @@ class FunctionExecutionInfo:
             coincides with the __annotations__ attribute of the function. For partialled
             functions, this is a dictionary with the names of the free arguments as keys
             and their expected types as values, as well as the return type of the
-            function stored under the key "return". We assume that the type annotations
-            are strings.
+            function stored under the key "return". Type annotations must be strings,
+            else a NonStringAnnotationError is raised.
         arguments: The names of the arguments of the function.
         argument_annotations: The argument annotations of the function.
         return_annotation: The return annotation of the function.
+
+    Raises
+    ------
+        NonStringAnnotationError: If the type annotations are not strings.
 
     """
 

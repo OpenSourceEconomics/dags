@@ -57,10 +57,6 @@ def get_annotations(
         A dictionary with the argument names as keys and the type annotations as values.
         The type annotations are strings if eval_str is False, otherwise they are types.
 
-    Raises
-    ------
-        NonStringAnnotationError: If the type annotations are not strings.
-
     """
     if default is None:
         default = inspect.Parameter.empty if eval_str else "unknown_type"
