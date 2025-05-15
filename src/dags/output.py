@@ -46,13 +46,13 @@ def single_output(
 
 @overload
 def dict_output(
-    func: Callable[P, tuple[T, ...]], *, keys: list[str], set_annotations: bool
+    func: Callable[P, tuple[T, ...]], *, keys: list[str], set_annotations: bool = False
 ) -> Callable[P, dict[str, T]]: ...
 
 
 @overload
 def dict_output(
-    *, keys: list[str], set_annotations: bool
+    *, keys: list[str], set_annotations: bool = False
 ) -> Callable[[Callable[P, tuple[T, ...]]], Callable[P, dict[str, T]]]: ...
 
 

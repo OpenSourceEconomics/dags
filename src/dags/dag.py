@@ -501,7 +501,7 @@ def _create_concatenated_function(
 
     """
     args: list[str] | dict[str, str]
-    return_annotation: str | tuple[str, ...]
+    return_annotation: type[inspect.Parameter.empty] | str
 
     if set_annotations:
         args, return_annotation = get_annotations_from_execution_info(
@@ -534,7 +534,7 @@ def get_annotations_from_execution_info(
     execution_info: dict[str, FunctionExecutionInfo],
     arglist: list[str],
     targets: list[str],
-) -> tuple[dict[str, str], tuple[str, ...]]:
+) -> tuple[dict[str, str], str]:
     """Get the (argument and return) annotations of the concatenated function.
 
     Args:
@@ -546,7 +546,7 @@ def get_annotations_from_execution_info(
     Returns
     -------
         - Dictionary with argnames as keys and their expected types as values
-        - The expected type of the return value(s) as a tuple.
+        - The expected type of the return value(s) as a string.
 
     Raises
     ------

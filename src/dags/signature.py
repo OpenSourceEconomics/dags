@@ -14,18 +14,19 @@ if TYPE_CHECKING:
 
 
 def _create_signature(
-    args: dict[str, str] | list[str] | None = None,
-    kwargs: dict[str, str] | list[str] | None = None,
-    return_annotation: str = inspect.Parameter.empty,
+    args_types: dict[str, str] | dict[str, type[inspect._empty]],
+    kwargs_types: dict[str, str] | dict[str, type[inspect._empty]],
+    return_annotation: type[inspect._empty] | str = inspect.Parameter.empty,
 ) -> inspect.Signature:
     """Create an inspect.Signature object based on args and kwargs.
 
     Args:
-        args: If a list, the names of positional or keyword arguments. If a dict,
-            the names of positional or keyword arguments and their types as string.
-        kwargs: If a list, the names of keyword only arguments. If a dict,
-            the names of keyword only arguments and their types as string.
-        return_annotation: The return annotation as string.
+        args_types: The positional arguments mapped to their types as strings, or if no
+            type is available, mapped to `inspect.Parameter.empty`.
+        kwargs_types: The keyword arguments mapped to their types as strings, or if no
+            type is available, mapped to `inspect.Parameter.empty`.
+        return_annotation: The return annotation as string, or if no type is available,
+            `inspect.Parameter.empty`.
 
     Returns
     -------
@@ -33,7 +34,7 @@ def _create_signature(
 
     """
     parameter_objects = []
-    for arg, arg_type in _map_names_to_types(args).items():
+    for arg, arg_type in args_types.items():
         param = inspect.Parameter(
             name=arg,
             kind=inspect.Parameter.POSITIONAL_OR_KEYWORD,
@@ -41,7 +42,7 @@ def _create_signature(
         )
         parameter_objects.append(param)
 
-    for kwarg, kwarg_type in _map_names_to_types(kwargs).items():
+    for kwarg, kwarg_type in kwargs_types.items():
         param = inspect.Parameter(
             name=kwarg,
             kind=inspect.Parameter.KEYWORD_ONLY,
@@ -55,11 +56,14 @@ def _create_signature(
 
 
 def _create_annotations(
-    args_types: dict[str, str],
-    kwargs_types: dict[str, str],
-    return_annotation: str,
-) -> dict[str, str]:
-    return args_types | kwargs_types | {"return": return_annotation}
+    args_types: dict[str, str] | dict[str, type[inspect._empty]],
+    kwargs_types: dict[str, str] | dict[str, type[inspect._empty]],
+    return_annotation: type[inspect._empty] | str,
+) -> dict[str, str] | dict[str, type[inspect._empty]]:
+    annotations = args_types | kwargs_types
+    if return_annotation is not inspect.Parameter.empty:
+        annotations["return"] = return_annotation  # type: ignore[assignment]
+    return annotations  # type: ignore[return-value]
 
 
 @overload
@@ -69,7 +73,7 @@ def with_signature(
     args: dict[str, str] | list[str] | None = None,
     kwargs: dict[str, str] | list[str] | None = None,
     enforce: bool = True,
-    return_annotation: str = inspect.Parameter.empty,
+    return_annotation: type[inspect._empty] | str = inspect.Parameter.empty,
 ) -> Callable[P, R]: ...
 
 
@@ -79,7 +83,7 @@ def with_signature(
     args: dict[str, str] | list[str] | None = None,
     kwargs: dict[str, str] | list[str] | None = None,
     enforce: bool = True,
-    return_annotation: str = inspect.Parameter.empty,
+    return_annotation: type[inspect._empty] | str = inspect.Parameter.empty,
 ) -> Callable[[Callable[P, R]], Callable[P, R]]: ...
 
 
@@ -89,7 +93,7 @@ def with_signature(
     args: dict[str, str] | list[str] | None = None,
     kwargs: dict[str, str] | list[str] | None = None,
     enforce: bool = True,
-    return_annotation: str = inspect.Parameter.empty,
+    return_annotation: type[inspect._empty] | str = inspect.Parameter.empty,
 ) -> Callable[P, R] | Callable[[Callable[P, R]], Callable[P, R]]:
     """Add a signature to a function of type `f(*args, **kwargs)` (decorator).
 
@@ -207,23 +211,24 @@ def rename_arguments(
     def decorator_rename_arguments(func: Callable[P, R]) -> Callable[P, R]:
         old_signature = inspect.signature(func)
         old_parameters: dict[str, inspect.Parameter] = dict(old_signature.parameters)
+        old_annotations = get_annotations(func)
+
         parameters: list[inspect.Parameter] = []
+        new_annotations: dict[str, str] = {}
         # mapper is assumed not to be None when renaming is desired.
         for name, param in old_parameters.items():
             if mapper is not None and name in mapper:
                 parameters.append(param.replace(name=mapper[name]))
+                new_annotations[mapper[name]] = old_annotations[name]
             else:
                 parameters.append(param)
+                new_annotations[name] = old_annotations[name]
 
         signature = inspect.Signature(
             parameters=parameters, return_annotation=old_signature.return_annotation
         )
 
-        old_annotations = get_annotations(func)
-        new_argument_annotations = {
-            new_name: old_annotations[old_name] for old_name, new_name in mapper.items()
-        }
-        annotations = {"return": old_annotations["return"]} | new_argument_annotations
+        annotations = {"return": old_annotations["return"]} | new_annotations
 
         reverse_mapper: dict[str, str] = (
             {v: k for k, v in mapper.items()} if mapper is not None else {}
@@ -260,7 +265,7 @@ def rename_arguments(
 
 def _map_names_to_types(
     arg: dict[str, str] | list[str] | None,
-) -> dict[str, str | inspect.Parameter.empty]:
+) -> dict[str, str] | dict[str, type[inspect._empty]]:
     if arg is None:
         return {}
     if isinstance(arg, list):
