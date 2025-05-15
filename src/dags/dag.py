@@ -501,7 +501,7 @@ def _create_concatenated_function(
 
     """
     args: list[str] | dict[str, str]
-    return_annotation: type[inspect.Parameter.empty] | str
+    return_annotation: type[inspect._empty] | str
 
     if set_annotations:
         args, return_annotation = get_annotations_from_execution_info(
@@ -516,7 +516,7 @@ def _create_concatenated_function(
     @with_signature(
         args=args,
         enforce=enforce_signature,
-        return_annotation=return_annotation,  # type: ignore[arg-type]
+        return_annotation=return_annotation,
     )
     def concatenated(*args: Any, **kwargs: Any) -> tuple[Any, ...]:  # noqa: ANN401
         results = {**dict(zip(arglist, args, strict=False)), **kwargs}
@@ -617,13 +617,13 @@ def _verify_annotations_are_strings(
     stringified_arg_annotations = []
     for k, v in arg_annotations.items():
         if k in non_string_annotations:
-            stringified_arg_annotations.append(f"{k}: '{v.__name__}'")
+            stringified_arg_annotations.append(f"{k}: '{_get_object_name(v)}'")
         else:
             annot = f"{k}: '{v}'"
             stringified_arg_annotations.append(annot)
 
     if "return" in non_string_annotations:
-        stringified_return_annotation = f"'{return_annotation.__name__}'"
+        stringified_return_annotation = f"'{_get_object_name(return_annotation)}'"
     else:
         stringified_return_annotation = f"'{return_annotation}'"
 
@@ -658,3 +658,7 @@ def _verify_annotations_are_strings(
         "\n\nat the top of your file. Alternatively, you can do it manually by "
         f"enclosing the annotations in quotes:\n\n\t{stringified_signature}."
     )
+
+
+def _get_object_name(obj: object) -> str:
+    return getattr(obj, "__name__", str(obj))

@@ -214,21 +214,25 @@ def rename_arguments(
         old_annotations = get_annotations(func)
 
         parameters: list[inspect.Parameter] = []
-        new_annotations: dict[str, str] = {}
+        annotations: dict[str, str] = {}
         # mapper is assumed not to be None when renaming is desired.
         for name, param in old_parameters.items():
             if mapper is not None and name in mapper:
                 parameters.append(param.replace(name=mapper[name]))
-                new_annotations[mapper[name]] = old_annotations[name]
             else:
                 parameters.append(param)
-                new_annotations[name] = old_annotations[name]
+
+        # annotations do not contain information on partialled arguments, and therefore
+        # must be updated separately.
+        for name, annotation in old_annotations.items():
+            if mapper is not None and name in mapper:
+                annotations[mapper[name]] = annotation
+            else:
+                annotations[name] = annotation
 
         signature = inspect.Signature(
             parameters=parameters, return_annotation=old_signature.return_annotation
         )
-
-        annotations = {"return": old_annotations["return"]} | new_annotations
 
         reverse_mapper: dict[str, str] = (
             {v: k for k, v in mapper.items()} if mapper is not None else {}

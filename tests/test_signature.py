@@ -35,7 +35,10 @@ def example_signature_annotated() -> inspect.Signature:
 
 
 def test_create_signature(example_signature: inspect.Signature) -> None:
-    created = _create_signature(args_types=["a", "b"], kwargs_types=["c"])
+    created = _create_signature(
+        args_types={"a": inspect.Parameter.empty, "b": inspect.Parameter.empty},
+        kwargs_types={"c": inspect.Parameter.empty},
+    )
     assert created == example_signature
 
 

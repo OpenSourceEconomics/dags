@@ -175,29 +175,40 @@ def test_concatenate_functions_multi_target_signature_and_annotations(
         set_annotations=True,
     )
 
+    expected_functions: dict[str, GenericCallable] = {}
+
     if return_type == "tuple":
 
-        def expected(
+        def expected_tuple(  # type: ignore[empty-body]
             working_hours: int, wage: float, leisure_weight: float
         ) -> tuple[float, float]:
             pass
+
+        expected_functions["tuple"] = expected_tuple
+
     elif return_type == "list":
 
-        def expected(
+        def expected_list(  # type: ignore[empty-body]
             working_hours: int, wage: float, leisure_weight: float
         ) -> list[float]:
             pass
+
+        expected_functions["list"] = expected_list
     elif return_type == "dict":
 
-        def expected(
+        def expected_dict(  # type: ignore[empty-body]
             working_hours: int, wage: float, leisure_weight: float
-        ) -> {"_utility": float, "_consumption": float}:  # type: ignore[valid-type]  # noqa: UP037
+        ) -> {"_utility": float, "_consumption": float}:  # noqa: UP037
             pass
 
-    assert inspect.signature(expected) == inspect.signature(concatenated)
-    assert inspect.get_annotations(expected, eval_str=True) == inspect.get_annotations(
-        concatenated, eval_str=True
+        expected_functions["dict"] = expected_dict
+
+    assert inspect.signature(expected_functions[return_type]) == inspect.signature(
+        concatenated
     )
+    assert inspect.get_annotations(
+        expected_functions[return_type], eval_str=True
+    ) == inspect.get_annotations(concatenated, eval_str=True)
 
 
 def test_get_ancestors_many_ancestors() -> None:
