@@ -644,11 +644,11 @@ def _verify_annotations_are_strings(
 
     invalid_annotations_msg = ""
     if invalid_arg_msg and "return" in non_string_annotations:
-        invalid_annotations_msg = f"{invalid_arg_msg} and the return annotation"
+        invalid_annotations_msg = f"{invalid_arg_msg} and the return value"
     elif invalid_arg_msg:
         invalid_annotations_msg = invalid_arg_msg
     elif "return" in non_string_annotations:
-        invalid_annotations_msg = "the return annotation"
+        invalid_annotations_msg = "return value"
 
     # Raise the error
     # ----------------------------------------------------------------------------------

@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from dags.dag import (
+    _get_object_name,
     concatenate_functions,
     create_dag,
     get_ancestors,
@@ -338,3 +339,9 @@ def test_get_annotations_partial_eval_str() -> None:
     got = get_annotations(partial_f, eval_str=True)
     exp = {"b": float, "return": float}
     assert got == exp
+
+
+def test_get_object_name() -> None:
+    assert _get_object_name("int") == "int"
+    assert _get_object_name(int) == "int"
+    assert _get_object_name(1) == "1"
