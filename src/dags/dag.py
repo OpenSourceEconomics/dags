@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any, cast
 
 import networkx as nx
 
-from dags.annotations import get_annotations, get_free_arguments
+from dags.annotations import get_annotations, get_free_arguments, get_str_repr
 from dags.exceptions import (
     AnnotationMismatchError,
     CyclicDependencyError,
@@ -618,13 +618,13 @@ def _verify_annotations_are_strings(
     stringified_arg_annotations = []
     for k, v in arg_annotations.items():
         if k in non_string_annotations:
-            stringified_arg_annotations.append(f"{k}: '{_get_object_name(v)}'")
+            stringified_arg_annotations.append(f"{k}: '{get_str_repr(v)}'")
         else:
             annot = f"{k}: '{v}'"
             stringified_arg_annotations.append(annot)
 
     if "return" in non_string_annotations:
-        stringified_return_annotation = f"'{_get_object_name(return_annotation)}'"
+        stringified_return_annotation = f"'{get_str_repr(return_annotation)}'"
     else:
         stringified_return_annotation = f"'{return_annotation}'"
 
@@ -659,7 +659,3 @@ def _verify_annotations_are_strings(
         "\n\nat the top of your file. Alternatively, you can do it manually by "
         f"enclosing the annotations in quotes:\n\n\t{stringified_signature}."
     )
-
-
-def _get_object_name(obj: object) -> str:
-    return getattr(obj, "__name__", str(obj))

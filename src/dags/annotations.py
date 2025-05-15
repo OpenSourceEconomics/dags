@@ -71,3 +71,7 @@ def get_annotations(
         annotations = inspect.get_annotations(func, eval_str=eval_str)
     free_arguments = get_free_arguments(func)
     return {arg: annotations.get(arg, default) for arg in ["return", *free_arguments]}
+
+
+def get_str_repr(obj: object) -> str:
+    return getattr(obj, "__name__", str(obj))

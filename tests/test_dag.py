@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from dags.annotations import get_str_repr
 from dags.dag import (
-    _get_object_name,
     concatenate_functions,
     create_dag,
     get_ancestors,
@@ -341,7 +341,7 @@ def test_get_annotations_partial_eval_str() -> None:
     assert got == exp
 
 
-def test_get_object_name() -> None:
-    assert _get_object_name("int") == "int"
-    assert _get_object_name(int) == "int"
-    assert _get_object_name(1) == "1"
+def test_get_str_repr() -> None:
+    assert get_str_repr("int") == "int"
+    assert get_str_repr(int) == "int"
+    assert get_str_repr(1) == "1"

@@ -3,6 +3,8 @@ from __future__ import annotations
 import inspect
 
 from dags.output import (
+    _create_dict_return_annotation,
+    _create_list_return_annotation,
     aggregated_output,
     dict_output,
     list_output,
@@ -110,3 +112,16 @@ def test_aggregated_output_direct_call() -> None:
 
     g = aggregated_output(f, aggregator=lambda x, y: x + y)
     assert g() == 3
+
+
+def test_create_dict_return_annotation() -> None:
+    keys = ["a", "b"]
+    tuple_of_types = ("int", float)
+    assert (
+        _create_dict_return_annotation(keys, tuple_of_types) == "{'a': int, 'b': float}"
+    )
+
+
+def test_create_list_return_annotation() -> None:
+    tuple_of_types = ("int", float)
+    assert _create_list_return_annotation(tuple_of_types) == "list[int | float]"

@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, get_args, overload
 
 from typing_extensions import Unpack
 
+from dags.annotations import get_str_repr
 from dags.exceptions import DagsError
 
 if TYPE_CHECKING:
@@ -30,13 +31,9 @@ def single_output(
         annotations = inspect.get_annotations(func, eval_str=True)
 
         if "return" in annotations:
-            return_annotation = get_args(annotations["return"])[0]
-            if isinstance(return_annotation, type):
-                return_annotation_str = return_annotation.__name__
-            else:
-                return_annotation_str = return_annotation
-            signature = signature.replace(return_annotation=return_annotation_str)
-            annotations["return"] = return_annotation_str
+            return_annotation = get_str_repr(get_args(annotations["return"])[0])
+            signature = signature.replace(return_annotation=return_annotation)
+            annotations["return"] = return_annotation
 
         wrapper_single_output.__signature__ = signature  # type: ignore[attr-defined]
         wrapper_single_output.__annotations__ = annotations
@@ -84,14 +81,8 @@ def dict_output(
             signature = inspect.signature(func)
             annotations = inspect.get_annotations(func, eval_str=True)
             if "return" in annotations:
-                tuple_types = get_args(annotations["return"])
-                tuple_types_str = [
-                    et.__name__ if isinstance(et, type) else et for et in tuple_types
-                ]
-                dict_entries = [
-                    f"'{k}': {v}" for k, v in zip(keys, tuple_types_str, strict=True)
-                ]
-                return_annotation = f"{{{', '.join(dict_entries)}}}"
+                tuple_of_types = get_args(annotations["return"])
+                return_annotation = _create_dict_return_annotation(keys, tuple_of_types)
                 signature = signature.replace(return_annotation=return_annotation)
                 annotations["return"] = return_annotation
             wrapper_dict_output.__signature__ = signature  # type: ignore[attr-defined]
@@ -118,12 +109,8 @@ def list_output(
         signature = inspect.signature(func)
         annotations = inspect.get_annotations(func, eval_str=True)
         if "return" in annotations:
-            tuple_types = get_args(annotations["return"])
-            tuple_types_str = [
-                et.__name__ if isinstance(et, type) else et for et in tuple_types
-            ]
-            union_type = " | ".join(set(tuple_types_str))
-            return_annotation = f"list[{union_type}]"
+            tuple_of_types = get_args(annotations["return"])
+            return_annotation = _create_list_return_annotation(tuple_of_types)
             signature = signature.replace(return_annotation=return_annotation)
             annotations["return"] = return_annotation
 
@@ -172,3 +159,19 @@ def aggregated_output(
     if callable(func):
         return decorator_aggregated_output(func)
     return decorator_aggregated_output
+
+
+def _create_dict_return_annotation(
+    keys: list[str], tuple_of_types: tuple[str | type, ...]
+) -> str:
+    tuple_of_types_str = [get_str_repr(t) for t in tuple_of_types]
+    dict_entries = [
+        f"'{k}': {v}" for k, v in zip(keys, tuple_of_types_str, strict=True)
+    ]
+    return f"{{{', '.join(dict_entries)}}}"
+
+
+def _create_list_return_annotation(tuple_of_types: tuple[str | type, ...]) -> str:
+    tuple_of_types_str = [get_str_repr(t) for t in tuple_of_types]
+    union_type = " | ".join(set(tuple_of_types_str))
+    return f"list[{union_type}]"
