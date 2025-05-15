@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from dags.tree import RepeatedTopLevelElementError, create_input_structure_tree
+from dags.tree import RepeatedTopLevelElementError, create_input_types_tree
 
 if TYPE_CHECKING:
     from dags.tree.typing import (
@@ -122,10 +122,10 @@ def test_create_input_structure_tree_simple(
 ) -> None:
     if "raises_error" in expected:
         with pytest.raises(RepeatedTopLevelElementError):
-            create_input_structure_tree(functions_simple, targets, top_level_inputs)
+            create_input_types_tree(functions_simple, targets, top_level_inputs)
     else:
         assert (
-            create_input_structure_tree(functions_simple, targets, top_level_inputs)
+            create_input_types_tree(functions_simple, targets, top_level_inputs)
             == expected
         )
 
@@ -174,12 +174,12 @@ def test_create_input_structure_tree_nested_and_duplicate_g(
 ) -> None:
     if "raises_error" in expected:
         with pytest.raises(RepeatedTopLevelElementError):
-            create_input_structure_tree(
+            create_input_types_tree(
                 functions_nested_and_duplicate_g, targets, top_level_inputs
             )
     else:
         assert (
-            create_input_structure_tree(
+            create_input_types_tree(
                 functions_nested_and_duplicate_g, targets, top_level_inputs
             )
             == expected
@@ -187,7 +187,7 @@ def test_create_input_structure_tree_nested_and_duplicate_g(
 
 
 def test_create_input_structure_tree_duplicates_lower_in_hierarchy() -> None:
-    assert create_input_structure_tree(
+    assert create_input_types_tree(
         functions={
             "n1": {"a": {"f": f}},
         },

@@ -5,7 +5,7 @@ from __future__ import annotations
 from dags.tree.dag_tree import (
     concatenate_functions_tree,
     create_dag_tree,
-    create_input_structure_tree,
+    create_input_types_tree,
     functions_without_tree_logic,
     one_function_without_tree_logic,
 )
@@ -33,7 +33,7 @@ from dags.tree.validation import (
 
 __all__ = [
     # Primary functions
-    "create_input_structure_tree",
+    "create_input_types_tree",
     "create_dag_tree",
     "concatenate_functions_tree",
     "functions_without_tree_logic",
