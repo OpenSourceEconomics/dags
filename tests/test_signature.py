@@ -46,9 +46,9 @@ def test_create_signature_annotated(
     example_signature_annotated: inspect.Signature,
 ) -> None:
     created = _create_signature(
-        args_types={"a": int, "b": float},
-        kwargs_types={"c": bool},
-        return_annotation=float,
+        args_types={"a": "int", "b": "float"},
+        kwargs_types={"c": "bool"},
+        return_annotation="float",
     )
     assert created == example_signature_annotated
 
@@ -67,7 +67,7 @@ def test_with_signature_decorator_valid_annotated(
     example_signature_annotated: inspect.Signature,
 ) -> None:
     @with_signature(
-        args={"a": int, "b": float}, kwargs={"c": bool}, return_annotation=float
+        args={"a": "int", "b": "float"}, kwargs={"c": "bool"}, return_annotation="float"
     )
     def f(*args, **kwargs):
         return sum(args) + sum(kwargs.values())
@@ -93,7 +93,10 @@ def test_with_signature_direct_call_valid_annotated(
         return sum(args) + sum(kwargs.values())
 
     g = with_signature(
-        f, args={"a": int, "b": float}, kwargs={"c": bool}, return_annotation=float
+        f,
+        args={"a": "int", "b": "float"},
+        kwargs={"c": "bool"},
+        return_annotation="float",
     )
 
     assert inspect.signature(g) == example_signature_annotated

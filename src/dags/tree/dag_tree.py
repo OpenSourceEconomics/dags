@@ -129,7 +129,7 @@ def concatenate_functions_tree(
     inputs: NestedInputDict,
     targets: NestedTargetDict | None,
     enforce_signature: bool = True,
-) -> tuple[Callable[[NestedInputDict], NestedOutputDict], NestedInputStructureDict]:
+) -> Callable[[NestedInputDict], NestedOutputDict]:
     """Combine a nested dictionary of functions into a single callable.
 
     Args:

@@ -198,7 +198,7 @@ def test_concatenate_functions_multi_target_signature_and_annotations(
 
         def expected_dict(  # type: ignore[empty-body]
             working_hours: int, wage: float, leisure_weight: float
-        ) -> {"_utility": float, "_consumption": float}:  # noqa: UP037
+        ) -> {"_utility": float, "_consumption": float}:  # type: ignore[misc]  # noqa: UP037
             pass
 
         expected_functions["dict"] = expected_dict
