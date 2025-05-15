@@ -545,8 +545,9 @@ def get_annotations_from_execution_info(
 
     Returns
     -------
-        - Dictionary with argnames as keys and their expected types as values
-        - The expected type of the return value(s) as a string.
+        - Dictionary with argnames as keys and their expected types in string format as
+          values.
+        - The expected type of the return value as a string.
 
     Raises
     ------

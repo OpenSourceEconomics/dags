@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import functools
+
 import pytest
 
+from dags.annotations import get_annotations
 from dags.dag import concatenate_functions
 from dags.exceptions import AnnotationMismatchError
 
@@ -42,3 +45,33 @@ def test_argument_annoations_mismatch_with_return_annotation() -> None:
         ),
     ):
         concatenate_functions([f, g], set_annotations=True)
+
+
+def test_get_annotations() -> None:
+    def f(a: int) -> float:
+        return float(a)
+
+    assert get_annotations(f) == {"a": "int", "return": "float"}
+    assert get_annotations(f, eval_str=True) == {"a": int, "return": float}
+
+
+def test_get_annotations_with_partial() -> None:
+    def f(a: int, b: bool) -> float:
+        return float(a) + int(b)
+
+    g = functools.partial(f, b=True)
+
+    assert get_annotations(f) == {"a": "int", "b": "bool", "return": "float"}
+    assert get_annotations(g) == {"a": "int", "return": "float"}
+    assert get_annotations(g, eval_str=True) == {"a": int, "return": float}
+
+
+def test_get_annotations_with_default() -> None:
+    def f(a) -> float:  # type: ignore[no-untyped-def]
+        return float(a)
+
+    assert get_annotations(f, default="default") == {"a": "default", "return": "float"}
+    assert get_annotations(f, default=bool, eval_str=True) == {
+        "a": bool,
+        "return": float,
+    }
