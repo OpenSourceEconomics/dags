@@ -16,15 +16,16 @@ if TYPE_CHECKING:
     )
 
 
-def f(g, a, b):
-    return g + a + b
+def f(g: int, a: int, b: float, c) -> float:
+    # We expect to see "unknown_type" for c
+    return g + a + b + c
 
 
-def g(a):
+def g(a: int) -> int:
     return a**2
 
 
-def h(a, b__g):
+def h(a: int, b__g: int) -> int:
     return a + b__g
 
 
@@ -60,12 +61,13 @@ def functions_nested_and_duplicate_g() -> NestedFunctionDict:
             set(),
             {
                 "n1": {
-                    "a": None,
-                    "b": None,
+                    "a": "int",
+                    "b": "float",
+                    "c": "unknown_type",
                 },
                 "n2": {
-                    "a": None,
-                    "b": {"g": None},
+                    "a": "int",
+                    "b": {"g": "int"},
                 },
             },
         ),
@@ -73,32 +75,35 @@ def functions_nested_and_duplicate_g() -> NestedFunctionDict:
             None,
             {"a"},
             {
-                "a": None,
+                "a": "int",
                 "n1": {
-                    "b": None,
+                    "b": "float",
+                    "c": "unknown_type",
                 },
                 "n2": {
-                    "b": {"g": None},
+                    "b": {"g": "int"},
                 },
             },
         ),
         (
-            {"n1": {"f": None}},
+            {"n1": {"f": "float"}},
             set(),
             {
                 "n1": {
-                    "a": None,
-                    "b": None,
+                    "a": "int",
+                    "b": "float",
+                    "c": "unknown_type",
                 },
             },
         ),
         (
-            {"n1": {"f": None}},
+            {"n1": {"f": "float"}},
             {"a"},
             {
-                "a": None,
+                "a": "int",
                 "n1": {
-                    "b": None,
+                    "b": "float",
+                    "c": "unknown_type",
                 },
             },
         ),
@@ -133,12 +138,13 @@ def test_create_input_structure_tree_simple(
             set(),
             {
                 "n1": {
-                    "a": None,
-                    "b": None,
+                    "a": "int",
+                    "b": "float",
+                    "c": "unknown_type",
                 },
                 "n2": {
-                    "a": None,
-                    "b": {"a": None},
+                    "a": "int",
+                    "b": {"a": "int"},
                 },
             },
         ),
@@ -146,9 +152,10 @@ def test_create_input_structure_tree_simple(
             None,
             {"a"},
             {
-                "a": None,
+                "a": "int",
                 "n1": {
-                    "b": None,
+                    "b": "float",
+                    "c": "unknown_type",
                 },
             },
         ),
@@ -186,4 +193,4 @@ def test_create_input_structure_tree_duplicates_lower_in_hierarchy() -> None:
         },
         targets=None,
         top_level_inputs=set(),
-    ) == {"n1": {"a": {"a": None, "b": None, "g": None}}}
+    ) == {"n1": {"a": {"a": "int", "b": "float", "g": "int", "c": "unknown_type"}}}

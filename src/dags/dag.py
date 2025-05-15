@@ -164,7 +164,7 @@ def create_dag(
 
     """
     # Harmonize and check arguments.
-    _functions, _targets = _harmonize_and_check_functions_and_targets(
+    _functions, _targets = harmonize_and_check_functions_and_targets(
         functions,
         targets,
     )
@@ -218,13 +218,13 @@ def _create_combined_function_from_dag(
 
     """
     # Harmonize and check arguments.
-    _functions, _targets = _harmonize_and_check_functions_and_targets(
+    _functions, _targets = harmonize_and_check_functions_and_targets(
         functions,
         targets,
     )
 
     _arglist = create_arguments_of_concatenated_function(_functions, dag)
-    _exec_info = _create_execution_info(_functions, dag)
+    _exec_info = create_execution_info(_functions, dag)
     _concatenated = _create_concatenated_function(
         _exec_info,
         _arglist,
@@ -285,7 +285,7 @@ def get_ancestors(
 
     """
     # Harmonize and check arguments.
-    _functions, _targets = _harmonize_and_check_functions_and_targets(
+    _functions, _targets = harmonize_and_check_functions_and_targets(
         functions,
         targets,
     )
@@ -301,7 +301,7 @@ def get_ancestors(
     return ancestors
 
 
-def _harmonize_and_check_functions_and_targets(
+def harmonize_and_check_functions_and_targets(
     functions: FunctionCollection,
     targets: TargetType,
 ) -> tuple[dict[str, GenericCallable], list[str]]:
@@ -450,7 +450,7 @@ def create_arguments_of_concatenated_function(
     return sorted(all_nodes - function_names)
 
 
-def _create_execution_info(
+def create_execution_info(
     functions: dict[str, GenericCallable],
     dag: nx.DiGraph[str],
 ) -> dict[str, FunctionExecutionInfo]:
@@ -504,7 +504,7 @@ def _create_concatenated_function(
     return_annotation: str | tuple[str, ...]
 
     if set_annotations:
-        args, return_annotation = _get_annotations_from_execution_info(
+        args, return_annotation = get_annotations_from_execution_info(
             execution_info,
             arglist=arglist,
             targets=targets,
@@ -530,7 +530,7 @@ def _create_concatenated_function(
     return concatenated
 
 
-def _get_annotations_from_execution_info(
+def get_annotations_from_execution_info(
     execution_info: dict[str, FunctionExecutionInfo],
     arglist: list[str],
     targets: list[str],
