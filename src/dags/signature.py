@@ -193,7 +193,7 @@ def rename_arguments(
 ) -> Callable[[Callable[P, R]], Callable[P, R]]: ...
 
 
-def rename_arguments(
+def rename_arguments(  # noqa: C901
     func: Callable[P, R] | None = None, *, mapper: dict[str, str] | None = None
 ) -> Callable[P, R] | Callable[[Callable[P, R]], Callable[P, R]]:
     """Rename positional and keyword arguments of func.
