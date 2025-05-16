@@ -7,9 +7,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from dags.tree import (
-    concatenate_functions_tree,
-)
+from dags.tree import concatenate_functions_tree
 
 if TYPE_CHECKING:
     from dags.tree.typing import (
@@ -20,15 +18,15 @@ if TYPE_CHECKING:
     )
 
 
-def f(g, a, b):
+def f(g: int, a: int, b: float) -> float:
     return g + a + b
 
 
-def g(a):
+def g(a: int) -> int:
     return a**2
 
 
-def h(a, b__g):
+def h(a: int, b__g: int) -> int:
     return a + b__g
 
 
@@ -182,4 +180,4 @@ def test_partialled_function_argument() -> None:
         inputs=input_structure,
         enforce_signature=True,
     )
-    concatenated_func({"a": 1})
+    assert concatenated_func({"a": 1}) == {"f": 2}

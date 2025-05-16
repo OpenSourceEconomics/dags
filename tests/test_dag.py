@@ -1,22 +1,27 @@
+from __future__ import annotations
+
 import inspect
 from functools import partial
-from typing import TypedDict, get_type_hints
+from typing import TYPE_CHECKING
 
 import pytest
 
+from dags.annotations import get_str_repr
 from dags.dag import (
-    _get_annotations_from_func,
+    FunctionExecutionInfo,
     concatenate_functions,
     create_dag,
     get_ancestors,
-    get_input_types,
+    get_annotations,
 )
-from dags.exceptions import CyclicDependencyError
-from dags.typing import (
-    CombinedFunctionReturnType,
-    FunctionCollection,
-    GenericCallable,
-)
+from dags.exceptions import CyclicDependencyError, DagsError
+
+if TYPE_CHECKING:
+    from dags.typing import (
+        CombinedFunctionReturnType,
+        FunctionCollection,
+        GenericCallable,
+    )
 
 
 def _utility(_consumption: float, _leisure: int, leisure_weight: float) -> float:
@@ -98,6 +103,23 @@ def test_concatenate_functions_no_target_signature(
     assert inspect.signature(concatenated_no_target) == inspect.signature(expected)
 
 
+@pytest.mark.parametrize("eval_str", [True, False])
+def test_concatenate_functions_no_target_annotations(
+    concatenated_no_target: GenericCallable,
+    eval_str: bool,
+) -> None:
+    def expected(  # type: ignore[empty-body]
+        working_hours: int,
+        wage: float,
+        leisure_weight: float,
+    ) -> tuple[float, int, float]:
+        pass
+
+    assert inspect.get_annotations(
+        concatenated_no_target, eval_str=eval_str
+    ) == inspect.get_annotations(expected, eval_str=eval_str)
+
+
 def test_concatenate_functions_single_target_results(
     concatenated_utility_target: GenericCallable,
 ) -> None:
@@ -119,7 +141,33 @@ def test_concatenate_functions_single_target_signature(
 
 
 @pytest.mark.parametrize("return_type", ["tuple", "list", "dict"])
-def test_concatenate_functions_multi_target(
+def test_concatenate_functions_multi_target_result(
+    return_type: CombinedFunctionReturnType,
+) -> None:
+    concatenated = concatenate_functions(
+        functions=[_utility, _unrelated, _leisure, _consumption],
+        targets=["_utility", "_consumption"],
+        return_type=return_type,
+        set_annotations=True,
+    )
+    calculated_result = concatenated(wage=5, working_hours=8, leisure_weight=2)
+    _expected_result = {
+        "_utility": _complete_utility(wage=5, working_hours=8, leisure_weight=2),
+        "_consumption": _consumption(wage=5, working_hours=8),
+    }
+    expected_result: tuple[float, ...] | list[float] | dict[str, float]
+    if return_type == "tuple":
+        expected_result = tuple(_expected_result.values())
+    elif return_type == "list":
+        expected_result = list(_expected_result.values())
+    elif return_type == "dict":
+        expected_result = dict(_expected_result)
+
+    assert calculated_result == expected_result
+
+
+@pytest.mark.parametrize("return_type", ["tuple", "list", "dict"])
+def test_concatenate_functions_multi_target_signature_and_annotations(
     return_type: CombinedFunctionReturnType,
 ) -> None:
     concatenated = concatenate_functions(
@@ -129,53 +177,40 @@ def test_concatenate_functions_multi_target(
         set_annotations=True,
     )
 
-    calculated_result = concatenated(wage=5, working_hours=8, leisure_weight=2)
+    expected_functions: dict[str, GenericCallable] = {}
 
-    _expected_result = {
-        "_utility": _complete_utility(wage=5, working_hours=8, leisure_weight=2),
-        "_consumption": _consumption(wage=5, working_hours=8),
-    }
-
-    return_annotation: type[object]
-    expected_result: tuple[float, ...] | list[float] | dict[str, float]
     if return_type == "tuple":
-        return_annotation = tuple[float, float]
-        expected_result = tuple(_expected_result.values())
+
+        def expected_tuple(  # type: ignore[empty-body]
+            working_hours: int, wage: float, leisure_weight: float
+        ) -> tuple[float, float]:
+            pass
+
+        expected_functions["tuple"] = expected_tuple
+
     elif return_type == "list":
-        return_annotation = list[float]
-        expected_result = list(_expected_result.values())
+
+        def expected_list(
+            working_hours: int, wage: float, leisure_weight: float
+        ) -> [float, float]:  # type: ignore[valid-type]
+            pass
+
+        expected_functions["list"] = expected_list
     elif return_type == "dict":
 
-        class ConcatenatedReturn(TypedDict):
-            _utility: float
-            _consumption: float
+        def expected_dict(  # type: ignore[empty-body]
+            working_hours: int, wage: float, leisure_weight: float
+        ) -> {"_utility": float, "_consumption": float}:  # type: ignore[misc]  # noqa: UP037
+            pass
 
-        return_annotation = ConcatenatedReturn
-        expected_result = dict(_expected_result)
+        expected_functions["dict"] = expected_dict
 
-    def expected(
-        working_hours: int, wage: float, leisure_weight: float
-    ) -> return_annotation:  # type: ignore[valid-type]
-        pass
-
-    assert calculated_result == expected_result
-
-    exp_signature = inspect.signature(expected)
-    got_signature = inspect.signature(concatenated)
-    assert exp_signature.parameters == got_signature.parameters
-    if return_type == "dict":
-        # In the "dict" case, the return annotation is a TypedDict. This cannot be
-        # compared using ==, so we compare the name and implied dictionary of type
-        # hints.
-        assert (
-            got_signature.return_annotation.__name__
-            == exp_signature.return_annotation.__name__
-        )
-        assert get_type_hints(exp_signature.return_annotation) == get_type_hints(
-            got_signature.return_annotation
-        )
-    else:
-        assert exp_signature.return_annotation == got_signature.return_annotation
+    assert inspect.signature(expected_functions[return_type]) == inspect.signature(
+        concatenated
+    )
+    assert inspect.get_annotations(
+        expected_functions[return_type], eval_str=True
+    ) == inspect.get_annotations(concatenated, eval_str=True)
 
 
 def test_get_ancestors_many_ancestors() -> None:
@@ -269,29 +304,93 @@ def test_fail_if_cycle_in_dag(funcs: FunctionCollection) -> None:
         create_dag(functions=funcs, targets=["_utility"])
 
 
-def test_get_annotations_from_func() -> None:
-    def f(a: int, b: float, c: bool) -> float:
-        return 1.0
-
-    got = _get_annotations_from_func(f, free_arguments=["a", "b"])
-    exp = {"a": int, "b": float}, float
-    assert got == exp
-
-
-def test_get_input_types() -> None:
+def test_get_annotations() -> None:
     def f(a: int, b: float) -> float:
         return 1.0
 
-    got = get_input_types(f)
-    exp = {"a": int, "b": float}
+    got = get_annotations(f, eval_str=False)
+    exp = {"a": "int", "b": "float", "return": "float"}
     assert got == exp
 
 
-def test_get_input_types_partial() -> None:
+def test_get_annotations_eval_str() -> None:
+    def f(a: int, b: float) -> float:
+        return 1.0
+
+    got = get_annotations(f, eval_str=True)
+    exp = {"a": int, "b": float, "return": float}
+    assert got == exp
+
+
+def test_get_annotations_partial() -> None:
     def f(a: int, b: float) -> float:
         return 1.0
 
     partial_f = partial(f, a=1)
-    got = get_input_types(partial_f)
-    exp = {"b": float}
+    got = get_annotations(partial_f, eval_str=False)
+    exp = {"b": "float", "return": "float"}
     assert got == exp
+
+
+def test_get_annotations_partial_eval_str() -> None:
+    def f(a: int, b: float) -> float:
+        return 1.0
+
+    partial_f = partial(f, a=1)
+    got = get_annotations(partial_f, eval_str=True)
+    exp = {"b": float, "return": float}
+    assert got == exp
+
+
+def test_get_str_repr() -> None:
+    assert get_str_repr("int") == "int"
+    assert get_str_repr(int) == "int"
+    assert get_str_repr(1) == "1"
+
+
+def test_concatenate_functions_with_aggregator_and_multiple_targets() -> None:
+    with pytest.raises(DagsError):
+        concatenate_functions(
+            functions={},
+            targets=["f1", "f2"],
+            aggregator=lambda a, b: a + b,
+            set_annotations=True,
+        )
+
+
+def test_function_execution_info() -> None:
+    def f(a: int, b: float) -> float:
+        return a + b
+
+    info = FunctionExecutionInfo(
+        name="f",
+        func=f,
+        verify_annotations=True,
+    )
+
+    assert info.name == "f"
+    assert info.func == f
+    assert info.verify_annotations is True
+    assert info.annotations == {"a": "int", "b": "float", "return": "float"}
+    assert info.argument_annotations == {"a": "int", "b": "float"}
+    assert info.return_annotation == "float"
+
+
+def test_concatenate_functions_no_annotations_set_annotations() -> None:
+    def f(a):
+        return a
+
+    concatenated = concatenate_functions(
+        functions=[f],
+        targets=None,
+        set_annotations=True,
+    )
+
+    assert inspect.get_annotations(concatenated) == {
+        "a": "None",
+        "return": "tuple['None']",
+    }
+    assert inspect.get_annotations(concatenated, eval_str=True) == {
+        "a": None,
+        "return": tuple["None"],
+    }

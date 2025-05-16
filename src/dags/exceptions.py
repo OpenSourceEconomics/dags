@@ -1,5 +1,7 @@
 """Custom exceptions for the dags library."""
 
+from __future__ import annotations
+
 
 class DagsError(Exception):
     """Base exception for all dags-specific errors."""
@@ -7,6 +9,10 @@ class DagsError(Exception):
 
 class AnnotationMismatchError(DagsError):
     """Raised when there is a mismatch between annotations."""
+
+
+class NonStringAnnotationError(DagsError):
+    """Raised when a non-string annotation is encountered."""
 
 
 class MissingFunctionsError(DagsError):
