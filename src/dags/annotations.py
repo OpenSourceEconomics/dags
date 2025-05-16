@@ -45,7 +45,10 @@ def get_annotations(
     eval_str: bool = False,
     default: str | type | None = None,
 ) -> dict[str, str] | dict[str, type]:
-    """Thin wrapper around inspect.get_annotations to also handle partialled funcs.
+    """Thin wrapper around inspect.get_annotations.
+
+    Compared to inspect.get_annotations, this function also handles partialled funcs,
+    and it returns annotations for all arguments, not just the ones with annotations.
 
     Args:
         func: The function to get annotations from.

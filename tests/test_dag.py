@@ -8,6 +8,7 @@ import pytest
 
 from dags.annotations import get_str_repr
 from dags.dag import (
+    FunctionExecutionInfo,
     concatenate_functions,
     create_dag,
     get_ancestors,
@@ -355,3 +356,21 @@ def test_concatenate_functions_with_aggregator_and_multiple_targets() -> None:
             aggregator=lambda a, b: a + b,
             set_annotations=True,
         )
+
+
+def test_function_execution_info() -> None:
+    def f(a: int, b: float) -> float:
+        return a + b
+
+    info = FunctionExecutionInfo(
+        name="f",
+        func=f,
+        verify_annotations=True,
+    )
+
+    assert info.name == "f"
+    assert info.func == f
+    assert info.verify_annotations is True
+    assert info.annotations == {"a": "int", "b": "float", "return": "float"}
+    assert info.argument_annotations == {"a": "int", "b": "float"}
+    assert info.return_annotation == "float"

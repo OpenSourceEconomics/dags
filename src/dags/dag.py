@@ -42,6 +42,7 @@ class FunctionExecutionInfo:
     ----------
         name: The name of the function.
         func: The function to execute.
+        verify_annotations: If True, we verify that the annotations are strings.
 
     Properties
     ----------
@@ -63,10 +64,12 @@ class FunctionExecutionInfo:
 
     name: str
     func: GenericCallable
+    verify_annotations: bool = False
 
     def __post_init__(self) -> None:
         """Verify that the annotations are strings."""
-        verify_annotations_are_strings(self.annotations, self.name)
+        if self.verify_annotations:
+            verify_annotations_are_strings(self.annotations, self.name)
 
     @functools.cached_property
     def annotations(self) -> dict[str, str]:
@@ -246,7 +249,9 @@ def _create_combined_function_from_dag(
     )
 
     _arglist = create_arguments_of_concatenated_function(_functions, dag)
-    _exec_info = create_execution_info(_functions, dag)
+    _exec_info = create_execution_info(
+        _functions, dag, verify_annotations=set_annotations
+    )
     _concatenated = _create_concatenated_function(
         _exec_info,
         _arglist,
@@ -475,12 +480,14 @@ def create_arguments_of_concatenated_function(
 def create_execution_info(
     functions: dict[str, GenericCallable],
     dag: nx.DiGraph[str],
+    verify_annotations: bool = False,
 ) -> dict[str, FunctionExecutionInfo]:
     """Create a dictionary with all information needed to execute relevant functions.
 
     Args:
         functions (dict): Dictionary containing functions to build the DAG.
         dag (networkx.DiGraph): The complete DAG.
+        verify_annotations (bool): If True, we verify that the annotations are strings.
 
     Returns
     -------
@@ -491,7 +498,11 @@ def create_execution_info(
     out = {}
     for node in nx.topological_sort(dag):
         if node in functions:
-            out[node] = FunctionExecutionInfo(name=node, func=functions[node])
+            out[node] = FunctionExecutionInfo(
+                name=node,
+                func=functions[node],
+                verify_annotations=verify_annotations,
+            )
     return out
 
 
