@@ -1,3 +1,10 @@
+"""Check behavior of annotations functions when annotations are not strings.
+
+Do not add "from __future__ import annotations" to this file, otherwise we cannot
+check what happens when annotations are not strings.
+
+"""
+
 import pytest
 
 from dags.dag import FunctionExecutionInfo
