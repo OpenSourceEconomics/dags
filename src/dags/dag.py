@@ -8,13 +8,16 @@ from typing import TYPE_CHECKING, Any, cast
 
 import networkx as nx
 
-from dags.annotations import get_annotations, get_free_arguments, get_str_repr
+from dags.annotations import (
+    get_annotations,
+    get_free_arguments,
+    verify_annotations_are_strings,
+)
 from dags.exceptions import (
     AnnotationMismatchError,
     CyclicDependencyError,
     DagsError,
     MissingFunctionsError,
-    NonStringAnnotationError,
 )
 from dags.output import aggregated_output, dict_output, list_output, single_output
 from dags.signature import with_signature
@@ -63,7 +66,7 @@ class FunctionExecutionInfo:
 
     def __post_init__(self) -> None:
         """Verify that the annotations are strings."""
-        _verify_annotations_are_strings(self.annotations, self.name)
+        verify_annotations_are_strings(self.annotations, self.name)
 
     @functools.cached_property
     def annotations(self) -> dict[str, str]:
@@ -227,7 +230,9 @@ def _create_combined_function_from_dag(
             the targets. In case of a type mismatch, an error is raised. Type
             annotations must be strings, else a NonStringAnnotationError is raised.
             Either enclose the annotations in quotes or add
-            "from __future__ import annotations" at the top of your file.
+            "from __future__ import annotations" at the top of your file. If you do not
+            have direct control over some function, you can wrap it in an annotated
+            version.
 
     Returns
     -------
@@ -617,62 +622,3 @@ def format_list_linewise(seq: Sequence[object]) -> str:
         ]
         """,
     ).format(formatted_list=formatted_list)
-
-
-def _verify_annotations_are_strings(
-    annotations: dict[str, str], function_name: str
-) -> None:
-    # If all annotations are strings, we are done.
-    if all(isinstance(v, str) for v in annotations.values()):
-        return
-
-    non_string_annotations = [k for k, v in annotations.items() if isinstance(v, type)]
-    arg_annotations = {k: v for k, v in annotations.items() if k != "return"}
-    return_annotation = annotations["return"]
-
-    # Create a representation of the signature with string annotations
-    # ----------------------------------------------------------------------------------
-    stringified_arg_annotations = []
-    for k, v in arg_annotations.items():
-        if k in non_string_annotations:
-            stringified_arg_annotations.append(f"{k}: '{get_str_repr(v)}'")
-        else:
-            annot = f"{k}: '{v}'"
-            stringified_arg_annotations.append(annot)
-
-    if "return" in non_string_annotations:
-        stringified_return_annotation = f"'{get_str_repr(return_annotation)}'"
-    else:
-        stringified_return_annotation = f"'{return_annotation}'"
-
-    stringified_signature = (
-        f"{function_name}({', '.join(stringified_arg_annotations)}) -> "
-        f"{stringified_return_annotation}"
-    )
-
-    # Create message on which argument and/or return annotation is invalid
-    # ----------------------------------------------------------------------------------
-    invalid_arg_annotations = [k for k in non_string_annotations if k != "return"]
-    if invalid_arg_annotations:
-        s = "s" if len(invalid_arg_annotations) > 1 else ""
-        invalid_arg_msg = f"argument{s} ({', '.join(invalid_arg_annotations)})"
-    else:
-        invalid_arg_msg = ""
-
-    invalid_annotations_msg = ""
-    if invalid_arg_msg and "return" in non_string_annotations:
-        invalid_annotations_msg = f"{invalid_arg_msg} and the return value"
-    elif invalid_arg_msg:
-        invalid_annotations_msg = invalid_arg_msg
-    elif "return" in non_string_annotations:
-        invalid_annotations_msg = "return value"
-
-    # Raise the error
-    # ----------------------------------------------------------------------------------
-    raise NonStringAnnotationError(
-        f"All function annotations must be strings. The annotations for the "
-        f"{invalid_annotations_msg} are not strings.\nA simple way for Python to treat "
-        "type annotations as strings is to add\n\n\tfrom __future__ import annotations"
-        "\n\nat the top of your file. Alternatively, you can do it manually by "
-        f"enclosing the annotations in quotes:\n\n\t{stringified_signature}."
-    )

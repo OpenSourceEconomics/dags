@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 
 def f(g: int, a: int, b: float, c) -> float:  # type: ignore[no-untyped-def]
-    # We expect to see "unknown_type" for c, because it is not annotated.
+    # We expect to see "no_annotation_found" for c, because it is not annotated.
     return g + a + b + c
 
 
@@ -63,7 +63,7 @@ def functions_nested_and_duplicate_g() -> NestedFunctionDict:
                 "n1": {
                     "a": "int",
                     "b": "float",
-                    "c": "unknown_type",
+                    "c": "no_annotation_found",
                 },
                 "n2": {
                     "a": "int",
@@ -78,7 +78,7 @@ def functions_nested_and_duplicate_g() -> NestedFunctionDict:
                 "a": "int",
                 "n1": {
                     "b": "float",
-                    "c": "unknown_type",
+                    "c": "no_annotation_found",
                 },
                 "n2": {
                     "b": {"g": "int"},
@@ -92,7 +92,7 @@ def functions_nested_and_duplicate_g() -> NestedFunctionDict:
                 "n1": {
                     "a": "int",
                     "b": "float",
-                    "c": "unknown_type",
+                    "c": "no_annotation_found",
                 },
             },
         ),
@@ -103,7 +103,7 @@ def functions_nested_and_duplicate_g() -> NestedFunctionDict:
                 "a": "int",
                 "n1": {
                     "b": "float",
-                    "c": "unknown_type",
+                    "c": "no_annotation_found",
                 },
             },
         ),
@@ -140,7 +140,7 @@ def test_create_input_structure_tree_simple(
                 "n1": {
                     "a": "int",
                     "b": "float",
-                    "c": "unknown_type",
+                    "c": "no_annotation_found",
                 },
                 "n2": {
                     "a": "int",
@@ -155,7 +155,7 @@ def test_create_input_structure_tree_simple(
                 "a": "int",
                 "n1": {
                     "b": "float",
-                    "c": "unknown_type",
+                    "c": "no_annotation_found",
                 },
             },
         ),
@@ -193,4 +193,6 @@ def test_create_input_structure_tree_duplicates_lower_in_hierarchy() -> None:
         },
         targets=None,
         top_level_inputs=set(),
-    ) == {"n1": {"a": {"a": "int", "b": "float", "g": "int", "c": "unknown_type"}}}
+    ) == {
+        "n1": {"a": {"a": "int", "b": "float", "g": "int", "c": "no_annotation_found"}}
+    }
