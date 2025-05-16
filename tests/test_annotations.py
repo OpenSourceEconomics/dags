@@ -4,7 +4,9 @@ import functools
 import inspect
 from typing import TYPE_CHECKING
 
+import numpy as np
 import pytest
+from numpy.typing import NDArray
 
 from dags.annotations import get_annotations, verify_annotations_are_strings
 from dags.dag import concatenate_functions
@@ -98,6 +100,17 @@ def test_get_annotations_with_default() -> None:
     assert get_annotations(f, default="default") == {"a": "default", "return": "float"}
     assert get_annotations(f, default=bool, eval_str=True) == {
         "a": bool,
+        "return": float,
+    }
+
+
+def test_get_annotations_with_numpy() -> None:
+    def f(a: NDArray[np.float64]) -> float:
+        return a.sum()
+
+    assert get_annotations(f) == {"a": "NDArray[np.float64]", "return": "float"}
+    assert get_annotations(f, eval_str=True) == {
+        "a": NDArray[np.float64],
         "return": float,
     }
 

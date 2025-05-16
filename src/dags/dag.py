@@ -621,7 +621,15 @@ def get_annotations_from_execution_info(
 
     args = {k: v for k, v in types.items() if k in arglist}
     if targets:
-        return_annotation = f"tuple[{', '.join(types[target] for target in targets)}]"
+        _target_types = [types[target] for target in targets if target in types]
+        target_types = [
+            # We need to wrap the "None" "type" in quotes for it to be
+            # interpreted as a string, as it will be evaluated later on, which fails if
+            # it is not a string.
+            tt if tt != "None" else "'None'"
+            for tt in _target_types
+        ]
+        return_annotation = f"tuple[{', '.join(target_types)}]"
     else:
         return_annotation = "()"
     return args, return_annotation

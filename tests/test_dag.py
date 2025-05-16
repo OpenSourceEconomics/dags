@@ -374,3 +374,23 @@ def test_function_execution_info() -> None:
     assert info.annotations == {"a": "int", "b": "float", "return": "float"}
     assert info.argument_annotations == {"a": "int", "b": "float"}
     assert info.return_annotation == "float"
+
+
+def test_concatenate_functions_no_annotations_set_annotations() -> None:
+    def f(a):
+        return a
+
+    concatenated = concatenate_functions(
+        functions=[f],
+        targets=None,
+        set_annotations=True,
+    )
+
+    assert inspect.get_annotations(concatenated) == {
+        "a": "None",
+        "return": "tuple['None']",
+    }
+    assert inspect.get_annotations(concatenated, eval_str=True) == {
+        "a": None,
+        "return": tuple["None"],
+    }

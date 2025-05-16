@@ -64,7 +64,7 @@ def get_annotations(
 
     """
     if default is None:
-        default = inspect.Parameter.empty if eval_str else "no_annotation_found"
+        default = inspect.Parameter.empty if eval_str else "None"
 
     if isinstance(func, functools.partial):
         annotations = inspect.get_annotations(func.func, eval_str=eval_str)
