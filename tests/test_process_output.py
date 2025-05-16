@@ -67,7 +67,7 @@ def test_list_output_annotations() -> None:
 
     assert inspect.get_annotations(f, eval_str=True) == {
         "foo": bool,
-        "return": list[int | float],
+        "return": [int, float],
     }
 
 
@@ -124,4 +124,4 @@ def test_create_dict_return_annotation() -> None:
 
 def test_create_list_return_annotation() -> None:
     tuple_of_types = ("int", float)
-    assert _create_list_return_annotation(tuple_of_types) == "list[float | int]"
+    assert _create_list_return_annotation(tuple_of_types) == "[int, float]"

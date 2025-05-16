@@ -1,12 +1,17 @@
 from __future__ import annotations
 
 import functools
+import inspect
+from typing import TYPE_CHECKING
 
 import pytest
 
 from dags.annotations import get_annotations, verify_annotations_are_strings
 from dags.dag import concatenate_functions
 from dags.exceptions import AnnotationMismatchError, NonStringAnnotationError
+
+if TYPE_CHECKING:
+    from dags.typing import CombinedFunctionReturnType
 
 
 def test_argument_annotations_mismatch() -> None:
@@ -45,6 +50,26 @@ def test_argument_annoations_mismatch_with_return_annotation() -> None:
         ),
     ):
         concatenate_functions([f, g], set_annotations=True)
+
+
+@pytest.mark.parametrize("return_type", ["tuple", "list", "dict"])
+def test_concatenate_functions_without_input(
+    return_type: CombinedFunctionReturnType,
+) -> None:
+    concatenated = concatenate_functions(
+        functions={},
+        targets=None,
+        return_type=return_type,
+        set_annotations=True,
+    )
+    expected_type = {  # type: ignore[var-annotated]
+        "tuple": (),
+        "list": [],
+        "dict": {},
+    }
+    assert inspect.get_annotations(concatenated, eval_str=True) == {
+        "return": expected_type[return_type],
+    }
 
 
 def test_get_annotations() -> None:

@@ -190,9 +190,9 @@ def test_concatenate_functions_multi_target_signature_and_annotations(
 
     elif return_type == "list":
 
-        def expected_list(  # type: ignore[empty-body]
+        def expected_list(
             working_hours: int, wage: float, leisure_weight: float
-        ) -> list[float]:
+        ) -> [float, float]:  # type: ignore[valid-type]
             pass
 
         expected_functions["list"] = expected_list

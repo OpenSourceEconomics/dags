@@ -620,7 +620,10 @@ def get_annotations_from_execution_info(
         types.update(info.argument_annotations)
 
     args = {k: v for k, v in types.items() if k in arglist}
-    return_annotation = f"tuple[{', '.join(types[target] for target in targets)}]"
+    if targets:
+        return_annotation = f"tuple[{', '.join(types[target] for target in targets)}]"
+    else:
+        return_annotation = "()"
     return args, return_annotation
 
 
