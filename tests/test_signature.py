@@ -174,11 +174,11 @@ def test_rename_arguments_decorator_annotated() -> None:
     def f(d: int, e: float, *, f: bool) -> float:
         return d + e + f
 
-    assert inspect.get_annotations(f, eval_str=True) == {
-        "a": int,
-        "b": float,
-        "c": bool,
-        "return": float,
+    assert inspect.get_annotations(f) == {
+        "a": "int",
+        "b": "float",
+        "c": "bool",
+        "return": "float",
     }
 
 
@@ -200,9 +200,9 @@ def test_rename_arguments_direct_call_annotated() -> None:
 
     g = rename_arguments(f, mapper={"e": "b", "d": "a", "f": "c"})
 
-    assert inspect.get_annotations(g, eval_str=True) == {
-        "a": int,
-        "b": float,
-        "c": bool,
-        "return": float,
+    assert inspect.get_annotations(g) == {
+        "a": "int",
+        "b": "float",
+        "c": "bool",
+        "return": "float",
     }

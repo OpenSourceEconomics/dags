@@ -97,6 +97,7 @@ def test_get_annotations_with_default() -> None:
     def f(a) -> float:  # type: ignore[no-untyped-def]
         return float(a)
 
+    assert get_annotations(f) == {"a": "no_annotation_found", "return": "float"}
     assert get_annotations(f, default="default") == {"a": "default", "return": "float"}
     assert get_annotations(f, default=bool, eval_str=True) == {
         "a": bool,
