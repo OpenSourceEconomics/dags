@@ -126,11 +126,14 @@ def concatenate_functions(
             Enforcing the signature has a small runtime overhead.
         set_annotations (bool): If True, we set the annotations of the concatenated
             function using the annotations of the functions that are used to generate
-            the targets. In case of a type mismatch, an error is raised. Type
-            annotations must be strings, else a NonStringAnnotationError is raised.
-            Either enclose the annotations in quotes or add
-            "from __future__ import annotations" at the top of your file.
-
+            the targets. Type annotations must be strings, else a
+            NonStringAnnotationError is raised. Either enclose the annotations in quotes
+            or add "from __future__ import annotations" at the top of your file. The
+            return annotation of the concatenated function will be a string, tuple,
+            list, or dict, depending on the return type and the number of targets.
+            Importantly, the return annotation is not a valid type annotation, but
+            designed to communicate as much information on the target types as
+            possible.
 
     Returns
     -------
@@ -230,12 +233,14 @@ def _create_combined_function_from_dag(
             Enforcing the signature has a small runtime overhead.
         set_annotations (bool): If True, we set the annotations of the concatenated
             function using the annotations of the functions that are used to generate
-            the targets. In case of a type mismatch, an error is raised. Type
-            annotations must be strings, else a NonStringAnnotationError is raised.
-            Either enclose the annotations in quotes or add
-            "from __future__ import annotations" at the top of your file. If you do not
-            have direct control over some function, you can wrap it in an annotated
-            version.
+            the targets. Type annotations must be strings, else a
+            NonStringAnnotationError is raised. Either enclose the annotations in quotes
+            or add "from __future__ import annotations" at the top of your file. The
+            return annotation of the concatenated function will be a string, tuple,
+            list, or dict, depending on the return type and the number of targets.
+            Importantly, the return annotation is not a valid type annotation, but
+            designed to communicate as much information on the target types as
+            possible.
 
     Returns
     -------
@@ -529,9 +534,16 @@ def _create_concatenated_function(
         enforce_signature: If True, the signature of the concatenated function
             is enforced. Otherwise it is only provided for introspection purposes.
             Enforcing the signature has a small runtime overhead.
-        set_annotations: If True, we set the annotations of the concatenated
+        set_annotations (bool): If True, we set the annotations of the concatenated
             function using the annotations of the functions that are used to generate
-            the targets. In case of a type mismatch, an error is raised.
+            the targets. Type annotations must be strings, else a
+            NonStringAnnotationError is raised. Either enclose the annotations in quotes
+            or add "from __future__ import annotations" at the top of your file. The
+            return annotation of the concatenated function will be a string, tuple,
+            list, or dict, depending on the return type and the number of targets.
+            Importantly, the return annotation is not a valid type annotation, but
+            designed to communicate as much information on the target types as
+            possible.
 
     Returns
     -------
