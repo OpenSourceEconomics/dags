@@ -19,4 +19,4 @@ R = TypeVar("R")
 # Generic type variable for use in type constructors
 T = TypeVar("T")
 # Variadic TypeVar for tuples of arbitrary length with heterogeneous element types
-HetTupleType = TypeVarTuple("HetTupleType")
+MixedTupleType = TypeVarTuple("MixedTupleType")

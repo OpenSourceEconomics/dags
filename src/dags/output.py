@@ -2,21 +2,20 @@ from __future__ import annotations
 
 import functools
 import inspect
-from typing import TYPE_CHECKING, get_args, overload
+from typing import TYPE_CHECKING, overload
 
 from typing_extensions import Unpack
 
-from dags.annotations import get_str_repr
 from dags.exceptions import DagsError
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from dags.typing import HetTupleType, P, T
+    from dags.typing import MixedTupleType, P, T
 
 
 def single_output(
-    func: Callable[P, tuple[T, Unpack[HetTupleType]]] | Callable[P, tuple[T, ...]],
+    func: Callable[P, tuple[T, Unpack[MixedTupleType]]] | Callable[P, tuple[T, ...]],
     set_annotations: bool = False,
 ) -> Callable[P, T]:
     """Convert tuple output to single output; i.e. the first element of the tuple."""
@@ -28,10 +27,11 @@ def single_output(
 
     if set_annotations:
         signature = inspect.signature(func)
-        annotations = inspect.get_annotations(func, eval_str=True)
+        annotations = inspect.get_annotations(func)
 
         if "return" in annotations:
-            return_annotation = get_str_repr(get_args(annotations["return"])[0])
+            tuple_of_types: tuple[str, ...] = annotations["return"]
+            return_annotation = tuple_of_types[0]
             signature = signature.replace(return_annotation=return_annotation)
             annotations["return"] = return_annotation
 
@@ -79,10 +79,10 @@ def dict_output(
 
         if set_annotations:
             signature = inspect.signature(func)
-            annotations = inspect.get_annotations(func, eval_str=True)
+            annotations = inspect.get_annotations(func)
             if "return" in annotations:
-                tuple_of_types = get_args(annotations["return"])
-                return_annotation = _create_dict_return_annotation(keys, tuple_of_types)
+                tuple_of_types: tuple[str, ...] = annotations["return"]
+                return_annotation = dict(zip(keys, tuple_of_types, strict=True))
                 signature = signature.replace(return_annotation=return_annotation)
                 annotations["return"] = return_annotation
             wrapper_dict_output.__signature__ = signature  # type: ignore[attr-defined]
@@ -107,10 +107,10 @@ def list_output(
 
     if set_annotations:
         signature = inspect.signature(func)
-        annotations = inspect.get_annotations(func, eval_str=True)
+        annotations = inspect.get_annotations(func)
         if "return" in annotations:
-            tuple_of_types = get_args(annotations["return"])
-            return_annotation = _create_list_return_annotation(tuple_of_types)
+            tuple_of_types: tuple[str, ...] = annotations["return"]
+            return_annotation = list(tuple_of_types)
             signature = signature.replace(return_annotation=return_annotation)
             annotations["return"] = return_annotation
 
@@ -159,18 +159,3 @@ def aggregated_output(
     if callable(func):
         return decorator_aggregated_output(func)
     return decorator_aggregated_output
-
-
-def _create_dict_return_annotation(
-    keys: list[str], tuple_of_types: tuple[str | type, ...]
-) -> str:
-    tuple_of_types_str = [get_str_repr(t) for t in tuple_of_types]
-    dict_entries = [
-        f"'{k}': {v}" for k, v in zip(keys, tuple_of_types_str, strict=True)
-    ]
-    return f"{{{', '.join(dict_entries)}}}"
-
-
-def _create_list_return_annotation(tuple_of_types: tuple[str | type, ...]) -> str:
-    tuple_of_types_str = [get_str_repr(t) for t in tuple_of_types]
-    return f"[{', '.join(tuple_of_types_str)}]"

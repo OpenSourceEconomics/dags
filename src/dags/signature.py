@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 def _create_signature(
     args_types: dict[str, str] | dict[str, type[inspect._empty]],
     kwargs_types: dict[str, str] | dict[str, type[inspect._empty]],
-    return_annotation: type[inspect._empty] | str = inspect.Parameter.empty,
+    return_annotation: Any = inspect.Parameter.empty,
 ) -> inspect.Signature:
     """Create an inspect.Signature object based on args and kwargs.
 
@@ -25,7 +25,7 @@ def _create_signature(
             type is available, mapped to `inspect.Parameter.empty`.
         kwargs_types: The keyword arguments mapped to their types as strings, or if no
             type is available, mapped to `inspect.Parameter.empty`.
-        return_annotation: The return annotation as string, or if no type is available,
+        return_annotation: The return annotation. By default, the return annotation is
             `inspect.Parameter.empty`.
 
     Returns
@@ -58,11 +58,11 @@ def _create_signature(
 def _create_annotations(
     args_types: dict[str, str] | dict[str, type[inspect._empty]],
     kwargs_types: dict[str, str] | dict[str, type[inspect._empty]],
-    return_annotation: type[inspect._empty] | str,
-) -> dict[str, str] | dict[str, type[inspect._empty]]:
+    return_annotation: Any,
+) -> dict[str, str | Any] | dict[str, str | type[inspect._empty]]:
     annotations = args_types | kwargs_types
     if return_annotation is not inspect.Parameter.empty:
-        annotations["return"] = return_annotation  # type: ignore[assignment]
+        annotations["return"] = return_annotation
     return annotations  # type: ignore[return-value]
 
 
@@ -73,7 +73,7 @@ def with_signature(
     args: dict[str, str] | list[str] | None = None,
     kwargs: dict[str, str] | list[str] | None = None,
     enforce: bool = True,
-    return_annotation: type[inspect._empty] | str = inspect.Parameter.empty,
+    return_annotation: Any = inspect.Parameter.empty,
 ) -> Callable[P, R]: ...
 
 
@@ -83,7 +83,7 @@ def with_signature(
     args: dict[str, str] | list[str] | None = None,
     kwargs: dict[str, str] | list[str] | None = None,
     enforce: bool = True,
-    return_annotation: type[inspect._empty] | str = inspect.Parameter.empty,
+    return_annotation: Any = inspect.Parameter.empty,
 ) -> Callable[[Callable[P, R]], Callable[P, R]]: ...
 
 
@@ -93,7 +93,7 @@ def with_signature(
     args: dict[str, str] | list[str] | None = None,
     kwargs: dict[str, str] | list[str] | None = None,
     enforce: bool = True,
-    return_annotation: type[inspect._empty] | str = inspect.Parameter.empty,
+    return_annotation: Any = inspect.Parameter.empty,
 ) -> Callable[P, R] | Callable[[Callable[P, R]], Callable[P, R]]:
     """Add a signature to a function of type `f(*args, **kwargs)` (decorator).
 
@@ -110,7 +110,8 @@ def with_signature(
         enforce: Whether the signature should be enforced or just
             added to the function for introspection. This creates runtime
             overhead.
-        return_annotation: The return annotation as string.
+        return_annotation: The return annotation. By default, the return annotation is
+            `inspect.Parameter.empty`.
 
     Returns
     -------

@@ -252,6 +252,10 @@ def _create_combined_function_from_dag(
     _exec_info = create_execution_info(
         _functions, dag, verify_annotations=set_annotations
     )
+
+    # Create the concatenated function that returns all requested targets as a tuple.
+    # If set_annotations is True, the return annotation is a tuple of strings,
+    # corresponding to the return types of the targets.
     _concatenated = _create_concatenated_function(
         _exec_info,
         _arglist,
@@ -260,7 +264,8 @@ def _create_combined_function_from_dag(
         set_annotations,
     )
 
-    # Return function in specified format.
+    # Update the actual return type, as well as the return annotation of the
+    # concatenated function.
     if isinstance(targets, str) or (aggregator is not None and len(_targets) == 1):
         out = cast(
             "GenericCallable",
@@ -534,7 +539,7 @@ def _create_concatenated_function(
 
     """
     args: list[str] | dict[str, str]
-    return_annotation: type[inspect._empty] | str
+    return_annotation: type[inspect._empty] | tuple[str, ...]
 
     if set_annotations:
         args, return_annotation = get_annotations_from_execution_info(
@@ -551,7 +556,7 @@ def _create_concatenated_function(
         enforce=enforce_signature,
         return_annotation=return_annotation,
     )
-    def concatenated(*args: Any, **kwargs: Any) -> tuple[Any, ...]:  # noqa: ANN401
+    def concatenated(*args: Any, **kwargs: Any) -> tuple[Any, ...]:
         results = {**dict(zip(arglist, args, strict=False)), **kwargs}
         for name, info in execution_info.items():
             func_kwargs = {arg: results[arg] for arg in info.arguments}
@@ -567,7 +572,7 @@ def get_annotations_from_execution_info(
     execution_info: dict[str, FunctionExecutionInfo],
     arglist: list[str],
     targets: list[str],
-) -> tuple[dict[str, str], str]:
+) -> tuple[dict[str, str], tuple[str, ...]]:
     """Get the (argument and return) annotations of the concatenated function.
 
     Args:
@@ -578,14 +583,9 @@ def get_annotations_from_execution_info(
 
     Returns
     -------
-        - Dictionary with argnames as keys and their expected types in string format as
-          values.
+        - Dictionary with argument names as keys and their expected types in string
+          format as values.
         - The expected type of the return value as a string.
-
-    Raises
-    ------
-        AnnotationMismatchError: If the types of the arguments or the return value of
-            the functions are not consistent.
 
     """
     types: dict[str, str] = {}
@@ -619,20 +619,9 @@ def get_annotations_from_execution_info(
 
         types.update(info.argument_annotations)
 
-    args = {k: v for k, v in types.items() if k in arglist}
-    if targets:
-        _target_types = [types[target] for target in targets if target in types]
-        target_types = [
-            # We need to wrap the "None" "type" in quotes for it to be
-            # interpreted as a string, as it will be evaluated later on, which fails if
-            # it is not a string.
-            tt if tt != "None" else "'None'"
-            for tt in _target_types
-        ]
-        return_annotation = f"tuple[{', '.join(target_types)}]"
-    else:
-        return_annotation = "()"
-    return args, return_annotation
+    args_annotations = {arg: types[arg] for arg in arglist}
+    return_annotation = tuple(types[target] for target in targets)
+    return args_annotations, return_annotation
 
 
 def format_list_linewise(seq: Sequence[object]) -> str:

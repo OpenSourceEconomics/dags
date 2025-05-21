@@ -64,7 +64,7 @@ def get_annotations(
 
     """
     if default is None:
-        default = inspect.Parameter.empty if eval_str else "None"
+        default = inspect.Parameter.empty if eval_str else "no_annotation_found"
 
     if isinstance(func, functools.partial):
         annotations = inspect.get_annotations(func.func, eval_str=eval_str)
@@ -72,10 +72,6 @@ def get_annotations(
         annotations = inspect.get_annotations(func, eval_str=eval_str)
     free_arguments = get_free_arguments(func)
     return {arg: annotations.get(arg, default) for arg in ["return", *free_arguments]}
-
-
-def get_str_repr(obj: object) -> str:
-    return getattr(obj, "__name__", str(obj))
 
 
 def verify_annotations_are_strings(
@@ -94,13 +90,13 @@ def verify_annotations_are_strings(
     stringified_arg_annotations = []
     for k, v in arg_annotations.items():
         if k in non_string_annotations:
-            stringified_arg_annotations.append(f"{k}: '{get_str_repr(v)}'")
+            stringified_arg_annotations.append(f"{k}: '{_get_str_repr(v)}'")
         else:
             annot = f"{k}: '{v}'"
             stringified_arg_annotations.append(annot)
 
     if "return" in non_string_annotations:
-        stringified_return_annotation = f"'{get_str_repr(return_annotation)}'"
+        stringified_return_annotation = f"'{_get_str_repr(return_annotation)}'"
     else:
         stringified_return_annotation = f"'{return_annotation}'"
 
@@ -126,8 +122,6 @@ def verify_annotations_are_strings(
     elif "return" in non_string_annotations:
         invalid_annotations_msg = "return value"
 
-    # Raise the error
-    # ----------------------------------------------------------------------------------
     raise NonStringAnnotationError(
         f"All function annotations must be strings. The annotations for the "
         f"{invalid_annotations_msg} are not strings.\nA simple way for Python to treat "
@@ -135,3 +129,7 @@ def verify_annotations_are_strings(
         "\n\nat the top of your file. Alternatively, you can do it manually by "
         f"enclosing the annotations in quotes:\n\n\t{stringified_signature}."
     )
+
+
+def _get_str_repr(obj: object) -> str:
+    return getattr(obj, "__name__", str(obj))
