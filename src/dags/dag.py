@@ -58,7 +58,8 @@ class FunctionExecutionInfo:
 
     Raises
     ------
-        NonStringAnnotationError: If the type annotations are not strings.
+        NonStringAnnotationError: If `verify_annotations` is `True` and the type
+            annotations are not strings.
 
     """
 
@@ -124,20 +125,28 @@ def concatenate_functions(
         enforce_signature (bool): If True, the signature of the concatenated function
             is enforced. Otherwise it is only provided for introspection purposes.
             Enforcing the signature has a small runtime overhead.
-        set_annotations (bool): If True, we set the annotations of the concatenated
-            function using the annotations of the functions that are used to generate
-            the targets. Type annotations must be strings, else a
-            NonStringAnnotationError is raised. Either enclose the annotations in quotes
-            or add "from __future__ import annotations" at the top of your file. The
-            return annotation of the concatenated function will be a string, tuple,
-            list, or dict, depending on the return type and the number of targets.
-            Importantly, the return annotation is not a valid type annotation, but
-            designed to communicate as much information on the target types as
-            possible.
+        set_annotations (bool): If True, sets the annotations of the concatenated
+            function based on those of the functions used to generate the targets. The
+            return annotation of the concatenated function reflects the requested return
+            type and number of targets (e.g., for two targets returned as a list, the
+            return annotation is a list of their respective type hints). Note that this
+            is not a valid type annotation and should not be used for type checking. All
+            annotations must be strings; otherwise, a NonStringAnnotationError is
+            raised. To ensure string annotations, enclose them in quotes or use "from
+            __future__ import annotations" at the top of your file. An
+            AnnotationMismatchError is raised if annotations differ between functions.
 
     Returns
     -------
         function: A function that produces targets when called with suitable arguments.
+
+    Raises
+    ------
+        - NonStringAnnotationError: If `set_annotations` is `True` and the type
+            annotations are not strings.
+
+        - AnnotationMismatchError: If `set_annotations` is `True` and there are
+            incompatible annotations in the DAG's components.
 
     """
     if set_annotations and not isinstance(targets, str) and aggregator is not None:
@@ -231,20 +240,28 @@ def _create_combined_function_from_dag(
         enforce_signature (bool): If True, the signature of the concatenated function
             is enforced. Otherwise it is only provided for introspection purposes.
             Enforcing the signature has a small runtime overhead.
-        set_annotations (bool): If True, we set the annotations of the concatenated
-            function using the annotations of the functions that are used to generate
-            the targets. Type annotations must be strings, else a
-            NonStringAnnotationError is raised. Either enclose the annotations in quotes
-            or add "from __future__ import annotations" at the top of your file. The
-            return annotation of the concatenated function will be a string, tuple,
-            list, or dict, depending on the return type and the number of targets.
-            Importantly, the return annotation is not a valid type annotation, but
-            designed to communicate as much information on the target types as
-            possible.
+        set_annotations (bool): If True, sets the annotations of the concatenated
+            function based on those of the functions used to generate the targets. The
+            return annotation of the concatenated function reflects the requested return
+            type and number of targets (e.g., for two targets returned as a list, the
+            return annotation is a list of their respective type hints). Note that this
+            is not a valid type annotation and should not be used for type checking. All
+            annotations must be strings; otherwise, a NonStringAnnotationError is
+            raised. To ensure string annotations, enclose them in quotes or use "from
+            __future__ import annotations" at the top of your file. An
+            AnnotationMismatchError is raised if annotations differ between functions.
 
     Returns
     -------
         function: A function that produces targets when called with suitable arguments.
+
+    Raises
+    ------
+        - NonStringAnnotationError: If `set_annotations` is `True` and the type
+            annotations are not strings.
+
+        - AnnotationMismatchError: If `set_annotations` is `True` and there are
+            incompatible annotations in the DAG's components.
 
     """
     # Harmonize and check arguments.
@@ -504,6 +521,11 @@ def create_execution_info(
         dict: Dictionary with functions and their arguments for each node in the DAG.
             The functions are already in topological_sort order.
 
+    Raises
+    ------
+        NonStringAnnotationError: If `verify_annotations` is `True` and the type
+            annotations are not strings.
+
     """
     out = {}
     for node in nx.topological_sort(dag):
@@ -534,16 +556,16 @@ def _create_concatenated_function(
         enforce_signature: If True, the signature of the concatenated function
             is enforced. Otherwise it is only provided for introspection purposes.
             Enforcing the signature has a small runtime overhead.
-        set_annotations (bool): If True, we set the annotations of the concatenated
-            function using the annotations of the functions that are used to generate
-            the targets. Type annotations must be strings, else a
-            NonStringAnnotationError is raised. Either enclose the annotations in quotes
-            or add "from __future__ import annotations" at the top of your file. The
-            return annotation of the concatenated function will be a string, tuple,
-            list, or dict, depending on the return type and the number of targets.
-            Importantly, the return annotation is not a valid type annotation, but
-            designed to communicate as much information on the target types as
-            possible.
+        set_annotations (bool): If True, sets the annotations of the concatenated
+            function based on those of the functions used to generate the targets. The
+            return annotation of the concatenated function reflects the requested return
+            type and number of targets (e.g., for two targets returned as a list, the
+            return annotation is a list of their respective type hints). Note that this
+            is not a valid type annotation and should not be used for type checking. All
+            annotations must be strings; otherwise, a NonStringAnnotationError is
+            raised. To ensure string annotations, enclose them in quotes or use "from
+            __future__ import annotations" at the top of your file. An
+            AnnotationMismatchError is raised if annotations differ between functions.
 
     Returns
     -------
@@ -598,6 +620,11 @@ def get_annotations_from_execution_info(
         - Dictionary with argument names as keys and their expected types in string
           format as values.
         - The expected type of the return value as a string.
+
+    Raises
+    ------
+        AnnotationMismatchError: If there are incompatible annotations in the DAG's
+            components.
 
     """
     types: dict[str, str] = {}
