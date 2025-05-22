@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from dags.tree import RepeatedTopLevelElementError, create_input_structure_tree
+from dags.tree import RepeatedTopLevelElementError, create_tree_with_input_types
 
 if TYPE_CHECKING:
     from dags.tree.typing import (
@@ -16,15 +16,16 @@ if TYPE_CHECKING:
     )
 
 
-def f(g, a, b):
-    return g + a + b
+def f(g: int, a: int, b: float, c) -> float:  # type: ignore[no-untyped-def]
+    # We expect to see "no_annotation_found" for c, because it is not annotated.
+    return g + a + b + c
 
 
-def g(a):
+def g(a: int) -> int:
     return a**2
 
 
-def h(a, b__g):
+def h(a: int, b__g: int) -> int:
     return a + b__g
 
 
@@ -60,12 +61,13 @@ def functions_nested_and_duplicate_g() -> NestedFunctionDict:
             set(),
             {
                 "n1": {
-                    "a": None,
-                    "b": None,
+                    "a": "int",
+                    "b": "float",
+                    "c": "no_annotation_found",
                 },
                 "n2": {
-                    "a": None,
-                    "b": {"g": None},
+                    "a": "int",
+                    "b": {"g": "int"},
                 },
             },
         ),
@@ -73,32 +75,35 @@ def functions_nested_and_duplicate_g() -> NestedFunctionDict:
             None,
             {"a"},
             {
-                "a": None,
+                "a": "int",
                 "n1": {
-                    "b": None,
+                    "b": "float",
+                    "c": "no_annotation_found",
                 },
                 "n2": {
-                    "b": {"g": None},
+                    "b": {"g": "int"},
                 },
             },
         ),
         (
-            {"n1": {"f": None}},
+            {"n1": {"f": "float"}},
             set(),
             {
                 "n1": {
-                    "a": None,
-                    "b": None,
+                    "a": "int",
+                    "b": "float",
+                    "c": "no_annotation_found",
                 },
             },
         ),
         (
-            {"n1": {"f": None}},
+            {"n1": {"f": "float"}},
             {"a"},
             {
-                "a": None,
+                "a": "int",
                 "n1": {
-                    "b": None,
+                    "b": "float",
+                    "c": "no_annotation_found",
                 },
             },
         ),
@@ -117,10 +122,10 @@ def test_create_input_structure_tree_simple(
 ) -> None:
     if "raises_error" in expected:
         with pytest.raises(RepeatedTopLevelElementError):
-            create_input_structure_tree(functions_simple, targets, top_level_inputs)
+            create_tree_with_input_types(functions_simple, targets, top_level_inputs)
     else:
         assert (
-            create_input_structure_tree(functions_simple, targets, top_level_inputs)
+            create_tree_with_input_types(functions_simple, targets, top_level_inputs)
             == expected
         )
 
@@ -133,12 +138,13 @@ def test_create_input_structure_tree_simple(
             set(),
             {
                 "n1": {
-                    "a": None,
-                    "b": None,
+                    "a": "int",
+                    "b": "float",
+                    "c": "no_annotation_found",
                 },
                 "n2": {
-                    "a": None,
-                    "b": {"a": None},
+                    "a": "int",
+                    "b": {"a": "int"},
                 },
             },
         ),
@@ -146,9 +152,10 @@ def test_create_input_structure_tree_simple(
             None,
             {"a"},
             {
-                "a": None,
+                "a": "int",
                 "n1": {
-                    "b": None,
+                    "b": "float",
+                    "c": "no_annotation_found",
                 },
             },
         ),
@@ -167,12 +174,12 @@ def test_create_input_structure_tree_nested_and_duplicate_g(
 ) -> None:
     if "raises_error" in expected:
         with pytest.raises(RepeatedTopLevelElementError):
-            create_input_structure_tree(
+            create_tree_with_input_types(
                 functions_nested_and_duplicate_g, targets, top_level_inputs
             )
     else:
         assert (
-            create_input_structure_tree(
+            create_tree_with_input_types(
                 functions_nested_and_duplicate_g, targets, top_level_inputs
             )
             == expected
@@ -180,10 +187,12 @@ def test_create_input_structure_tree_nested_and_duplicate_g(
 
 
 def test_create_input_structure_tree_duplicates_lower_in_hierarchy() -> None:
-    assert create_input_structure_tree(
+    assert create_tree_with_input_types(
         functions={
             "n1": {"a": {"f": f}},
         },
         targets=None,
         top_level_inputs=set(),
-    ) == {"n1": {"a": {"a": None, "b": None, "g": None}}}
+    ) == {
+        "n1": {"a": {"a": "int", "b": "float", "g": "int", "c": "no_annotation_found"}}
+    }

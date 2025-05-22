@@ -1,5 +1,7 @@
 """Custom exceptions for the dags library."""
 
+from __future__ import annotations
+
 from dags.exceptions import ValidationError
 
 

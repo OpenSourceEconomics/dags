@@ -27,10 +27,10 @@ QualNameFunctionDict = dict[str, GenericCallable]
 TreePathFunctionDict = dict[tuple[str, ...], GenericCallable]
 
 # Input structure types
-NestedInputStructureDict = Mapping[str, "None | NestedInputStructureDict"]
-QualNameInputStructureDict = dict[str, None]
-TreePathInputStructureDict = dict[tuple[str, ...], None]
+NestedInputStructureDict = Mapping[str, "str | None | NestedInputStructureDict"]
+QualNameInputStructureDict = dict[str, "str | None"]
+TreePathInputStructureDict = dict[tuple[str, ...], "str | None"]
 
 # Target types
-NestedTargetDict = Mapping[str, "None | NestedTargetDict"]
+NestedTargetDict = Mapping[str, "str | None | NestedTargetDict"]
 QualNameTargetList = list[str]

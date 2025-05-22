@@ -1,4 +1,11 @@
-from dags.dag import concatenate_functions, create_dag, get_ancestors, get_input_types
+from __future__ import annotations
+
+from dags.annotations import get_annotations, get_free_arguments
+from dags.dag import (
+    concatenate_functions,
+    create_dag,
+    get_ancestors,
+)
 from dags.exceptions import (
     AnnotationMismatchError,
     CyclicDependencyError,
@@ -21,6 +28,7 @@ __all__ = [
     "concatenate_functions",
     "create_dag",
     "get_ancestors",
-    "get_input_types",
+    "get_annotations",
+    "get_free_arguments",
     "rename_arguments",
 ]

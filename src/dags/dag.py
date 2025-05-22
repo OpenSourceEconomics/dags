@@ -8,6 +8,11 @@ from typing import TYPE_CHECKING, Any, cast
 
 import networkx as nx
 
+from dags.annotations import (
+    get_annotations,
+    get_free_arguments,
+    verify_annotations_are_strings,
+)
 from dags.exceptions import (
     AnnotationMismatchError,
     CyclicDependencyError,
@@ -29,30 +34,63 @@ if TYPE_CHECKING:
     )
 
 
-@dataclass
+@dataclass(frozen=True)
 class FunctionExecutionInfo:
     """Information about a function that is needed to execute it.
 
     Attributes
     ----------
+        name: The name of the function.
         func: The function to execute.
-        argument_annotations: The argument annotations of the function.
-        return_annotation: The return annotation of the function.
+        verify_annotations: If True, we verify that the annotations are strings.
 
     Properties
     ----------
+        annotations: The annotations of the function. For standard functions this
+            coincides with the __annotations__ attribute of the function. For partialled
+            functions, this is a dictionary with the names of the free arguments as keys
+            and their expected types as values, as well as the return type of the
+            function stored under the key "return". Type annotations must be strings,
+            else a NonStringAnnotationError is raised.
         arguments: The names of the arguments of the function.
+        argument_annotations: The argument annotations of the function.
+        return_annotation: The return annotation of the function.
+
+    Raises
+    ------
+        NonStringAnnotationError: If `verify_annotations` is `True` and the type
+            annotations are not strings.
 
     """
 
+    name: str
     func: GenericCallable
-    argument_annotations: dict[str, type]
-    return_annotation: type
+    verify_annotations: bool = False
+
+    def __post_init__(self) -> None:
+        """Verify that the annotations are strings."""
+        if self.verify_annotations:
+            verify_annotations_are_strings(self.annotations, self.name)
+
+    @functools.cached_property
+    def annotations(self) -> dict[str, str]:
+        """The annotations of the function."""
+        return get_annotations(self.func)
 
     @property
     def arguments(self) -> list[str]:
         """The names of the arguments of the function."""
-        return list(self.argument_annotations)
+        return list(set(self.annotations) - {"return"})
+
+    @property
+    def argument_annotations(self) -> dict[str, str]:
+        """The argument annotations of the function."""
+        return {arg: self.annotations[arg] for arg in self.arguments}
+
+    @property
+    def return_annotation(self) -> str:
+        """The return annotation of the function."""
+        return self.annotations["return"]
 
 
 def concatenate_functions(
@@ -87,16 +125,37 @@ def concatenate_functions(
         enforce_signature (bool): If True, the signature of the concatenated function
             is enforced. Otherwise it is only provided for introspection purposes.
             Enforcing the signature has a small runtime overhead.
-        set_annotations (bool): If True, we set the annotations of the concatenated
-            function using the annotations of the functions that are used to generate
-            the targets. In case of a type mismatch, an error is raised.
-
+        set_annotations (bool): If True, sets the annotations of the concatenated
+            function based on those of the functions used to generate the targets. The
+            return annotation of the concatenated function reflects the requested return
+            type and number of targets (e.g., for two targets returned as a list, the
+            return annotation is a list of their respective type hints). Note that this
+            is not a valid type annotation and should not be used for type checking. All
+            annotations must be strings; otherwise, a NonStringAnnotationError is
+            raised. To ensure string annotations, enclose them in quotes or use "from
+            __future__ import annotations" at the top of your file. An
+            AnnotationMismatchError is raised if annotations differ between functions.
 
     Returns
     -------
         function: A function that produces targets when called with suitable arguments.
 
+    Raises
+    ------
+        - NonStringAnnotationError: If `set_annotations` is `True` and the type
+            annotations are not strings.
+
+        - AnnotationMismatchError: If `set_annotations` is `True` and there are
+            incompatible annotations in the DAG's components.
+
     """
+    if set_annotations and not isinstance(targets, str) and aggregator is not None:
+        raise DagsError(
+            "Cannot set annotations when using an aggregator on multiple targets. "
+            "Please set set_annotations to False, or use a single target, or do not "
+            "use an aggregator."
+        )
+
     # Create the DAG.
     dag = create_dag(functions, targets)
 
@@ -137,7 +196,7 @@ def create_dag(
 
     """
     # Harmonize and check arguments.
-    _functions, _targets = _harmonize_and_check_functions_and_targets(
+    _functions, _targets = harmonize_and_check_functions_and_targets(
         functions,
         targets,
     )
@@ -181,23 +240,44 @@ def _create_combined_function_from_dag(
         enforce_signature (bool): If True, the signature of the concatenated function
             is enforced. Otherwise it is only provided for introspection purposes.
             Enforcing the signature has a small runtime overhead.
-        set_annotations (bool): If True, we set the annotations of the concatenated
-            function using the annotations of the functions that are used to generate
-            the targets. In case of a type mismatch, an error is raised.
+        set_annotations (bool): If True, sets the annotations of the concatenated
+            function based on those of the functions used to generate the targets. The
+            return annotation of the concatenated function reflects the requested return
+            type and number of targets (e.g., for two targets returned as a list, the
+            return annotation is a list of their respective type hints). Note that this
+            is not a valid type annotation and should not be used for type checking. All
+            annotations must be strings; otherwise, a NonStringAnnotationError is
+            raised. To ensure string annotations, enclose them in quotes or use "from
+            __future__ import annotations" at the top of your file. An
+            AnnotationMismatchError is raised if annotations differ between functions.
 
     Returns
     -------
         function: A function that produces targets when called with suitable arguments.
 
+    Raises
+    ------
+        - NonStringAnnotationError: If `set_annotations` is `True` and the type
+            annotations are not strings.
+
+        - AnnotationMismatchError: If `set_annotations` is `True` and there are
+            incompatible annotations in the DAG's components.
+
     """
     # Harmonize and check arguments.
-    _functions, _targets = _harmonize_and_check_functions_and_targets(
+    _functions, _targets = harmonize_and_check_functions_and_targets(
         functions,
         targets,
     )
 
     _arglist = create_arguments_of_concatenated_function(_functions, dag)
-    _exec_info = _create_execution_info(_functions, dag)
+    _exec_info = create_execution_info(
+        _functions, dag, verify_annotations=set_annotations
+    )
+
+    # Create the concatenated function that returns all requested targets as a tuple.
+    # If set_annotations is True, the return annotation is a tuple of strings,
+    # corresponding to the return types of the targets.
     _concatenated = _create_concatenated_function(
         _exec_info,
         _arglist,
@@ -206,19 +286,29 @@ def _create_combined_function_from_dag(
         set_annotations,
     )
 
-    # Return function in specified format.
+    # Update the actual return type, as well as the return annotation of the
+    # concatenated function.
     if isinstance(targets, str) or (aggregator is not None and len(_targets) == 1):
-        out = cast("GenericCallable", single_output(_concatenated))
+        out = cast(
+            "GenericCallable",
+            single_output(_concatenated, set_annotations=set_annotations),
+        )
     elif aggregator is not None:
         out = cast(
             "GenericCallable", aggregated_output(_concatenated, aggregator=aggregator)
         )
     elif return_type == "list":
-        out = cast("GenericCallable", list_output(_concatenated))
+        out = cast(
+            "GenericCallable",
+            list_output(_concatenated, set_annotations=set_annotations),
+        )
     elif return_type == "tuple":
         out = _concatenated
     elif return_type == "dict":
-        out = cast("GenericCallable", dict_output(_concatenated, keys=_targets))
+        out = cast(
+            "GenericCallable",
+            dict_output(_concatenated, keys=_targets, set_annotations=set_annotations),
+        )
     else:
         msg = (
             f"Invalid return type {return_type}. Must be 'list', 'tuple', or 'dict'. "
@@ -249,7 +339,7 @@ def get_ancestors(
 
     """
     # Harmonize and check arguments.
-    _functions, _targets = _harmonize_and_check_functions_and_targets(
+    _functions, _targets = harmonize_and_check_functions_and_targets(
         functions,
         targets,
     )
@@ -265,7 +355,7 @@ def get_ancestors(
     return ancestors
 
 
-def _harmonize_and_check_functions_and_targets(
+def harmonize_and_check_functions_and_targets(
     functions: FunctionCollection,
     targets: TargetType,
 ) -> tuple[dict[str, GenericCallable], list[str]]:
@@ -366,19 +456,6 @@ def _create_complete_dag(
     return nx.DiGraph(functions_arguments_dict).reverse()  # type: ignore[arg-type]
 
 
-def get_free_arguments(
-    func: GenericCallable,
-) -> list[str]:
-    arguments = list(inspect.signature(func).parameters)
-    if isinstance(func, functools.partial):
-        # arguments that are partialled by position are not part of the signature
-        # anyways, so they do not need special handling.
-        non_free = set(func.keywords)
-        arguments = [arg for arg in arguments if arg not in non_free]
-
-    return arguments
-
-
 def _limit_dag_to_targets_and_their_ancestors(
     dag: nx.DiGraph[str],
     targets: list[str],
@@ -427,35 +504,36 @@ def create_arguments_of_concatenated_function(
     return sorted(all_nodes - function_names)
 
 
-def _create_execution_info(
+def create_execution_info(
     functions: dict[str, GenericCallable],
     dag: nx.DiGraph[str],
+    verify_annotations: bool = False,
 ) -> dict[str, FunctionExecutionInfo]:
     """Create a dictionary with all information needed to execute relevant functions.
 
     Args:
         functions (dict): Dictionary containing functions to build the DAG.
         dag (networkx.DiGraph): The complete DAG.
+        verify_annotations (bool): If True, we verify that the annotations are strings.
 
     Returns
     -------
         dict: Dictionary with functions and their arguments for each node in the DAG.
             The functions are already in topological_sort order.
 
+    Raises
+    ------
+        NonStringAnnotationError: If `verify_annotations` is `True` and the type
+            annotations are not strings.
+
     """
     out = {}
     for node in nx.topological_sort(dag):
         if node in functions:
-            arguments = get_free_arguments(functions[node])
-            argument_annotations, return_annotation = _get_annotations_from_func(
-                functions[node],
-                free_arguments=arguments,
-            )
-
             out[node] = FunctionExecutionInfo(
+                name=node,
                 func=functions[node],
-                argument_annotations=argument_annotations,
-                return_annotation=return_annotation,
+                verify_annotations=verify_annotations,
             )
     return out
 
@@ -478,20 +556,27 @@ def _create_concatenated_function(
         enforce_signature: If True, the signature of the concatenated function
             is enforced. Otherwise it is only provided for introspection purposes.
             Enforcing the signature has a small runtime overhead.
-        set_annotations: If True, we set the annotations of the concatenated
-            function using the annotations of the functions that are used to generate
-            the targets. In case of a type mismatch, an error is raised.
+        set_annotations (bool): If True, sets the annotations of the concatenated
+            function based on those of the functions used to generate the targets. The
+            return annotation of the concatenated function reflects the requested return
+            type and number of targets (e.g., for two targets returned as a list, the
+            return annotation is a list of their respective type hints). Note that this
+            is not a valid type annotation and should not be used for type checking. All
+            annotations must be strings; otherwise, a NonStringAnnotationError is
+            raised. To ensure string annotations, enclose them in quotes or use "from
+            __future__ import annotations" at the top of your file. An
+            AnnotationMismatchError is raised if annotations differ between functions.
 
     Returns
     -------
         The concatenated function
 
     """
-    args: list[str] | dict[str, type]
-    return_annotation: type | tuple[type, ...]
+    args: list[str] | dict[str, str]
+    return_annotation: type[inspect._empty] | tuple[str, ...]
 
     if set_annotations:
-        args, return_annotation = _get_annotations_from_execution_info(
+        args, return_annotation = get_annotations_from_execution_info(
             execution_info,
             arglist=arglist,
             targets=targets,
@@ -503,9 +588,9 @@ def _create_concatenated_function(
     @with_signature(
         args=args,
         enforce=enforce_signature,
-        return_annotation=return_annotation,  # type: ignore[arg-type]
+        return_annotation=return_annotation,
     )
-    def concatenated(*args: Any, **kwargs: Any) -> tuple[Any, ...]:  # noqa: ANN401
+    def concatenated(*args: Any, **kwargs: Any) -> tuple[Any, ...]:
         results = {**dict(zip(arglist, args, strict=False)), **kwargs}
         for name, info in execution_info.items():
             func_kwargs = {arg: results[arg] for arg in info.arguments}
@@ -517,34 +602,11 @@ def _create_concatenated_function(
     return concatenated
 
 
-def _get_annotations_from_func(
-    func: GenericCallable,
-    free_arguments: list[str],
-) -> tuple[dict[str, type], type]:
-    """Get the (argument and return) annotations of a function.
-
-    Args:
-        func: The function to get the annotations from.
-        free_arguments: The list of free arguments of the function. For the case of
-            functools.partial objects, these are the arguments that are not partialled.
-
-    Returns
-    -------
-        - Dictionary with argnames as keys and their expected types as values
-        - The expected type of the return value(s) as a tuple.
-    """
-    signature = inspect.signature(func)
-    argument_types = {
-        arg: signature.parameters[arg].annotation for arg in free_arguments
-    }
-    return argument_types, signature.return_annotation
-
-
-def _get_annotations_from_execution_info(
+def get_annotations_from_execution_info(
     execution_info: dict[str, FunctionExecutionInfo],
     arglist: list[str],
     targets: list[str],
-) -> tuple[dict[str, type], tuple[type, ...]]:
+) -> tuple[dict[str, str], tuple[str, ...]]:
     """Get the (argument and return) annotations of the concatenated function.
 
     Args:
@@ -555,16 +617,17 @@ def _get_annotations_from_execution_info(
 
     Returns
     -------
-        - Dictionary with argnames as keys and their expected types as values
-        - The expected type of the return value(s) as a tuple.
+        - Dictionary with argument names as keys and their expected types in string
+          format as values.
+        - The expected type of the return value as a string.
 
     Raises
     ------
-        AnnotationMismatchError: If the types of the arguments or the return value of
-            the functions are not consistent.
+        AnnotationMismatchError: If there are incompatible annotations in the DAG's
+            components.
 
     """
-    types: dict[str, type] = {}
+    types: dict[str, str] = {}
     for name, info in execution_info.items():
         # We do not need to check whether name is already in types_dict, because the
         # functions in execution_info are topologically sorted, and hence, it is
@@ -582,25 +645,22 @@ def _get_annotations_from_execution_info(
             if earlier_type != current_type:
                 arg_is_function = arg in execution_info
                 if arg_is_function:
-                    explanation = (
-                        f"function {arg} has return type: {earlier_type.__name__}."
-                    )
+                    explanation = f"function {arg} has return type: {earlier_type}."
                 else:
                     explanation = (
-                        f"type annotation '{arg}: {earlier_type.__name__}' is used "
-                        "elsewhere."
+                        f"type annotation '{arg}: {earlier_type}' is used elsewhere."
                     )
 
                 raise AnnotationMismatchError(
                     f"function {name} has the argument type annotation '{arg}: "
-                    f"{current_type.__name__}', but {explanation}"
+                    f"{current_type}', but {explanation}"
                 )
 
         types.update(info.argument_annotations)
 
-    args = {k: v for k, v in types.items() if k in arglist}
-    return_annotation = tuple[tuple(types[target] for target in targets)]  # type: ignore[misc,valid-type]
-    return args, cast("tuple[type, ...]", return_annotation)
+    args_annotations = {arg: types[arg] for arg in arglist}
+    return_annotation = tuple(types[target] for target in targets)
+    return args_annotations, return_annotation
 
 
 def format_list_linewise(seq: Sequence[object]) -> str:
@@ -612,17 +672,3 @@ def format_list_linewise(seq: Sequence[object]) -> str:
         ]
         """,
     ).format(formatted_list=formatted_list)
-
-
-def get_input_types(func: GenericCallable) -> dict[str, type]:
-    """Get the input types annotations of a function.
-
-    Args:
-        func: The function to get the input types annotations of.
-
-    Returns
-    -------
-        dict: The argument names and their types annotations of the function.
-    """
-    free_arguments = get_free_arguments(func)
-    return _get_annotations_from_func(func, free_arguments)[0]

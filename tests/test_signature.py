@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import inspect
 
 import pytest
 
 from dags.exceptions import InvalidFunctionArgumentsError
-from dags.signature import create_signature, rename_arguments, with_signature
+from dags.signature import _create_signature, rename_arguments, with_signature
 
 
 @pytest.fixture
@@ -20,28 +22,33 @@ def example_signature() -> inspect.Signature:
 def example_signature_annotated() -> inspect.Signature:
     parameters = [
         inspect.Parameter(
-            name="a", kind=inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=int
+            name="a", kind=inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation="int"
         ),
         inspect.Parameter(
-            name="b", kind=inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=float
+            name="b", kind=inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation="float"
         ),
         inspect.Parameter(
-            name="c", kind=inspect.Parameter.KEYWORD_ONLY, annotation=bool
+            name="c", kind=inspect.Parameter.KEYWORD_ONLY, annotation="bool"
         ),
     ]
-    return inspect.Signature(parameters=parameters, return_annotation=float)
+    return inspect.Signature(parameters=parameters, return_annotation="float")
 
 
 def test_create_signature(example_signature: inspect.Signature) -> None:
-    created = create_signature(args=["a", "b"], kwargs=["c"])
+    created = _create_signature(
+        args_types={"a": inspect.Parameter.empty, "b": inspect.Parameter.empty},
+        kwargs_types={"c": inspect.Parameter.empty},
+    )
     assert created == example_signature
 
 
 def test_create_signature_annotated(
     example_signature_annotated: inspect.Signature,
 ) -> None:
-    created = create_signature(
-        args={"a": int, "b": float}, kwargs={"c": bool}, return_annotation=float
+    created = _create_signature(
+        args_types={"a": "int", "b": "float"},
+        kwargs_types={"c": "bool"},
+        return_annotation="float",
     )
     assert created == example_signature_annotated
 
@@ -60,7 +67,7 @@ def test_with_signature_decorator_valid_annotated(
     example_signature_annotated: inspect.Signature,
 ) -> None:
     @with_signature(
-        args={"a": int, "b": float}, kwargs={"c": bool}, return_annotation=float
+        args={"a": "int", "b": "float"}, kwargs={"c": "bool"}, return_annotation="float"
     )
     def f(*args, **kwargs):
         return sum(args) + sum(kwargs.values())
@@ -86,7 +93,10 @@ def test_with_signature_direct_call_valid_annotated(
         return sum(args) + sum(kwargs.values())
 
     g = with_signature(
-        f, args={"a": int, "b": float}, kwargs={"c": bool}, return_annotation=float
+        f,
+        args={"a": "int", "b": "float"},
+        kwargs={"c": "bool"},
+        return_annotation="float",
     )
 
     assert inspect.signature(g) == example_signature_annotated
@@ -164,10 +174,12 @@ def test_rename_arguments_decorator_annotated() -> None:
     def f(d: int, e: float, *, f: bool) -> float:
         return d + e + f
 
-    def expected(a: int, b: float, *, c: bool) -> float:
-        return a + b + c
-
-    assert inspect.signature(f) == inspect.signature(expected)
+    assert inspect.get_annotations(f) == {
+        "a": "int",
+        "b": "float",
+        "c": "bool",
+        "return": "float",
+    }
 
 
 def test_rename_arguments_direct_call(example_signature: inspect.Signature) -> None:
@@ -188,7 +200,9 @@ def test_rename_arguments_direct_call_annotated() -> None:
 
     g = rename_arguments(f, mapper={"e": "b", "d": "a", "f": "c"})
 
-    def expected(a: int, b: float, *, c: bool) -> float:
-        return a + b + c
-
-    assert inspect.signature(g) == inspect.signature(expected)
+    assert inspect.get_annotations(g) == {
+        "a": "int",
+        "b": "float",
+        "c": "bool",
+        "return": "float",
+    }

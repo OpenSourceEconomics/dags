@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
-import functools
 from typing import TYPE_CHECKING
 
 from dags.dag import (
     concatenate_functions,
     create_arguments_of_concatenated_function,
     create_dag,
+    create_execution_info,
+    get_annotations_from_execution_info,
     get_free_arguments,
+    harmonize_and_check_functions_and_targets,
 )
 from dags.signature import rename_arguments
 from dags.tree.tree_utils import (
@@ -41,7 +43,7 @@ if TYPE_CHECKING:
     )
 
 
-def create_input_structure_tree(
+def create_tree_with_input_types(
     functions: NestedFunctionDict,
     targets: NestedTargetDict | None = None,
     top_level_inputs: set[str] | list[str] | tuple[str, ...] = (),
@@ -72,14 +74,25 @@ def create_input_structure_tree(
         top_level_namespace=top_level_namespace,
     )
 
-    parameters = create_arguments_of_concatenated_function(
+    targets_qual_names = qual_names(targets) if targets is not None else None
+
+    _functions, _targets = harmonize_and_check_functions_and_targets(
         functions=functions_for_flat_dags,
-        dag=create_dag(
-            functions=functions_for_flat_dags,
-            targets=qual_names(targets) if targets is not None else None,
-        ),
+        targets=targets_qual_names,
     )
-    return unflatten_from_qual_names(dict.fromkeys(parameters))
+
+    dag = create_dag(
+        functions=_functions,
+        targets=_targets,
+    )
+    arglist = create_arguments_of_concatenated_function(functions=_functions, dag=dag)
+    execution_info = create_execution_info(_functions, dag)
+    args = get_annotations_from_execution_info(
+        execution_info,
+        arglist=arglist,
+        targets=_targets,
+    )[0]
+    return unflatten_from_qual_names(args)
 
 
 def create_dag_tree(
@@ -146,7 +159,6 @@ def concatenate_functions_tree(
         enforce_signature=enforce_signature,
     )
 
-    @functools.wraps(concatenated_function)
     def wrapper(inputs: NestedInputDict) -> NestedOutputDict:
         qual_name_inputs = flatten_to_qual_names(inputs)
         qual_name_outputs = concatenated_function(**qual_name_inputs)

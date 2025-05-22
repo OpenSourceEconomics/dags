@@ -1,7 +1,19 @@
-import pytest
+from __future__ import annotations
 
+import functools
+import inspect
+from typing import TYPE_CHECKING
+
+import numpy as np
+import pytest
+from numpy.typing import NDArray
+
+from dags.annotations import get_annotations, verify_annotations_are_strings
 from dags.dag import concatenate_functions
-from dags.exceptions import AnnotationMismatchError
+from dags.exceptions import AnnotationMismatchError, NonStringAnnotationError
+
+if TYPE_CHECKING:
+    from dags.typing import CombinedFunctionReturnType
 
 
 def test_argument_annotations_mismatch() -> None:
@@ -40,3 +52,118 @@ def test_argument_annoations_mismatch_with_return_annotation() -> None:
         ),
     ):
         concatenate_functions([f, g], set_annotations=True)
+
+
+@pytest.mark.parametrize("return_type", ["tuple", "list", "dict"])
+def test_concatenate_functions_without_input(
+    return_type: CombinedFunctionReturnType,
+) -> None:
+    concatenated = concatenate_functions(
+        functions={},
+        targets=None,
+        return_type=return_type,
+        set_annotations=True,
+    )
+    expected_type = {  # type: ignore[var-annotated]
+        "tuple": (),
+        "list": [],
+        "dict": {},
+    }
+    assert inspect.get_annotations(concatenated, eval_str=True) == {
+        "return": expected_type[return_type],
+    }
+
+
+def test_get_annotations() -> None:
+    def f(a: int) -> float:
+        return float(a)
+
+    assert get_annotations(f) == {"a": "int", "return": "float"}
+    assert get_annotations(f, eval_str=True) == {"a": int, "return": float}
+
+
+def test_get_annotations_with_partial() -> None:
+    def f(a: int, b: bool) -> float:
+        return float(a) + int(b)
+
+    g = functools.partial(f, b=True)
+
+    assert get_annotations(f) == {"a": "int", "b": "bool", "return": "float"}
+    assert get_annotations(g) == {"a": "int", "return": "float"}
+    assert get_annotations(g, eval_str=True) == {"a": int, "return": float}
+
+
+def test_get_annotations_with_default() -> None:
+    def f(a) -> float:  # type: ignore[no-untyped-def]
+        return float(a)
+
+    assert get_annotations(f) == {"a": "no_annotation_found", "return": "float"}
+    assert get_annotations(f, default="default") == {"a": "default", "return": "float"}
+    assert get_annotations(f, default=bool, eval_str=True) == {
+        "a": bool,
+        "return": float,
+    }
+
+
+def test_get_annotations_with_numpy() -> None:
+    def f(a: NDArray[np.float64]) -> float:
+        return a.sum()
+
+    assert get_annotations(f) == {"a": "NDArray[np.float64]", "return": "float"}
+    assert get_annotations(f, eval_str=True) == {
+        "a": NDArray[np.float64],
+        "return": float,
+    }
+
+
+def test_verify_annotations_are_strings() -> None:
+    verify_annotations_are_strings({"a": "int", "return": "float"}, "f")
+
+
+def test_verify_annotations_are_strings_non_string_argument_full_message() -> None:
+    with pytest.raises(
+        NonStringAnnotationError,
+        match=(
+            r"All function annotations must be strings. The annotations for the "
+            r"argument \(a\) are not strings.\n"
+            r"A simple way for Python to treat type annotations as strings is to add\n"
+            r"\n\tfrom __future__ import annotations\n\n"
+            r"at the top of your file. Alternatively, you can do it manually by "
+            r"enclosing the annotations in quotes:\n\n"
+            r"\tf\(a: 'int'\) -> 'float'\."
+        ),
+    ):
+        verify_annotations_are_strings({"a": int, "return": "float"}, "f")  # type: ignore[dict-item]
+
+
+def test_verify_annotations_are_strings_multiple_non_string_argument() -> None:
+    with pytest.raises(
+        NonStringAnnotationError,
+        match=(
+            "All function annotations must be strings. The annotations for the "
+            r"arguments \(a, b\) are not strings."
+        ),
+    ):
+        verify_annotations_are_strings({"a": int, "b": bool, "return": "float"}, "f")  # type: ignore[dict-item]
+
+
+def test_verify_annotations_are_strings_non_string_return() -> None:
+    with pytest.raises(
+        NonStringAnnotationError,
+        match=(
+            "All function annotations must be strings. The annotations for the return"
+            " value are not strings."
+        ),
+    ):
+        verify_annotations_are_strings({"a": "int", "return": float}, "f")  # type: ignore[dict-item]
+
+
+def test_verify_annotations_are_strings_non_string_argument_and_return() -> None:
+    with pytest.raises(
+        NonStringAnnotationError,
+        match=(
+            "All function annotations must be strings. The annotations for the argument"
+            r" \(a\) and the return value are not strings."
+        ),
+    ):
+        verify_annotations_are_strings({"a": int, "return": float}, "f")  # type: ignore[dict-item]
