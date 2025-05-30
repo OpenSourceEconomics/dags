@@ -81,7 +81,9 @@ def verify_annotations_are_strings(
     if all(isinstance(v, str) for v in annotations.values()):
         return
 
-    non_string_annotations = [k for k, v in annotations.items() if isinstance(v, type)]
+    non_string_annotations = [
+        k for k, v in annotations.items() if not isinstance(v, str)
+    ]
     arg_annotations = {k: v for k, v in annotations.items() if k != "return"}
     return_annotation = annotations["return"]
 

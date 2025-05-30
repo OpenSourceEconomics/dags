@@ -3,6 +3,7 @@ from __future__ import annotations
 import functools
 import inspect
 import textwrap
+import warnings
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, cast
 
@@ -32,6 +33,10 @@ if TYPE_CHECKING:
         T,
         TargetType,
     )
+
+
+class DagsWarning(UserWarning):
+    """Base class for all warnings in the dags library."""
 
 
 @dataclass(frozen=True)
@@ -150,10 +155,11 @@ def concatenate_functions(
 
     """
     if set_annotations and not isinstance(targets, str) and aggregator is not None:
-        raise DagsError(
-            "Cannot set annotations when using an aggregator on multiple targets. "
-            "Please set set_annotations to False, or use a single target, or do not "
-            "use an aggregator."
+        warnings.warn(
+            "Cannot infer return annotation when using an aggregator on multiple "
+            "targets.",
+            DagsWarning,
+            stacklevel=2,
         )
 
     # Create the DAG.
