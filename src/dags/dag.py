@@ -35,6 +35,10 @@ if TYPE_CHECKING:
     )
 
 
+class DagsWarning(UserWarning):
+    """Base class for all warnings in the dags library."""
+
+
 @dataclass(frozen=True)
 class FunctionExecutionInfo:
     """Information about a function that is needed to execute it.
@@ -154,7 +158,7 @@ def concatenate_functions(
         warnings.warn(
             "Cannot infer return annotation when using an aggregator on multiple "
             "targets.",
-            category=UserWarning,
+            DagsWarning,
             stacklevel=2,
         )
 
