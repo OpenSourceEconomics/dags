@@ -95,8 +95,8 @@ class FunctionExecutionInfo:
 
 def concatenate_functions(
     functions: FunctionCollection,
-    dag: nx.DiGraph[str] | None = None,
     targets: TargetType = None,
+    dag: nx.DiGraph[str] | None = None,
     return_type: CombinedFunctionReturnType = "tuple",
     aggregator: Callable[[T, T], T] | None = None,
     enforce_signature: bool = True,
@@ -116,11 +116,11 @@ def concatenate_functions(
         functions (dict or list): Dict or list of functions. If a list, the function
             name is inferred from the __name__ attribute of the entries. If a dict, the
             name of the function is set to the dictionary key.
-        dag (networkx.DiGraph or None): A DAG of functions. If None, a new DAG is
-            created from the functions and targets.
         targets (str or list or None): Name of the function that produces the target or
             list of such function names. If the value is `None`, all variables are
             returned.
+        dag (networkx.DiGraph or None): A DAG of functions. If None, a new DAG is
+            created from the functions and targets.
         return_type (str): One of "tuple", "list", "dict". This is ignored if the
             targets are a single string or if an aggregator is provided.
         aggregator (callable or None): Binary reduction function that is used to
