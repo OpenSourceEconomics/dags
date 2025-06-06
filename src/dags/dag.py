@@ -96,6 +96,7 @@ class FunctionExecutionInfo:
 def concatenate_functions(
     functions: FunctionCollection,
     targets: TargetType = None,
+    *,
     dag: nx.DiGraph[str] | None = None,
     return_type: CombinedFunctionReturnType = "tuple",
     aggregator: Callable[[T, T], T] | None = None,
