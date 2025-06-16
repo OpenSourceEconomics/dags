@@ -72,6 +72,20 @@ def concatenated_utility_target() -> GenericCallable:
     )
 
 
+def test_concatenate_functions_with_dag(
+    concatenated_no_target: GenericCallable,
+) -> None:
+    dag = create_dag(
+        functions=[_utility, _unrelated, _leisure, _consumption], targets="_utility"
+    )
+    concatenated = concatenate_functions(
+        functions=[_utility, _leisure, _consumption],
+        dag=dag,
+        set_annotations=True,
+    )
+    assert inspect.signature(concatenated) == inspect.signature(concatenated_no_target)
+
+
 def test_concatenate_functions_no_target_results(
     concatenated_no_target: GenericCallable,
 ) -> None:
