@@ -293,15 +293,11 @@ def _create_combined_function_from_dag(
 
     # Update the actual return type, as well as the return annotation of the
     # concatenated function.
+    out: GenericCallable
     if isinstance(targets, str) or (aggregator is not None and len(_targets) == 1):
-        out = cast(
-            "GenericCallable",
-            single_output(_concatenated, set_annotations=set_annotations),
-        )
+        out = single_output(_concatenated, set_annotations=set_annotations)
     elif aggregator is not None:
-        out = cast(
-            "GenericCallable", aggregated_output(_concatenated, aggregator=aggregator)
-        )
+        out = aggregated_output(_concatenated, aggregator=aggregator)
     elif return_type == "list":
         out = cast(
             "GenericCallable",
