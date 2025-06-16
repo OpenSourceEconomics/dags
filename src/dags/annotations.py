@@ -5,14 +5,14 @@ from typing import TYPE_CHECKING, Literal, overload
 from dags.exceptions import NonStringAnnotationError
 
 if TYPE_CHECKING:
-    from dags.typing import GenericCallable
+    from collections.abc import Callable
 
 import functools
 import inspect
 
 
 def get_free_arguments(
-    func: GenericCallable,
+    func: Callable,
 ) -> list[str]:
     arguments = list(inspect.signature(func).parameters)
     if isinstance(func, functools.partial):
@@ -26,7 +26,7 @@ def get_free_arguments(
 
 @overload
 def get_annotations(
-    func: GenericCallable,
+    func: Callable,
     eval_str: Literal[False] = False,
     default: str | None = None,
 ) -> dict[str, str]: ...
@@ -34,14 +34,14 @@ def get_annotations(
 
 @overload
 def get_annotations(
-    func: GenericCallable,
+    func: Callable,
     eval_str: Literal[True] = True,
     default: type | None = None,
 ) -> dict[str, type]: ...
 
 
 def get_annotations(
-    func: GenericCallable,
+    func: Callable,
     eval_str: bool = False,
     default: str | type | None = None,
 ) -> dict[str, str] | dict[str, type]:

@@ -33,7 +33,6 @@ if TYPE_CHECKING:
     import networkx as nx
 
     from dags.tree.typing import (
-        GenericCallable,
         NestedFunctionDict,
         NestedInputDict,
         NestedInputStructureDict,
@@ -208,10 +207,10 @@ def functions_without_tree_logic(
 
 
 def one_function_without_tree_logic(
-    function: GenericCallable,
+    function: Callable,
     tree_path: tuple[str, ...],
     top_level_namespace: set[str],
-) -> GenericCallable:
+) -> Callable:
     """Convert a single function to work without tree logic.
 
     Args:
@@ -260,7 +259,7 @@ def _get_top_level_namespace_final(
 
 
 def _map_parameters_rel_to_abs(
-    func: GenericCallable,
+    func: Callable,
     current_namespace: tuple[str, ...],
     top_level_namespace: set[str],
 ) -> dict[str, str]:

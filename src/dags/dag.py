@@ -4,7 +4,7 @@ import functools
 import inspect
 import textwrap
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, Literal, cast
 
 import networkx as nx
 
@@ -25,13 +25,7 @@ from dags.signature import with_signature
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
 
-    from dags.typing import (
-        CombinedFunctionReturnType,
-        FunctionCollection,
-        GenericCallable,
-        T,
-        TargetType,
-    )
+    from dags.typing import T
 
 
 @dataclass(frozen=True)
@@ -64,7 +58,7 @@ class FunctionExecutionInfo:
     """
 
     name: str
-    func: GenericCallable
+    func: Callable
     verify_annotations: bool = False
 
     def __post_init__(self) -> None:
@@ -94,15 +88,15 @@ class FunctionExecutionInfo:
 
 
 def concatenate_functions(
-    functions: FunctionCollection,
-    targets: TargetType = None,
+    functions: dict[str, Callable] | list[Callable],
+    targets: str | list[str] | None = None,
     *,
     dag: nx.DiGraph[str] | None = None,
-    return_type: CombinedFunctionReturnType = "tuple",
+    return_type: Literal["tuple", "list", "dict"] = "tuple",
     aggregator: Callable[[T, T], T] | None = None,
     enforce_signature: bool = True,
     set_annotations: bool = False,
-) -> GenericCallable:
+) -> Callable:
     """Combine functions to one function that generates targets.
 
     Functions can depend on the output of other functions as inputs, as long as the
@@ -177,8 +171,8 @@ def concatenate_functions(
 
 
 def create_dag(
-    functions: FunctionCollection,
-    targets: TargetType,
+    functions: dict[str, Callable] | list[Callable],
+    targets: str | list[str] | None,
 ) -> nx.DiGraph[str]:
     """Build a directed acyclic graph (DAG) from functions.
 
@@ -218,13 +212,13 @@ def create_dag(
 
 def _create_combined_function_from_dag(
     dag: nx.DiGraph[str],
-    functions: FunctionCollection,
-    targets: TargetType,
-    return_type: CombinedFunctionReturnType = "tuple",
+    functions: dict[str, Callable] | list[Callable],
+    targets: str | list[str] | None,
+    return_type: Literal["tuple", "list", "dict"] = "tuple",
     aggregator: Callable[[T, T], T] | None = None,
     enforce_signature: bool = True,
     set_annotations: bool = False,
-) -> GenericCallable:
+) -> Callable:
     """Create combined function which allows executing a DAG in one function call.
 
     The arguments of the combined function are all arguments of relevant functions that
@@ -293,21 +287,21 @@ def _create_combined_function_from_dag(
 
     # Update the actual return type, as well as the return annotation of the
     # concatenated function.
-    out: GenericCallable
+    out: Callable
     if isinstance(targets, str) or (aggregator is not None and len(_targets) == 1):
         out = single_output(_concatenated, set_annotations=set_annotations)
     elif aggregator is not None:
         out = aggregated_output(_concatenated, aggregator=aggregator)
     elif return_type == "list":
         out = cast(
-            "GenericCallable",
+            "Callable",
             list_output(_concatenated, set_annotations=set_annotations),
         )
     elif return_type == "tuple":
         out = _concatenated
     elif return_type == "dict":
         out = cast(
-            "GenericCallable",
+            "Callable",
             dict_output(_concatenated, keys=_targets, set_annotations=set_annotations),
         )
     else:
@@ -321,8 +315,8 @@ def _create_combined_function_from_dag(
 
 
 def get_ancestors(
-    functions: FunctionCollection,
-    targets: TargetType,
+    functions: dict[str, Callable] | list[Callable],
+    targets: str | list[str] | None,
     include_targets: bool = False,
 ) -> set[str]:
     """Build a DAG and extract all ancestors of targets.
@@ -357,9 +351,9 @@ def get_ancestors(
 
 
 def harmonize_and_check_functions_and_targets(
-    functions: FunctionCollection,
-    targets: TargetType,
-) -> tuple[dict[str, GenericCallable], list[str]]:
+    functions: dict[str, Callable] | list[Callable],
+    targets: str | list[str] | None,
+) -> tuple[dict[str, Callable], list[str]]:
     """Harmonize the type of specified functions and targets and do some checks.
 
     Args:
@@ -384,8 +378,8 @@ def harmonize_and_check_functions_and_targets(
 
 
 def _harmonize_functions(
-    functions: FunctionCollection,
-) -> dict[str, GenericCallable]:
+    functions: dict[str, Callable] | list[Callable],
+) -> dict[str, Callable]:
     if not isinstance(functions, dict):
         functions_dict = {func.__name__: func for func in functions}
     else:
@@ -395,7 +389,7 @@ def _harmonize_functions(
 
 
 def _harmonize_targets(
-    targets: TargetType,
+    targets: str | list[str] | None,
     function_names: list[str],
 ) -> list[str]:
     if targets is None:
@@ -415,7 +409,7 @@ def _fail_if_targets_have_wrong_types(
 
 
 def _fail_if_functions_are_missing(
-    functions: dict[str, GenericCallable],
+    functions: dict[str, Callable],
     targets: list[str],
 ) -> None:
     targets_not_in_functions = set(targets) - set(functions)
@@ -436,7 +430,7 @@ def _fail_if_dag_contains_cycle(dag: nx.DiGraph[str]) -> None:
 
 
 def _create_complete_dag(
-    functions: dict[str, GenericCallable],
+    functions: dict[str, Callable],
 ) -> nx.DiGraph[str]:
     """Create the complete DAG.
 
@@ -486,7 +480,7 @@ def _limit_dag_to_targets_and_their_ancestors(
 
 
 def create_arguments_of_concatenated_function(
-    functions: dict[str, GenericCallable],
+    functions: dict[str, Callable],
     dag: nx.DiGraph[str],
 ) -> list[str]:
     """Create the signature of the concatenated function.
@@ -506,7 +500,7 @@ def create_arguments_of_concatenated_function(
 
 
 def create_execution_info(
-    functions: dict[str, GenericCallable],
+    functions: dict[str, Callable],
     dag: nx.DiGraph[str],
     verify_annotations: bool = False,
 ) -> dict[str, FunctionExecutionInfo]:

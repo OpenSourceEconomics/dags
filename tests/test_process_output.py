@@ -13,7 +13,7 @@ from dags.output import (
 )
 
 if TYPE_CHECKING:
-    from dags.typing import GenericCallable
+    from collections.abc import Callable
 
 
 @pytest.fixture
@@ -28,22 +28,22 @@ def f():
     return _f
 
 
-def test_single_output(f: GenericCallable) -> None:
+def test_single_output(f: Callable) -> None:
     g = single_output(f)  # type: ignore[var-annotated]
     assert g(foo=True) == 1
 
 
-def test_single_output_annotations(f: GenericCallable) -> None:
+def test_single_output_annotations(f: Callable) -> None:
     g = single_output(f, set_annotations=True)  # type: ignore[var-annotated]
     assert inspect.get_annotations(g) == {"foo": "bool", "return": "int"}
 
 
-def test_dict_output(f: GenericCallable) -> None:
+def test_dict_output(f: Callable) -> None:
     g = dict_output(f, keys=["a", "b"])
     assert g(foo=True) == {"a": 1, "b": 2.0}
 
 
-def test_dict_output_annotations(f: GenericCallable) -> None:
+def test_dict_output_annotations(f: Callable) -> None:
     g = dict_output(f, keys=["a", "b"], set_annotations=True)
     assert inspect.get_annotations(g) == {
         "foo": "bool",
@@ -51,22 +51,22 @@ def test_dict_output_annotations(f: GenericCallable) -> None:
     }
 
 
-def test_list_output(f: GenericCallable) -> None:
+def test_list_output(f: Callable) -> None:
     g = list_output(f)
     assert g(foo=True) == [1, 2.0]
 
 
-def test_list_output_annotations(f: GenericCallable) -> None:
+def test_list_output_annotations(f: Callable) -> None:
     g = list_output(f, set_annotations=True)
     assert inspect.get_annotations(g) == {"foo": "bool", "return": ["int", "float"]}
 
 
-def test_aggregated_output_decorator(f: GenericCallable) -> None:
+def test_aggregated_output_decorator(f: Callable) -> None:
     g = aggregated_output(f, aggregator=lambda x, y: x + y)
     assert g(foo=True) == 3
 
 
-def test_single_output_direct_call(f: GenericCallable) -> None:
+def test_single_output_direct_call(f: Callable) -> None:
     g = single_output(f)  # type: ignore[var-annotated]
     assert g(foo=True) == 1
 

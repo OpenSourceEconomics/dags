@@ -17,7 +17,7 @@ from dags.tree.dag_tree import (
 
 if TYPE_CHECKING:
     from dags.tree.typing import (
-        GenericCallable,
+        Callable,
         NestedFunctionDict,
         NestedInputStructureDict,
     )
@@ -105,7 +105,7 @@ def test_get_top_level_namespace_initial(
     ],
 )
 def test_create_parameter_name_mapper(
-    func: GenericCallable,
+    func: Callable,
     current_namespace: tuple[str, ...],
     top_level_namespace: set[str],
     expected: dict[str, str],
