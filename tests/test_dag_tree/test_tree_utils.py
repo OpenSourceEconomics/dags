@@ -12,13 +12,13 @@ if TYPE_CHECKING:
 # Import fixtures
 from dags.tree.tree_utils import (
     _is_python_identifier,
-    flatten_to_qual_names,
+    flatten_to_qnames,
     flatten_to_tree_paths,
-    qual_name_from_tree_path,
-    qual_names,
-    tree_path_from_qual_name,
+    qname_from_tree_path,
+    qnames,
+    tree_path_from_qname,
     tree_paths,
-    unflatten_from_qual_names,
+    unflatten_from_qnames,
     unflatten_from_tree_paths,
 )
 
@@ -75,23 +75,20 @@ def functions_tree() -> NestedFunctionDict:
     }
 
 
-def test_flatten_to_qual_names(functions_tree: NestedFunctionDict) -> None:
-    assert flatten_to_qual_names(functions_tree) == {
+def test_flatten_to_qnames(functions_tree: NestedFunctionDict) -> None:
+    assert flatten_to_qnames(functions_tree) == {
         "a__b": _bb,
         "c__d__e": _ee,
         "f": _ff,
     }
 
 
-def test_round_trip_via_qual_names(functions_tree: NestedFunctionDict) -> None:
-    assert (
-        unflatten_from_qual_names(flatten_to_qual_names(functions_tree))
-        == functions_tree
-    )
+def test_round_trip_via_qnames(functions_tree: NestedFunctionDict) -> None:
+    assert unflatten_from_qnames(flatten_to_qnames(functions_tree)) == functions_tree
 
 
-def test_qual_names(functions_tree: NestedFunctionDict) -> None:
-    assert qual_names(functions_tree) == [
+def test_qnames(functions_tree: NestedFunctionDict) -> None:
+    assert qnames(functions_tree) == [
         "a__b",
         "c__d__e",
         "f",
@@ -121,9 +118,9 @@ def test_tree_paths(functions_tree: NestedFunctionDict) -> None:
     ]
 
 
-def test_qual_name_from_tree_path() -> None:
-    assert qual_name_from_tree_path(("a", "b")) == "a__b"
+def test_qname_from_tree_path() -> None:
+    assert qname_from_tree_path(("a", "b")) == "a__b"
 
 
-def test_tree_path_from_qual_name() -> None:
-    assert tree_path_from_qual_name("a__b") == ("a", "b")
+def test_tree_path_from_qname() -> None:
+    assert tree_path_from_qname("a__b") == ("a", "b")

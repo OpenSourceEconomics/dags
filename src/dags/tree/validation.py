@@ -9,7 +9,7 @@ from dags.tree.exceptions import (
     RepeatedTopLevelElementError,
     TrailingUnderscoreError,
 )
-from dags.tree.tree_utils import tree_path_from_qual_name, tree_paths
+from dags.tree.tree_utils import tree_path_from_qname, tree_paths
 
 if TYPE_CHECKING:
     from dags.tree.typing import (
@@ -17,13 +17,13 @@ if TYPE_CHECKING:
         NestedInputDict,
         NestedStructureDict,
         NestedTargetDict,
-        QualNameFunctionDict,
+        QNameFunctionDict,
     )
 
 
 def fail_if_paths_are_invalid(
     functions: NestedFunctionDict | None = None,
-    qual_abs_names_functions: QualNameFunctionDict | None = None,
+    abs_qnames_functions: QNameFunctionDict | None = None,
     data_tree: NestedStructureDict | None = None,
     input_structure: NestedInputDict | None = None,
     targets: NestedTargetDict | None = None,
@@ -41,7 +41,7 @@ def fail_if_paths_are_invalid(
     2. The paths contain elements that are part of the top-level namespace.
 
     Note: Sometimes you want to pass both `functions` (the nested function dict you will
-    start out with) and `qual_abs_names_functions` (the result of running
+    start out with) and `abs_qnames_functions` (the result of running
     `functions_without_tree_logic` on `functions`, which contains the converted
     parameters of functions, too). Even though the former may be seen as a subset of the
     latter, the conversion to qualified absolute names is not innocuous when it comes to
@@ -52,7 +52,7 @@ def fail_if_paths_are_invalid(
     Args:
         functions:
             The nested function dict.
-        qual_abs_names_functions:
+        abs_qnames_functions:
             The result of running `functions_without_tree_logic` on `functions`.
         data_tree:
             The tree of input data (typically not used together with `input_structure`).
@@ -72,8 +72,8 @@ def fail_if_paths_are_invalid(
     """
     if functions is None:
         functions = {}
-    if qual_abs_names_functions is None:
-        qual_abs_names_functions = {}
+    if abs_qnames_functions is None:
+        abs_qnames_functions = {}
     if data_tree is None:
         data_tree = {}
     if input_structure is None:
@@ -82,7 +82,7 @@ def fail_if_paths_are_invalid(
         targets = {}
     all_tree_paths = (
         set(tree_paths(functions))
-        | {tree_path_from_qual_name(qn) for qn in qual_abs_names_functions}
+        | {tree_path_from_qname(qn) for qn in abs_qnames_functions}
         | set(tree_paths(data_tree))
         | set(tree_paths(input_structure))
         | set(tree_paths(targets))
