@@ -15,13 +15,13 @@ from dags.dag import (
 )
 from dags.signature import rename_arguments
 from dags.tree.tree_utils import (
-    flatten_to_qual_names,
+    flatten_to_qnames,
     flatten_to_tree_paths,
-    qual_name_from_tree_path,
-    qual_names,
-    tree_path_from_qual_name,
+    qname_from_tree_path,
+    qnames,
+    tree_path_from_qname,
     tree_paths,
-    unflatten_from_qual_names,
+    unflatten_from_qnames,
 )
 from dags.tree.validation import (
     fail_if_paths_are_invalid,
@@ -39,7 +39,7 @@ if TYPE_CHECKING:
         NestedInputStructureDict,
         NestedOutputDict,
         NestedTargetDict,
-        QualNameFunctionDict,
+        QNameFunctionDict,
     )
 
 
@@ -69,16 +69,16 @@ def create_tree_with_input_types(
     )
     fail_if_paths_are_invalid(
         functions=functions,
-        qual_abs_names_functions=functions_for_flat_dags,
+        abs_qnames_functions=functions_for_flat_dags,
         targets=targets,
         top_level_namespace=top_level_namespace,
     )
 
-    targets_qual_names = qual_names(targets) if targets is not None else None
+    targets_qnames = qnames(targets) if targets is not None else None
 
     _functions, _targets = harmonize_and_check_functions_and_targets(
         functions=functions_for_flat_dags,
-        targets=targets_qual_names,
+        targets=targets_qnames,
     )
 
     dag = create_dag(
@@ -92,7 +92,7 @@ def create_tree_with_input_types(
         arglist=arglist,
         targets=_targets,
     )[0]
-    return unflatten_from_qual_names(args)
+    return unflatten_from_qnames(args)
 
 
 def create_dag_tree(
@@ -119,7 +119,7 @@ def create_dag_tree(
         functions=functions,
         top_level_namespace=top_level_namespace,
     )
-    targets_for_flat_dags = qual_names(targets) if targets is not None else None
+    targets_for_flat_dags = qnames(targets) if targets is not None else None
 
     return create_dag(functions_for_flat_dags, targets_for_flat_dags)
 
@@ -150,7 +150,7 @@ def concatenate_functions_tree(
         functions=functions,
         top_level_namespace=top_level_namespace,
     )
-    targets_for_flat_dags = qual_names(targets) if targets is not None else None
+    targets_for_flat_dags = qnames(targets) if targets is not None else None
 
     concatenated_function = concatenate_functions(
         functions=functions_for_flat_dags,
@@ -160,9 +160,9 @@ def concatenate_functions_tree(
     )
 
     def wrapper(inputs: NestedInputDict) -> NestedOutputDict:
-        qual_name_inputs = flatten_to_qual_names(inputs)
-        qual_name_outputs = concatenated_function(**qual_name_inputs)
-        return unflatten_from_qual_names(qual_name_outputs)
+        qname_inputs = flatten_to_qnames(inputs)
+        qname_outputs = concatenated_function(**qname_inputs)
+        return unflatten_from_qnames(qname_outputs)
 
     return wrapper
 
@@ -170,7 +170,7 @@ def concatenate_functions_tree(
 def functions_without_tree_logic(
     functions: NestedFunctionDict,
     top_level_namespace: set[str],
-) -> QualNameFunctionDict:
+) -> QNameFunctionDict:
     """Return a functions dictionary that `dags.concatenate_functions` can work with.
 
     In particular, remove all tree logic by
@@ -195,16 +195,16 @@ def functions_without_tree_logic(
     """
     tree_path_functions = flatten_to_tree_paths(functions)
 
-    qual_name_functions = {}
+    qname_functions = {}
     for path, func in tree_path_functions.items():
         renamed = one_function_without_tree_logic(
             function=func,
             tree_path=path,
             top_level_namespace=top_level_namespace,
         )
-        qual_name_functions[qual_name_from_tree_path(path)] = renamed
+        qname_functions[qname_from_tree_path(path)] = renamed
 
-    return qual_name_functions
+    return qname_functions
 
 
 def one_function_without_tree_logic(
@@ -305,7 +305,7 @@ def _get_parameter_absolute_path(
         The qualified parameter name.
 
     """
-    return qual_name_from_tree_path(
+    return qname_from_tree_path(
         _get_parameter_tree_path(
             parameter_name=parameter_name,
             current_namespace=current_namespace,
@@ -339,7 +339,7 @@ def _get_parameter_tree_path(
         The path to the function/input that the parameter points to.
     """
     # Just a tuple since it could be a relative or an absolute path.
-    parameter_tuple = tree_path_from_qual_name(parameter_name)
+    parameter_tuple = tree_path_from_qname(parameter_name)
 
     if parameter_tuple[0] in top_level_namespace:
         parameter_tree_path = parameter_tuple

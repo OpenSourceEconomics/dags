@@ -14,14 +14,14 @@ from dags.tree.exceptions import (
     TrailingUnderscoreError,
 )
 from dags.tree.tree_utils import (
-    QUAL_NAME_DELIMITER,
-    flatten_to_qual_names,
+    QNAME_DELIMITER,
+    flatten_to_qnames,
     flatten_to_tree_paths,
-    qual_name_from_tree_path,
-    qual_names,
-    tree_path_from_qual_name,
+    qname_from_tree_path,
+    qnames,
+    tree_path_from_qname,
     tree_paths,
-    unflatten_from_qual_names,
+    unflatten_from_qnames,
     unflatten_from_tree_paths,
 )
 from dags.tree.validation import (
@@ -47,13 +47,13 @@ __all__ = [
     "RepeatedTopLevelElementError",
     "TrailingUnderscoreError",
     # Qualified name utilities
-    "QUAL_NAME_DELIMITER",
-    "flatten_to_qual_names",
+    "QNAME_DELIMITER",
+    "flatten_to_qnames",
     "flatten_to_tree_paths",
-    "qual_name_from_tree_path",
-    "qual_names",
-    "tree_path_from_qual_name",
+    "qname_from_tree_path",
+    "qnames",
+    "tree_path_from_qname",
     "tree_paths",
-    "unflatten_from_qual_names",
+    "unflatten_from_qnames",
     "unflatten_from_tree_paths",
 ]

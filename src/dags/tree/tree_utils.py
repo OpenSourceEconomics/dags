@@ -8,18 +8,18 @@ from typing import TYPE_CHECKING
 import flatten_dict as fd
 
 if TYPE_CHECKING:
-    from dags.tree.typing import FlatQualNameDict, FlatTreePathDict, NestedStructureDict
+    from dags.tree.typing import FlatQNameDict, FlatTreePathDict, NestedStructureDict
 
 # Constants for qualified names
-QUAL_NAME_DELIMITER: str = "__"
+QNAME_DELIMITER: str = "__"
 _python_identifier: str = r"[a-zA-Z_\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF][a-zA-Z0-9_\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]*"  # noqa: E501
 
 # Reducers and splitters to flatten/unflatten dicts with qualified names as keys
-_qualified_name_reducer = fd.reducers.make_reducer(delimiter=QUAL_NAME_DELIMITER)
-_qualified_name_splitter = fd.splitters.make_splitter(delimiter=QUAL_NAME_DELIMITER)
+_qualified_name_reducer = fd.reducers.make_reducer(delimiter=QNAME_DELIMITER)
+_qualified_name_splitter = fd.splitters.make_splitter(delimiter=QNAME_DELIMITER)
 
 
-def qual_name_from_tree_path(tree_path: tuple[str, ...]) -> str:
+def qname_from_tree_path(tree_path: tuple[str, ...]) -> str:
     """Convert a tree path to a qualified name.
 
     Args:
@@ -29,23 +29,23 @@ def qual_name_from_tree_path(tree_path: tuple[str, ...]) -> str:
     -------
         A qualified name.
     """
-    return QUAL_NAME_DELIMITER.join(tree_path)
+    return QNAME_DELIMITER.join(tree_path)
 
 
-def tree_path_from_qual_name(qual_name: str) -> tuple[str, ...]:
+def tree_path_from_qname(qname: str) -> tuple[str, ...]:
     """Convert a qualified name to a tree path (tuple of strings).
 
     Args:
-        qual_name: A qualified name.
+        qname: A qualified name.
 
     Returns
     -------
         A tree path.
     """
-    return tuple(qual_name.split(QUAL_NAME_DELIMITER))
+    return tuple(qname.split(QNAME_DELIMITER))
 
 
-def flatten_to_qual_names(nested: NestedStructureDict) -> FlatQualNameDict:
+def flatten_to_qnames(nested: NestedStructureDict) -> FlatQNameDict:
     """Flatten a nested dictionary to a flat dictionary with qualified names as keys.
 
     Args:
@@ -58,7 +58,7 @@ def flatten_to_qual_names(nested: NestedStructureDict) -> FlatQualNameDict:
     return fd.flatten(nested, reducer=_qualified_name_reducer)
 
 
-def qual_names(nested: NestedStructureDict) -> list[str]:
+def qnames(nested: NestedStructureDict) -> list[str]:
     """Return a list of qualified names from the keys of the nested dictionary.
 
     Args:
@@ -68,20 +68,20 @@ def qual_names(nested: NestedStructureDict) -> list[str]:
     -------
         A list of qualified names.
     """
-    return list(flatten_to_qual_names(nested).keys())
+    return list(flatten_to_qnames(nested).keys())
 
 
-def unflatten_from_qual_names(flat_qual_names: FlatQualNameDict) -> NestedStructureDict:
+def unflatten_from_qnames(flat_qnames: FlatQNameDict) -> NestedStructureDict:
     """Return a nested dictionary from a flat dictionary with qualified names as keys.
 
     Args:
-        flat_qual_names: A dictionary with qualified names as keys.
+        flat_qnames: A dictionary with qualified names as keys.
 
     Returns
     -------
         A nested dictionary.
     """
-    return fd.unflatten(flat_qual_names, splitter=_qualified_name_splitter)
+    return fd.unflatten(flat_qnames, splitter=_qualified_name_splitter)
 
 
 def flatten_to_tree_paths(nested: NestedStructureDict) -> FlatTreePathDict:

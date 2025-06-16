@@ -149,7 +149,7 @@ def test_link_parameter_to_function_or_input(
     (
         "functions",
         "input_structure",
-        "qual_name_function_name_to_check",
+        "qname_function_name_to_check",
         "expected_argument_name",
     ),
     [
@@ -188,20 +188,18 @@ def test_link_parameter_to_function_or_input(
 def test_correct_argument_names(
     functions: NestedFunctionDict,
     input_structure: NestedInputStructureDict,
-    qual_name_function_name_to_check: str,
+    qname_function_name_to_check: str,
     expected_argument_name: str,
 ) -> None:
     top_level_namespace = _get_top_level_namespace_final(
         functions=functions,
         inputs=input_structure,
     )
-    qual_name_functions = functions_without_tree_logic(
+    qname_functions = functions_without_tree_logic(
         functions=functions,
         top_level_namespace=top_level_namespace,
     )
     assert (
         expected_argument_name
-        in inspect.signature(
-            qual_name_functions[qual_name_function_name_to_check]
-        ).parameters
+        in inspect.signature(qname_functions[qname_function_name_to_check]).parameters
     )
