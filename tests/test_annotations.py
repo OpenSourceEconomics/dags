@@ -32,7 +32,7 @@ def test_argument_annotations_mismatch() -> None:
             "type annotation 'a: int' is used elsewhere."
         ),
     ):
-        concatenate_functions([f, g], set_annotations=True)
+        concatenate_functions(functions=[f, g], set_annotations=True)
 
 
 def test_argument_annoations_mismatch_with_return_annotation() -> None:
@@ -51,7 +51,7 @@ def test_argument_annoations_mismatch_with_return_annotation() -> None:
             "return type: float."
         ),
     ):
-        concatenate_functions([f, g], set_annotations=True)
+        concatenate_functions(functions=[f, g], set_annotations=True)
 
 
 @pytest.mark.parametrize("return_type", ["tuple", "list", "dict"])
