@@ -638,6 +638,14 @@ def get_annotations_from_execution_info(
             earlier_type = types[arg]
             current_type = info.argument_annotations[arg]
 
+            # The following condition is a hack to deal with overloaded type
+            # annotations. E.g., we may have a function that an int and returns an int,
+            # or it takes a float and returns a float. We can achieve that with
+            # @overload, but the type hints will be "int | float". If we just checked]
+            # for equality, we would get an error if a downstream or upstream function
+            # required an int or a float. We will not be able to do much better unless
+            # we switch away from string-type annotations or replicate the entire logic
+            # of a static type checker, both of which are infeasible at the moment.
             if earlier_type not in current_type and current_type not in earlier_type:
                 arg_is_function = arg in execution_info
                 if arg_is_function:
