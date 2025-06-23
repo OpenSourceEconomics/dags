@@ -623,6 +623,7 @@ def get_annotations_from_execution_info(
 
     """
     types: dict[str, str] = {}
+    errors: list[str] = []
     for name, info in execution_info.items():
         # We do not need to check whether name is already in types_dict, because the
         # functions in execution_info are topologically sorted, and hence, it is
@@ -637,7 +638,7 @@ def get_annotations_from_execution_info(
             earlier_type = types[arg]
             current_type = info.argument_annotations[arg]
 
-            if earlier_type != current_type:
+            if earlier_type not in current_type and current_type not in earlier_type:
                 arg_is_function = arg in execution_info
                 if arg_is_function:
                     explanation = f"function {arg} has return type: {earlier_type}."
@@ -646,12 +647,17 @@ def get_annotations_from_execution_info(
                         f"type annotation '{arg}: {earlier_type}' is used elsewhere."
                     )
 
-                raise AnnotationMismatchError(
+                errors.append(
                     f"function {name} has the argument type annotation '{arg}: "
                     f"{current_type}', but {explanation}"
                 )
 
         types.update(info.argument_annotations)
+
+    if errors:
+        raise AnnotationMismatchError(
+            "The following type annotations are inconsistent:\n" + "\n".join(errors)
+        )
 
     args_annotations = {arg: types[arg] for arg in arglist}
     return_annotation = tuple(types[target] for target in targets)
