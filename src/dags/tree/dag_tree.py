@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from dags.dag import (
     concatenate_functions,
@@ -207,10 +207,10 @@ def functions_without_tree_logic(
 
 
 def one_function_without_tree_logic(
-    function: Callable,
+    function: Callable[..., Any],
     tree_path: tuple[str, ...],
     top_level_namespace: set[str],
-) -> Callable:
+) -> Callable[..., Any]:
     """Convert a single function to work without tree logic.
 
     Args:
@@ -259,7 +259,7 @@ def _get_top_level_namespace_final(
 
 
 def _map_parameters_rel_to_abs(
-    func: Callable,
+    func: Callable[..., Any],
     current_namespace: tuple[str, ...],
     top_level_namespace: set[str],
 ) -> dict[str, str]:

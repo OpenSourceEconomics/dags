@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import inspect
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import pytest
 
@@ -28,22 +28,22 @@ def f():
     return _f
 
 
-def test_single_output(f: Callable) -> None:
+def test_single_output(f: Callable[..., Any]) -> None:
     g = single_output(f)  # type: ignore[var-annotated]
     assert g(foo=True) == 1
 
 
-def test_single_output_annotations(f: Callable) -> None:
+def test_single_output_annotations(f: Callable[..., Any]) -> None:
     g = single_output(f, set_annotations=True)  # type: ignore[var-annotated]
     assert inspect.get_annotations(g) == {"foo": "bool", "return": "int"}
 
 
-def test_dict_output(f: Callable) -> None:
+def test_dict_output(f: Callable[..., Any]) -> None:
     g = dict_output(f, keys=["a", "b"])
     assert g(foo=True) == {"a": 1, "b": 2.0}
 
 
-def test_dict_output_annotations(f: Callable) -> None:
+def test_dict_output_annotations(f: Callable[..., Any]) -> None:
     g = dict_output(f, keys=["a", "b"], set_annotations=True)
     assert inspect.get_annotations(g) == {
         "foo": "bool",
@@ -51,22 +51,22 @@ def test_dict_output_annotations(f: Callable) -> None:
     }
 
 
-def test_list_output(f: Callable) -> None:
+def test_list_output(f: Callable[..., Any]) -> None:
     g = list_output(f)
     assert g(foo=True) == [1, 2.0]
 
 
-def test_list_output_annotations(f: Callable) -> None:
+def test_list_output_annotations(f: Callable[..., Any]) -> None:
     g = list_output(f, set_annotations=True)
     assert inspect.get_annotations(g) == {"foo": "bool", "return": ["int", "float"]}
 
 
-def test_aggregated_output_decorator(f: Callable) -> None:
+def test_aggregated_output_decorator(f: Callable[..., Any]) -> None:
     g = aggregated_output(f, aggregator=lambda x, y: x + y)
     assert g(foo=True) == 3
 
 
-def test_single_output_direct_call(f: Callable) -> None:
+def test_single_output_direct_call(f: Callable[..., Any]) -> None:
     g = single_output(f)  # type: ignore[var-annotated]
     assert g(foo=True) == 1
 

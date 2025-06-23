@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal, overload
+from typing import TYPE_CHECKING, Any, Literal, overload
 
 from dags.exceptions import NonStringAnnotationError
 
@@ -12,7 +12,7 @@ import inspect
 
 
 def get_free_arguments(
-    func: Callable,
+    func: Callable[..., Any],
 ) -> list[str]:
     arguments = list(inspect.signature(func).parameters)
     if isinstance(func, functools.partial):
@@ -26,7 +26,7 @@ def get_free_arguments(
 
 @overload
 def get_annotations(
-    func: Callable,
+    func: Callable[..., Any],
     eval_str: Literal[False] = False,
     default: str | None = None,
 ) -> dict[str, str]: ...
@@ -34,14 +34,14 @@ def get_annotations(
 
 @overload
 def get_annotations(
-    func: Callable,
+    func: Callable[..., Any],
     eval_str: Literal[True] = True,
     default: type | None = None,
 ) -> dict[str, type]: ...
 
 
 def get_annotations(
-    func: Callable,
+    func: Callable[..., Any],
     eval_str: bool = False,
     default: str | type | None = None,
 ) -> dict[str, str] | dict[str, type]:

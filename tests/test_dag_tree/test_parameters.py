@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import inspect
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import pytest
 
@@ -105,7 +105,7 @@ def test_get_top_level_namespace_initial(
     ],
 )
 def test_create_parameter_name_mapper(
-    func: Callable,
+    func: Callable[..., Any],
     current_namespace: tuple[str, ...],
     top_level_namespace: set[str],
     expected: dict[str, str],

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import inspect
 from functools import partial
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 import pytest
 
@@ -53,14 +53,14 @@ def _complete_utility(wage: float, working_hours: int, leisure_weight: float) ->
 
 
 @pytest.fixture
-def concatenated_no_target() -> Callable:
+def concatenated_no_target() -> Callable[..., Any]:
     return concatenate_functions(
         functions=[_utility, _leisure, _consumption], set_annotations=True
     )
 
 
 @pytest.fixture
-def concatenated_utility_target() -> Callable:
+def concatenated_utility_target() -> Callable[..., Any]:
     return concatenate_functions(
         functions=[_utility, _unrelated, _leisure, _consumption],
         targets="_utility",
@@ -69,7 +69,7 @@ def concatenated_utility_target() -> Callable:
 
 
 def test_concatenate_functions_with_dag(
-    concatenated_no_target: Callable,
+    concatenated_no_target: Callable[..., Any],
 ) -> None:
     dag = create_dag(
         functions=[_utility, _unrelated, _leisure, _consumption], targets="_utility"
@@ -83,7 +83,7 @@ def test_concatenate_functions_with_dag(
 
 
 def test_concatenate_functions_no_target_results(
-    concatenated_no_target: Callable,
+    concatenated_no_target: Callable[..., Any],
 ) -> None:
     calculated_result = concatenated_no_target(
         wage=5, working_hours=8, leisure_weight=2
@@ -101,7 +101,7 @@ def test_concatenate_functions_no_target_results(
 
 
 def test_concatenate_functions_no_target_annotations(
-    concatenated_no_target: Callable,
+    concatenated_no_target: Callable[..., Any],
 ) -> None:
     expected_annotations = {
         "working_hours": "int",
@@ -113,7 +113,7 @@ def test_concatenate_functions_no_target_annotations(
 
 
 def test_concatenate_functions_single_target_results(
-    concatenated_utility_target: Callable,
+    concatenated_utility_target: Callable[..., Any],
 ) -> None:
     calculated_result = concatenated_utility_target(
         wage=5, working_hours=8, leisure_weight=2
@@ -124,7 +124,7 @@ def test_concatenate_functions_single_target_results(
 
 
 def test_concatenate_functions_single_target_annotations(
-    concatenated_utility_target: Callable,
+    concatenated_utility_target: Callable[..., Any],
 ) -> None:
     expected_annotations = {
         "working_hours": "int",
@@ -273,7 +273,9 @@ def test_partialled_argument_is_ignored() -> None:
         },
     ],
 )
-def test_fail_if_cycle_in_dag(funcs: dict[str, Callable] | list[Callable]) -> None:
+def test_fail_if_cycle_in_dag(
+    funcs: dict[str, Callable[..., Any]] | list[Callable[..., Any]],
+) -> None:
     with pytest.raises(CyclicDependencyError):
         create_dag(functions=funcs, targets=["_utility"])
 

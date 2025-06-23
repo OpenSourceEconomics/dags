@@ -20,9 +20,9 @@ FlatQNameDict = dict[str, Any]
 FlatTreePathDict = dict[tuple[str, ...], Any]
 
 # Function-related types
-NestedFunctionDict = Mapping[str, "Callable | NestedFunctionDict"]
-QNameFunctionDict = dict[str, Callable]
-TreePathFunctionDict = dict[tuple[str, ...], Callable]
+NestedFunctionDict = Mapping[str, "Callable[..., Any] | NestedFunctionDict"]
+QNameFunctionDict = dict[str, Callable[..., Any]]
+TreePathFunctionDict = dict[tuple[str, ...], Callable[..., Any]]
 
 # Input structure types
 NestedInputStructureDict = Mapping[str, "str | None | NestedInputStructureDict"]
