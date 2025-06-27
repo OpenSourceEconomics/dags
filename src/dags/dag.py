@@ -101,6 +101,7 @@ def concatenate_functions(
     aggregator: Callable[[T, T], T] | None = None,
     enforce_signature: bool = True,
     set_annotations: bool = False,
+    lexsort_key: Callable[[str], Any] | None = None,
 ) -> Callable[..., Any]:
     """Combine functions to one function that generates targets.
 
@@ -138,6 +139,9 @@ def concatenate_functions(
             raised. To ensure string annotations, enclose them in quotes or use "from
             __future__ import annotations" at the top of your file. An
             AnnotationMismatchError is raised if annotations differ between functions.
+        lexsort_key (callable or None): A function that takes a string and returns a
+            value that can be used to sort the nodes. This is used to sort the nodes
+            in the topological sort. If None, the nodes are sorted alphabetically.
 
     Returns
     -------
@@ -173,6 +177,7 @@ def concatenate_functions(
         aggregator=aggregator,
         enforce_signature=enforce_signature,
         set_annotations=set_annotations,
+        lexsort_key=lexsort_key,
     )
 
 
@@ -224,6 +229,7 @@ def _create_combined_function_from_dag(
     aggregator: Callable[[T, T], T] | None = None,
     enforce_signature: bool = True,
     set_annotations: bool = False,
+    lexsort_key: Callable[[str], Any] | None = None,
 ) -> Callable[..., Any]:
     """Create combined function which allows executing a DAG in one function call.
 
@@ -255,6 +261,9 @@ def _create_combined_function_from_dag(
             raised. To ensure string annotations, enclose them in quotes or use "from
             __future__ import annotations" at the top of your file. An
             AnnotationMismatchError is raised if annotations differ between functions.
+        lexsort_key (callable or None): A function that takes a string and returns a
+            value that can be used to sort the nodes. This is used to sort the nodes
+            in the topological sort. If None, the nodes are sorted alphabetically.
 
     Returns
     -------
@@ -277,7 +286,7 @@ def _create_combined_function_from_dag(
 
     _arglist = create_arguments_of_concatenated_function(_functions, dag)
     _exec_info = create_execution_info(
-        _functions, dag, verify_annotations=set_annotations
+        _functions, dag, verify_annotations=set_annotations, lexsort_key=lexsort_key
     )
 
     # Create the concatenated function that returns all requested targets as a tuple.
@@ -509,6 +518,7 @@ def create_execution_info(
     functions: dict[str, Callable[..., Any]],
     dag: nx.DiGraph[str],
     verify_annotations: bool = False,
+    lexsort_key: Callable[[str], Any] | None = None,
 ) -> dict[str, FunctionExecutionInfo]:
     """Create a dictionary with all information needed to execute relevant functions.
 
@@ -516,6 +526,9 @@ def create_execution_info(
         functions (dict): Dictionary containing functions to build the DAG.
         dag (networkx.DiGraph): The complete DAG.
         verify_annotations (bool): If True, we verify that the annotations are strings.
+        lexsort_key (callable or None): A function that takes a string and returns a
+            value that can be used to sort the nodes. This is used to sort the nodes
+            in the topological sort. If None, the nodes are sorted alphabetically.
 
     Returns
     -------
@@ -529,7 +542,7 @@ def create_execution_info(
 
     """
     out = {}
-    for node in nx.topological_sort(dag):
+    for node in nx.lexicographical_topological_sort(dag, key=lexsort_key):
         if node in functions:
             out[node] = FunctionExecutionInfo(
                 name=node,
