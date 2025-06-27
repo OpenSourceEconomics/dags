@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import inspect
 from functools import partial
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Literal
 
 import pytest
 
@@ -17,11 +17,7 @@ from dags.dag import (
 from dags.exceptions import CyclicDependencyError, DagsError
 
 if TYPE_CHECKING:
-    from dags.typing import (
-        CombinedFunctionReturnType,
-        FunctionCollection,
-        GenericCallable,
-    )
+    from collections.abc import Callable
 
 
 def _utility(_consumption: float, _leisure: int, leisure_weight: float) -> float:
@@ -57,14 +53,14 @@ def _complete_utility(wage: float, working_hours: int, leisure_weight: float) ->
 
 
 @pytest.fixture
-def concatenated_no_target() -> GenericCallable:
+def concatenated_no_target() -> Callable[..., Any]:
     return concatenate_functions(
         functions=[_utility, _leisure, _consumption], set_annotations=True
     )
 
 
 @pytest.fixture
-def concatenated_utility_target() -> GenericCallable:
+def concatenated_utility_target() -> Callable[..., Any]:
     return concatenate_functions(
         functions=[_utility, _unrelated, _leisure, _consumption],
         targets="_utility",
@@ -73,7 +69,7 @@ def concatenated_utility_target() -> GenericCallable:
 
 
 def test_concatenate_functions_with_dag(
-    concatenated_no_target: GenericCallable,
+    concatenated_no_target: Callable[..., Any],
 ) -> None:
     dag = create_dag(
         functions=[_utility, _unrelated, _leisure, _consumption], targets="_utility"
@@ -87,7 +83,7 @@ def test_concatenate_functions_with_dag(
 
 
 def test_concatenate_functions_no_target_results(
-    concatenated_no_target: GenericCallable,
+    concatenated_no_target: Callable[..., Any],
 ) -> None:
     calculated_result = concatenated_no_target(
         wage=5, working_hours=8, leisure_weight=2
@@ -105,7 +101,7 @@ def test_concatenate_functions_no_target_results(
 
 
 def test_concatenate_functions_no_target_annotations(
-    concatenated_no_target: GenericCallable,
+    concatenated_no_target: Callable[..., Any],
 ) -> None:
     expected_annotations = {
         "working_hours": "int",
@@ -117,7 +113,7 @@ def test_concatenate_functions_no_target_annotations(
 
 
 def test_concatenate_functions_single_target_results(
-    concatenated_utility_target: GenericCallable,
+    concatenated_utility_target: Callable[..., Any],
 ) -> None:
     calculated_result = concatenated_utility_target(
         wage=5, working_hours=8, leisure_weight=2
@@ -128,7 +124,7 @@ def test_concatenate_functions_single_target_results(
 
 
 def test_concatenate_functions_single_target_annotations(
-    concatenated_utility_target: GenericCallable,
+    concatenated_utility_target: Callable[..., Any],
 ) -> None:
     expected_annotations = {
         "working_hours": "int",
@@ -141,7 +137,7 @@ def test_concatenate_functions_single_target_annotations(
 
 @pytest.mark.parametrize("return_type", ["tuple", "list", "dict"])
 def test_concatenate_functions_multi_target_result(
-    return_type: CombinedFunctionReturnType,
+    return_type: Literal["tuple", "list", "dict"],
 ) -> None:
     concatenated = concatenate_functions(
         functions=[_utility, _unrelated, _leisure, _consumption],
@@ -167,7 +163,7 @@ def test_concatenate_functions_multi_target_result(
 
 @pytest.mark.parametrize("return_type", ["tuple", "list", "dict"])
 def test_concatenate_functions_multi_target_annotations(
-    return_type: CombinedFunctionReturnType,
+    return_type: Literal["tuple", "list", "dict"],
 ) -> None:
     concatenated = concatenate_functions(
         functions=[_utility, _unrelated, _leisure, _consumption],
@@ -277,7 +273,9 @@ def test_partialled_argument_is_ignored() -> None:
         },
     ],
 )
-def test_fail_if_cycle_in_dag(funcs: FunctionCollection) -> None:
+def test_fail_if_cycle_in_dag(
+    funcs: dict[str, Callable[..., Any]] | list[Callable[..., Any]],
+) -> None:
     with pytest.raises(CyclicDependencyError):
         create_dag(functions=funcs, targets=["_utility"])
 

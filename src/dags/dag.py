@@ -3,8 +3,9 @@ from __future__ import annotations
 import functools
 import inspect
 import textwrap
+import warnings
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, Literal, cast
 
 import networkx as nx
 
@@ -25,13 +26,11 @@ from dags.signature import with_signature
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
 
-    from dags.typing import (
-        CombinedFunctionReturnType,
-        FunctionCollection,
-        GenericCallable,
-        T,
-        TargetType,
-    )
+    from dags.typing import T
+
+
+class DagsWarning(UserWarning):
+    """Base class for all warnings in the dags library."""
 
 
 @dataclass(frozen=True)
@@ -64,7 +63,7 @@ class FunctionExecutionInfo:
     """
 
     name: str
-    func: GenericCallable
+    func: Callable[..., Any]
     verify_annotations: bool = False
 
     def __post_init__(self) -> None:
@@ -94,15 +93,15 @@ class FunctionExecutionInfo:
 
 
 def concatenate_functions(
-    functions: FunctionCollection,
-    targets: TargetType = None,
+    functions: dict[str, Callable[..., Any]] | list[Callable[..., Any]],
+    targets: str | list[str] | None = None,
     *,
     dag: nx.DiGraph[str] | None = None,
-    return_type: CombinedFunctionReturnType = "tuple",
+    return_type: Literal["tuple", "list", "dict"] = "tuple",
     aggregator: Callable[[T, T], T] | None = None,
     enforce_signature: bool = True,
     set_annotations: bool = False,
-) -> GenericCallable:
+) -> Callable[..., Any]:
     """Combine functions to one function that generates targets.
 
     Functions can depend on the output of other functions as inputs, as long as the
@@ -154,10 +153,11 @@ def concatenate_functions(
 
     """
     if set_annotations and not isinstance(targets, str) and aggregator is not None:
-        raise DagsError(
-            "Cannot set annotations when using an aggregator on multiple targets. "
-            "Please set set_annotations to False, or use a single target, or do not "
-            "use an aggregator."
+        warnings.warn(
+            "Cannot infer return annotation when using an aggregator on multiple "
+            "targets.",
+            DagsWarning,
+            stacklevel=2,
         )
 
     if dag is None:
@@ -177,8 +177,8 @@ def concatenate_functions(
 
 
 def create_dag(
-    functions: FunctionCollection,
-    targets: TargetType,
+    functions: dict[str, Callable[..., Any]] | list[Callable[..., Any]],
+    targets: str | list[str] | None,
 ) -> nx.DiGraph[str]:
     """Build a directed acyclic graph (DAG) from functions.
 
@@ -218,13 +218,13 @@ def create_dag(
 
 def _create_combined_function_from_dag(
     dag: nx.DiGraph[str],
-    functions: FunctionCollection,
-    targets: TargetType,
-    return_type: CombinedFunctionReturnType = "tuple",
+    functions: dict[str, Callable[..., Any]] | list[Callable[..., Any]],
+    targets: str | list[str] | None,
+    return_type: Literal["tuple", "list", "dict"] = "tuple",
     aggregator: Callable[[T, T], T] | None = None,
     enforce_signature: bool = True,
     set_annotations: bool = False,
-) -> GenericCallable:
+) -> Callable[..., Any]:
     """Create combined function which allows executing a DAG in one function call.
 
     The arguments of the combined function are all arguments of relevant functions that
@@ -293,21 +293,21 @@ def _create_combined_function_from_dag(
 
     # Update the actual return type, as well as the return annotation of the
     # concatenated function.
-    out: GenericCallable
+    out: Callable[..., Any]
     if isinstance(targets, str) or (aggregator is not None and len(_targets) == 1):
         out = single_output(_concatenated, set_annotations=set_annotations)
     elif aggregator is not None:
         out = aggregated_output(_concatenated, aggregator=aggregator)
     elif return_type == "list":
         out = cast(
-            "GenericCallable",
+            "Callable[..., Any]",
             list_output(_concatenated, set_annotations=set_annotations),
         )
     elif return_type == "tuple":
         out = _concatenated
     elif return_type == "dict":
         out = cast(
-            "GenericCallable",
+            "Callable[..., Any]",
             dict_output(_concatenated, keys=_targets, set_annotations=set_annotations),
         )
     else:
@@ -321,8 +321,8 @@ def _create_combined_function_from_dag(
 
 
 def get_ancestors(
-    functions: FunctionCollection,
-    targets: TargetType,
+    functions: dict[str, Callable[..., Any]] | list[Callable[..., Any]],
+    targets: str | list[str] | None,
     include_targets: bool = False,
 ) -> set[str]:
     """Build a DAG and extract all ancestors of targets.
@@ -357,9 +357,9 @@ def get_ancestors(
 
 
 def harmonize_and_check_functions_and_targets(
-    functions: FunctionCollection,
-    targets: TargetType,
-) -> tuple[dict[str, GenericCallable], list[str]]:
+    functions: dict[str, Callable[..., Any]] | list[Callable[..., Any]],
+    targets: str | list[str] | None,
+) -> tuple[dict[str, Callable[..., Any]], list[str]]:
     """Harmonize the type of specified functions and targets and do some checks.
 
     Args:
@@ -384,8 +384,8 @@ def harmonize_and_check_functions_and_targets(
 
 
 def _harmonize_functions(
-    functions: FunctionCollection,
-) -> dict[str, GenericCallable]:
+    functions: dict[str, Callable[..., Any]] | list[Callable[..., Any]],
+) -> dict[str, Callable[..., Any]]:
     if not isinstance(functions, dict):
         functions_dict = {func.__name__: func for func in functions}
     else:
@@ -395,7 +395,7 @@ def _harmonize_functions(
 
 
 def _harmonize_targets(
-    targets: TargetType,
+    targets: str | list[str] | None,
     function_names: list[str],
 ) -> list[str]:
     if targets is None:
@@ -415,7 +415,7 @@ def _fail_if_targets_have_wrong_types(
 
 
 def _fail_if_functions_are_missing(
-    functions: dict[str, GenericCallable],
+    functions: dict[str, Callable[..., Any]],
     targets: list[str],
 ) -> None:
     targets_not_in_functions = set(targets) - set(functions)
@@ -436,7 +436,7 @@ def _fail_if_dag_contains_cycle(dag: nx.DiGraph[str]) -> None:
 
 
 def _create_complete_dag(
-    functions: dict[str, GenericCallable],
+    functions: dict[str, Callable[..., Any]],
 ) -> nx.DiGraph[str]:
     """Create the complete DAG.
 
@@ -486,7 +486,7 @@ def _limit_dag_to_targets_and_their_ancestors(
 
 
 def create_arguments_of_concatenated_function(
-    functions: dict[str, GenericCallable],
+    functions: dict[str, Callable[..., Any]],
     dag: nx.DiGraph[str],
 ) -> list[str]:
     """Create the signature of the concatenated function.
@@ -506,7 +506,7 @@ def create_arguments_of_concatenated_function(
 
 
 def create_execution_info(
-    functions: dict[str, GenericCallable],
+    functions: dict[str, Callable[..., Any]],
     dag: nx.DiGraph[str],
     verify_annotations: bool = False,
 ) -> dict[str, FunctionExecutionInfo]:
@@ -629,6 +629,7 @@ def get_annotations_from_execution_info(
 
     """
     types: dict[str, str] = {}
+    errors: list[str] = []
     for name, info in execution_info.items():
         # We do not need to check whether name is already in types_dict, because the
         # functions in execution_info are topologically sorted, and hence, it is
@@ -643,7 +644,15 @@ def get_annotations_from_execution_info(
             earlier_type = types[arg]
             current_type = info.argument_annotations[arg]
 
-            if earlier_type != current_type:
+            # The following condition is a hack to deal with overloaded type
+            # annotations. E.g., we may have a function that an int and returns an int,
+            # or it takes a float and returns a float. We can achieve that with
+            # @overload, but the type hints will be "int | float". If we just checked]
+            # for equality, we would get an error if a downstream or upstream function
+            # required an int or a float. We will not be able to do much better unless
+            # we switch away from string-type annotations or replicate the entire logic
+            # of a static type checker, both of which are infeasible at the moment.
+            if earlier_type not in current_type and current_type not in earlier_type:
                 arg_is_function = arg in execution_info
                 if arg_is_function:
                     explanation = f"function {arg} has return type: {earlier_type}."
@@ -652,12 +661,17 @@ def get_annotations_from_execution_info(
                         f"type annotation '{arg}: {earlier_type}' is used elsewhere."
                     )
 
-                raise AnnotationMismatchError(
+                errors.append(
                     f"function {name} has the argument type annotation '{arg}: "
                     f"{current_type}', but {explanation}"
                 )
 
         types.update(info.argument_annotations)
+
+    if errors:
+        raise AnnotationMismatchError(
+            "The following type annotations are inconsistent:\n" + "\n".join(errors)
+        )
 
     args_annotations = {arg: types[arg] for arg in arglist}
     return_annotation = tuple(types[target] for target in targets)

@@ -1,18 +1,18 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal, overload
+from typing import TYPE_CHECKING, Any, Literal, overload
 
 from dags.exceptions import NonStringAnnotationError
 
 if TYPE_CHECKING:
-    from dags.typing import GenericCallable
+    from collections.abc import Callable
 
 import functools
 import inspect
 
 
 def get_free_arguments(
-    func: GenericCallable,
+    func: Callable[..., Any],
 ) -> list[str]:
     arguments = list(inspect.signature(func).parameters)
     if isinstance(func, functools.partial):
@@ -26,7 +26,7 @@ def get_free_arguments(
 
 @overload
 def get_annotations(
-    func: GenericCallable,
+    func: Callable[..., Any],
     eval_str: Literal[False] = False,
     default: str | None = None,
 ) -> dict[str, str]: ...
@@ -34,14 +34,14 @@ def get_annotations(
 
 @overload
 def get_annotations(
-    func: GenericCallable,
+    func: Callable[..., Any],
     eval_str: Literal[True] = True,
     default: type | None = None,
 ) -> dict[str, type]: ...
 
 
 def get_annotations(
-    func: GenericCallable,
+    func: Callable[..., Any],
     eval_str: bool = False,
     default: str | type | None = None,
 ) -> dict[str, str] | dict[str, type]:
@@ -81,7 +81,9 @@ def verify_annotations_are_strings(
     if all(isinstance(v, str) for v in annotations.values()):
         return
 
-    non_string_annotations = [k for k, v in annotations.items() if isinstance(v, type)]
+    non_string_annotations = [
+        k for k, v in annotations.items() if not isinstance(v, str)
+    ]
     arg_annotations = {k: v for k, v in annotations.items() if k != "return"}
     return_annotation = annotations["return"]
 

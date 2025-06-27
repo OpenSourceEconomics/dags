@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import functools
 import inspect
-from typing import TYPE_CHECKING
+from typing import Literal
 
 import numpy as np
 import pytest
@@ -11,9 +11,6 @@ from numpy.typing import NDArray
 from dags.annotations import get_annotations, verify_annotations_are_strings
 from dags.dag import concatenate_functions
 from dags.exceptions import AnnotationMismatchError, NonStringAnnotationError
-
-if TYPE_CHECKING:
-    from dags.typing import CombinedFunctionReturnType
 
 
 def test_argument_annotations_mismatch() -> None:
@@ -56,7 +53,7 @@ def test_argument_annoations_mismatch_with_return_annotation() -> None:
 
 @pytest.mark.parametrize("return_type", ["tuple", "list", "dict"])
 def test_concatenate_functions_without_input(
-    return_type: CombinedFunctionReturnType,
+    return_type: Literal["tuple", "list", "dict"],
 ) -> None:
     concatenated = concatenate_functions(
         functions={},

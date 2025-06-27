@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from typing import Any, TypeVar
-
-from dags.typing import GenericCallable
 
 # Type variables
 T = TypeVar("T")
@@ -22,9 +20,9 @@ FlatQNameDict = dict[str, Any]
 FlatTreePathDict = dict[tuple[str, ...], Any]
 
 # Function-related types
-NestedFunctionDict = Mapping[str, "GenericCallable | NestedFunctionDict"]
-QNameFunctionDict = dict[str, GenericCallable]
-TreePathFunctionDict = dict[tuple[str, ...], GenericCallable]
+NestedFunctionDict = Mapping[str, "Callable[..., Any] | NestedFunctionDict"]
+QNameFunctionDict = dict[str, Callable[..., Any]]
+TreePathFunctionDict = dict[tuple[str, ...], Callable[..., Any]]
 
 # Input structure types
 NestedInputStructureDict = Mapping[str, "str | None | NestedInputStructureDict"]

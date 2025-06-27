@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import inspect
 from functools import partial
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import pytest
 
@@ -11,8 +11,6 @@ from dags.signature import with_signature
 
 if TYPE_CHECKING:
     from collections.abc import Callable
-
-    from dags.typing import GenericCallable
 
 decorators = [
     single_output,
@@ -24,7 +22,7 @@ decorators = [
 
 @pytest.mark.parametrize("decorator", decorators)
 def test_output_decorators_preserve_signature_created_by_with_signature(
-    decorator: Callable[[GenericCallable], GenericCallable],
+    decorator: Callable[[Callable[..., Any]], Callable[..., Any]],
 ) -> None:
     @with_signature(args=["a"], kwargs=["b"])
     def f(*args, **kwargs):
