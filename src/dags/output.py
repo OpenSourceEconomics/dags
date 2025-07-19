@@ -4,12 +4,12 @@ import functools
 import inspect
 from typing import TYPE_CHECKING, overload
 
-from typing_extensions import Unpack
-
 from dags.exceptions import DagsError
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+
+    from typing_extensions import Unpack
 
     from dags.typing import MixedTupleType, P, T
 
