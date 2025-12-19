@@ -6,7 +6,7 @@ repos:
       - id: check-useless-excludes
       # - id: identity  # Prints all files passed to pre-commits. Debugging.
   - repo: https://github.com/lyz-code/yamlfix
-    rev: 1.19.0
+    rev: 1.19.1
     hooks:
       - id: yamlfix
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -45,17 +45,15 @@ repos:
     hooks:
       - id: yamllint
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.7
+    rev: v0.14.10
     hooks:
-      # Run the linter.
-      - id: ruff
+      - id: ruff-check
         types_or:
           - python
           - pyi
           - jupyter
         args:
           - --fix
-      # Run the formatter.
       - id: ruff-format
         types_or:
           - python
@@ -74,7 +72,7 @@ repos:
           - '88'
         files: (README\.md)
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.19.0
+    rev: v1.19.1
     hooks:
       - id: mypy
         files: src|tests

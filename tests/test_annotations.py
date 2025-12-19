@@ -25,8 +25,8 @@ def test_argument_annotations_mismatch() -> None:
     with pytest.raises(
         AnnotationMismatchError,
         match=(
-            "function g has the argument type annotation 'a: float', but "
-            "type annotation 'a: int' is used elsewhere."
+            r"function g has the argument type annotation 'a: float', but "
+            r"type annotation 'a: int' is used elsewhere."
         ),
     ):
         concatenate_functions(functions=[f, g], set_annotations=True)
@@ -44,8 +44,8 @@ def test_argument_annoations_mismatch_with_return_annotation() -> None:
     with pytest.raises(
         AnnotationMismatchError,
         match=(
-            "function f has the argument type annotation 'g: int', but function g has "
-            "return type: float."
+            r"function f has the argument type annotation 'g: int', but function g has "
+            r"return type: float."
         ),
     ):
         concatenate_functions(functions=[f, g], set_annotations=True)
@@ -148,8 +148,8 @@ def test_verify_annotations_are_strings_non_string_return() -> None:
     with pytest.raises(
         NonStringAnnotationError,
         match=(
-            "All function annotations must be strings. The annotations for the return"
-            " value are not strings."
+            r"All function annotations must be strings. The annotations for the return"
+            r" value are not strings."
         ),
     ):
         verify_annotations_are_strings({"a": "int", "return": float}, "f")  # type: ignore[dict-item]
