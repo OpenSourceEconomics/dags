@@ -359,7 +359,7 @@ def get_ancestors(
 
     ancestors: set[str] = set()
     for target in _targets:
-        ancestors = ancestors.union(nx.ancestors(dag, target))
+        ancestors = ancestors.union(nx.ancestors(dag, target))  # ty: ignore[invalid-argument-type]
         if include_targets:
             ancestors.add(target)
     return ancestors
@@ -396,7 +396,7 @@ def _harmonize_functions(
     functions: dict[str, Callable[..., Any]] | list[Callable[..., Any]],
 ) -> dict[str, Callable[..., Any]]:
     if not isinstance(functions, dict):
-        functions_dict = {func.__name__: func for func in functions}
+        functions_dict = {func.__name__: func for func in functions}  # ty: ignore[unresolved-attribute]
     else:
         functions_dict = functions
 
@@ -436,7 +436,7 @@ def _fail_if_functions_are_missing(
 
 def _fail_if_dag_contains_cycle(dag: nx.DiGraph[str]) -> None:
     """Check for cycles in DAG."""
-    cycles = list(nx.simple_cycles(dag))
+    cycles = list(nx.simple_cycles(dag))  # ty: ignore[invalid-argument-type]
 
     if len(cycles) > 0:
         formatted = format_list_linewise(cycles)
@@ -483,7 +483,7 @@ def _limit_dag_to_targets_and_their_ancestors(
     """
     used_nodes = set(targets)
     for target in targets:
-        used_nodes = used_nodes | set(nx.ancestors(dag, target))
+        used_nodes = used_nodes | set(nx.ancestors(dag, target))  # ty: ignore[invalid-argument-type]
 
     all_nodes = set(dag.nodes)
 
@@ -542,7 +542,7 @@ def create_execution_info(
 
     """
     out = {}
-    for node in nx.lexicographical_topological_sort(dag, key=lexsort_key):
+    for node in nx.lexicographical_topological_sort(dag, key=lexsort_key):  # ty: ignore[invalid-argument-type]
         if node in functions:
             out[node] = FunctionExecutionInfo(
                 name=node,

@@ -88,10 +88,10 @@ pre-commit = "*"
 pytest = "*"
 pytest-cov = "*"
 pytest-xdist = "*"
-mypy = "~=1.16"
 
 [tool.pixi.pypi-dependencies]
 dags = {path = ".", editable = true}
+ty = ">=0.0.3"
 types-networkx = "*"
 pdbp = "*"
 
@@ -223,3 +223,7 @@ disallow_untyped_defs = false
 [[tool.mypy.overrides]]
 module = ["flatten_dict.*"]
 ignore_missing_imports = true
+
+
+[tool.ty.rules]
+possibly-missing-attribute = "ignore"
