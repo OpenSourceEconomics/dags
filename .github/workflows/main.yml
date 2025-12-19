@@ -20,7 +20,7 @@ jobs:
       matrix:
         os:
           - ubuntu-latest
-          - macos-13  # intel
+          - macos-15-intel  # intel
           - macos-latest  # arm
           - windows-latest
         environment:
