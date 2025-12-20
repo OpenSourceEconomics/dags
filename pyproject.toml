@@ -206,8 +206,5 @@ none_representation = "null"
 # ty configuration
 # ======================================================================================
 
-[tool.ty.rules]
-possibly-missing-attribute = "ignore"
-
 [tool.ty.src]
 exclude = ["docs/source/example/example.ipynb", "tests"]

@@ -15,8 +15,8 @@ QNAME_DELIMITER: str = "__"
 _python_identifier: str = r"[a-zA-Z_\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF][a-zA-Z0-9_\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]*"  # noqa: E501
 
 # Reducers and splitters to flatten/unflatten dicts with qualified names as keys
-_qualified_name_reducer = fd.reducers.make_reducer(delimiter=QNAME_DELIMITER)
-_qualified_name_splitter = fd.splitters.make_splitter(delimiter=QNAME_DELIMITER)
+_qualified_name_reducer = fd.reducers.make_reducer(delimiter=QNAME_DELIMITER)  # ty: ignore[possibly-missing-attribute]
+_qualified_name_splitter = fd.splitters.make_splitter(delimiter=QNAME_DELIMITER)  # ty: ignore[possibly-missing-attribute]
 
 
 def qname_from_tree_path(tree_path: tuple[str, ...]) -> str:
