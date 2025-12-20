@@ -63,13 +63,13 @@ The functions tree can be nested to an arbitrary depth.
 
 Next, we create the input structure, which maps the parameters of the functions to their
 namespace. The input structure can also be created via the
-`create_input_structure_tree` function.
+`create_tree_with_input_types` function.
 
 .. code-block:: python
 
     import dags.tree as dt
 
-    input_structure = dt.create_input_structure_tree(functions=functions)
+    input_structure = dt.create_tree_with_input_types(functions=functions)
     input_structure
 
 .. code-block:: python
@@ -101,7 +101,7 @@ Finally, we combine the functions using `concatenate_functions_tree`.
 Top-level inputs
 ________________
 
-Note that `create_input_structure_tree` created two inputs with leaf names ``x``. You
+Note that `create_tree_with_input_types` created two inputs with leaf names ``x``. You
 might have thought that only one ``x`` should be provided at the top level. This is the
 distinction between absolute and relative paths.
 
@@ -120,14 +120,14 @@ We can just provide the top-level input ``x``:
 
     {'parabolic': {'h': 110.25}}
 
-By default, ``create_input_structure_tree`` assumes that all required input paths are
+By default, ``create_tree_with_input_types`` assumes that all required input paths are
 relative to the location where they are defined. If you need to provide paths at the top
 level, you can do so by passing the ``top_level_inputs`` argument to
-``create_input_structure_tree``:
+``create_tree_with_input_types``:
 
 .. code-block:: python
 
-    input_structure = dt.create_input_structure_tree(
+    input_structure = dt.create_tree_with_input_types(
         functions=functions,
         top_level_inputs={"x": None},
     )

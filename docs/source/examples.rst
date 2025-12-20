@@ -172,7 +172,7 @@ The functions tree can be nested to an arbitrary depth.
 
 Next, we define the input structure, which maps the parameters of the functions to their
 namespace. The input structure can also be created via the
-`create_input_structure_tree` function.
+`create_tree_with_input_types` function.
 
 .. code-block:: python
 

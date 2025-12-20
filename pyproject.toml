@@ -227,3 +227,6 @@ ignore_missing_imports = true
 
 [tool.ty.rules]
 possibly-missing-attribute = "ignore"
+
+[tool.ty.src]
+exclude = ["docs/source/example/example.ipynb", "tests"]
