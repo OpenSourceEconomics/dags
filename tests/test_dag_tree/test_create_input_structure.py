@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     )
 
 
-def f(g: int, a: int, b: float, c) -> float:  # type: ignore[no-untyped-def]
+def f(g: int, a: int, b: float, c) -> float:
     # We expect to see "no_annotation_found" for c, because it is not annotated.
     return g + a + b + c
 

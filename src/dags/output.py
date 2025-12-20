@@ -35,7 +35,7 @@ def single_output(
             signature = signature.replace(return_annotation=return_annotation)
             annotations["return"] = return_annotation
 
-        wrapper_single_output.__signature__ = signature  # type: ignore[attr-defined]
+        wrapper_single_output.__signature__ = signature  # ty: ignore[unresolved-attribute]
         wrapper_single_output.__annotations__ = annotations
 
     return wrapper_single_output
@@ -85,7 +85,7 @@ def dict_output(
                 return_annotation = dict(zip(keys, tuple_of_types, strict=True))
                 signature = signature.replace(return_annotation=return_annotation)
                 annotations["return"] = return_annotation
-            wrapper_dict_output.__signature__ = signature  # type: ignore[attr-defined]
+            wrapper_dict_output.__signature__ = signature  # ty: ignore[unresolved-attribute]
             wrapper_dict_output.__annotations__ = annotations
 
         return wrapper_dict_output
@@ -114,7 +114,7 @@ def list_output(
             signature = signature.replace(return_annotation=return_annotation)
             annotations["return"] = return_annotation
 
-        wrapper_list_output.__signature__ = signature  # type: ignore[attr-defined]
+        wrapper_list_output.__signature__ = signature  # ty: ignore[unresolved-attribute]
         wrapper_list_output.__annotations__ = annotations
 
     return wrapper_list_output

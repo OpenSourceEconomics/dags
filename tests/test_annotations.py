@@ -61,7 +61,7 @@ def test_concatenate_functions_without_input(
         return_type=return_type,
         set_annotations=True,
     )
-    expected_type = {  # type: ignore[var-annotated]
+    expected_type = {
         "tuple": (),
         "list": [],
         "dict": {},
@@ -91,7 +91,7 @@ def test_get_annotations_with_partial() -> None:
 
 
 def test_get_annotations_with_default() -> None:
-    def f(a) -> float:  # type: ignore[no-untyped-def]
+    def f(a) -> float:
         return float(a)
 
     assert get_annotations(f) == {"a": "no_annotation_found", "return": "float"}
@@ -130,7 +130,7 @@ def test_verify_annotations_are_strings_non_string_argument_full_message() -> No
             r"\tf\(a: 'int'\) -> 'float'\."
         ),
     ):
-        verify_annotations_are_strings({"a": int, "return": "float"}, "f")  # type: ignore[dict-item]
+        verify_annotations_are_strings({"a": int, "return": "float"}, "f")
 
 
 def test_verify_annotations_are_strings_multiple_non_string_argument() -> None:
@@ -141,7 +141,7 @@ def test_verify_annotations_are_strings_multiple_non_string_argument() -> None:
             r"arguments \(a, b\) are not strings."
         ),
     ):
-        verify_annotations_are_strings({"a": int, "b": bool, "return": "float"}, "f")  # type: ignore[dict-item]
+        verify_annotations_are_strings({"a": int, "b": bool, "return": "float"}, "f")
 
 
 def test_verify_annotations_are_strings_non_string_return() -> None:
@@ -152,7 +152,7 @@ def test_verify_annotations_are_strings_non_string_return() -> None:
             r" value are not strings."
         ),
     ):
-        verify_annotations_are_strings({"a": "int", "return": float}, "f")  # type: ignore[dict-item]
+        verify_annotations_are_strings({"a": "int", "return": float}, "f")
 
 
 def test_verify_annotations_are_strings_non_string_argument_and_return() -> None:
@@ -163,4 +163,4 @@ def test_verify_annotations_are_strings_non_string_argument_and_return() -> None
             r" \(a\) and the return value are not strings."
         ),
     ):
-        verify_annotations_are_strings({"a": int, "return": float}, "f")  # type: ignore[dict-item]
+        verify_annotations_are_strings({"a": int, "return": float}, "f")

@@ -303,14 +303,14 @@ def _create_combined_function_from_dag(
             warnings.warn(
                 message=(
                     "Cannot infer return annotation when using an aggregator on "
-                    "multiple targets.",
+                    "multiple targets."
                 ),
                 category=DagsWarning,
                 stacklevel=2,
             )
     elif return_type == "list":
         out = cast(
-            "Callable[..., Any]",  # type: ignore[assignment]
+            "Callable[..., Any]",
             list_output(func=_concatenated, set_annotations=set_annotations),
         )
     elif return_type == "tuple":
@@ -466,7 +466,7 @@ def _create_complete_dag(
     functions_arguments_dict = {
         name: get_free_arguments(function) for name, function in functions.items()
     }
-    return nx.DiGraph(functions_arguments_dict).reverse()  # type: ignore[arg-type]
+    return nx.DiGraph(functions_arguments_dict).reverse()
 
 
 def _limit_dag_to_targets_and_their_ancestors(
