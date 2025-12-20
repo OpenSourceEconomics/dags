@@ -156,14 +156,6 @@ def concatenate_functions(
             incompatible annotations in the DAG's components.
 
     """
-    if set_annotations and not isinstance(targets, str) and aggregator is not None:
-        warnings.warn(
-            "Cannot infer return annotation when using an aggregator on multiple "
-            "targets.",
-            DagsWarning,
-            stacklevel=2,
-        )
-
     if dag is None:
         # Create the DAG.
         dag = create_dag(functions=functions, targets=targets)
@@ -304,20 +296,31 @@ def _create_combined_function_from_dag(
     # concatenated function.
     out: Callable[..., Any]
     if isinstance(targets, str) or (aggregator is not None and len(_targets) == 1):
-        out = single_output(_concatenated, set_annotations=set_annotations)
+        out = single_output(func=_concatenated, set_annotations=set_annotations)
     elif aggregator is not None:
-        out = aggregated_output(_concatenated, aggregator=aggregator)
+        out = aggregated_output(func=_concatenated, aggregator=aggregator)
+        if set_annotations:
+            warnings.warn(
+                message=(
+                    "Cannot infer return annotation when using an aggregator on "
+                    "multiple targets.",
+                ),
+                category=DagsWarning,
+                stacklevel=2,
+            )
     elif return_type == "list":
         out = cast(
-            "Callable[..., Any]",
-            list_output(_concatenated, set_annotations=set_annotations),
+            "Callable[..., Any]",  # type: ignore[assignment]
+            list_output(func=_concatenated, set_annotations=set_annotations),
         )
     elif return_type == "tuple":
         out = _concatenated
     elif return_type == "dict":
         out = cast(
             "Callable[..., Any]",
-            dict_output(_concatenated, keys=_targets, set_annotations=set_annotations),
+            dict_output(
+                func=_concatenated, keys=_targets, set_annotations=set_annotations
+            ),
         )
     else:
         msg = (
