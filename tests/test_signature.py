@@ -165,7 +165,6 @@ def test_rename_arguments_decorator(example_signature: inspect.Signature) -> Non
 
     assert inspect.signature(f) == example_signature
 
-    # Note: mypy can't handle the rename arguments here.
     assert f(b=2, c=3, a=1) == (1, 2, 3)
 
 
@@ -190,7 +189,6 @@ def test_rename_arguments_direct_call(example_signature: inspect.Signature) -> N
 
     assert inspect.signature(g) == example_signature
 
-    # Note: mypy can't handle the rename arguments here.
     assert g(b=2, c=3, a=1) == (1, 2, 3)
 
 

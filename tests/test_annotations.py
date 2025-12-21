@@ -32,7 +32,7 @@ def test_argument_annotations_mismatch() -> None:
         concatenate_functions(functions=[f, g], set_annotations=True)
 
 
-def test_argument_annoations_mismatch_with_return_annotation() -> None:
+def test_argument_annotations_mismatch_with_return_annotation() -> None:
     """Problem: f expects g: int, but g() returns float."""
 
     def f(g: int) -> int:
@@ -130,7 +130,7 @@ def test_verify_annotations_are_strings_non_string_argument_full_message() -> No
             r"\tf\(a: 'int'\) -> 'float'\."
         ),
     ):
-        verify_annotations_are_strings({"a": int, "return": "float"}, "f")
+        verify_annotations_are_strings({"a": int, "return": "float"}, "f")  # ty: ignore[invalid-argument-type]
 
 
 def test_verify_annotations_are_strings_multiple_non_string_argument() -> None:
@@ -141,7 +141,7 @@ def test_verify_annotations_are_strings_multiple_non_string_argument() -> None:
             r"arguments \(a, b\) are not strings."
         ),
     ):
-        verify_annotations_are_strings({"a": int, "b": bool, "return": "float"}, "f")
+        verify_annotations_are_strings({"a": int, "b": bool, "return": "float"}, "f")  # ty: ignore[invalid-argument-type]
 
 
 def test_verify_annotations_are_strings_non_string_return() -> None:
@@ -152,7 +152,7 @@ def test_verify_annotations_are_strings_non_string_return() -> None:
             r" value are not strings."
         ),
     ):
-        verify_annotations_are_strings({"a": "int", "return": float}, "f")
+        verify_annotations_are_strings({"a": "int", "return": float}, "f")  # ty: ignore[invalid-argument-type]
 
 
 def test_verify_annotations_are_strings_non_string_argument_and_return() -> None:
@@ -163,4 +163,4 @@ def test_verify_annotations_are_strings_non_string_argument_and_return() -> None
             r" \(a\) and the return value are not strings."
         ),
     ):
-        verify_annotations_are_strings({"a": int, "return": float}, "f")
+        verify_annotations_are_strings({"a": int, "return": float}, "f")  # ty: ignore[invalid-argument-type]
