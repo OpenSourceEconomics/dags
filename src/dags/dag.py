@@ -156,14 +156,6 @@ def concatenate_functions(
             incompatible annotations in the DAG's components.
 
     """
-    if set_annotations and not isinstance(targets, str) and aggregator is not None:
-        warnings.warn(
-            "Cannot infer return annotation when using an aggregator on multiple "
-            "targets.",
-            DagsWarning,
-            stacklevel=2,
-        )
-
     if dag is None:
         # Create the DAG.
         dag = create_dag(functions=functions, targets=targets)
@@ -304,20 +296,31 @@ def _create_combined_function_from_dag(
     # concatenated function.
     out: Callable[..., Any]
     if isinstance(targets, str) or (aggregator is not None and len(_targets) == 1):
-        out = single_output(_concatenated, set_annotations=set_annotations)
+        out = single_output(func=_concatenated, set_annotations=set_annotations)
     elif aggregator is not None:
-        out = aggregated_output(_concatenated, aggregator=aggregator)
+        out = aggregated_output(func=_concatenated, aggregator=aggregator)
+        if set_annotations:
+            warnings.warn(
+                message=(
+                    "Cannot infer return annotation when using an aggregator on "
+                    "multiple targets."
+                ),
+                category=DagsWarning,
+                stacklevel=2,
+            )
     elif return_type == "list":
         out = cast(
             "Callable[..., Any]",
-            list_output(_concatenated, set_annotations=set_annotations),
+            list_output(func=_concatenated, set_annotations=set_annotations),
         )
     elif return_type == "tuple":
         out = _concatenated
     elif return_type == "dict":
         out = cast(
             "Callable[..., Any]",
-            dict_output(_concatenated, keys=_targets, set_annotations=set_annotations),
+            dict_output(
+                func=_concatenated, keys=_targets, set_annotations=set_annotations
+            ),
         )
     else:
         msg = (
@@ -359,7 +362,7 @@ def get_ancestors(
 
     ancestors: set[str] = set()
     for target in _targets:
-        ancestors = ancestors.union(nx.ancestors(dag, target))
+        ancestors = ancestors.union(nx.ancestors(dag, target))  # ty: ignore[invalid-argument-type]
         if include_targets:
             ancestors.add(target)
     return ancestors
@@ -396,7 +399,7 @@ def _harmonize_functions(
     functions: dict[str, Callable[..., Any]] | list[Callable[..., Any]],
 ) -> dict[str, Callable[..., Any]]:
     if not isinstance(functions, dict):
-        functions_dict = {func.__name__: func for func in functions}
+        functions_dict = {func.__name__: func for func in functions}  # ty: ignore[unresolved-attribute]
     else:
         functions_dict = functions
 
@@ -436,7 +439,7 @@ def _fail_if_functions_are_missing(
 
 def _fail_if_dag_contains_cycle(dag: nx.DiGraph[str]) -> None:
     """Check for cycles in DAG."""
-    cycles = list(nx.simple_cycles(dag))
+    cycles = list(nx.simple_cycles(dag))  # ty: ignore[invalid-argument-type]
 
     if len(cycles) > 0:
         formatted = format_list_linewise(cycles)
@@ -463,7 +466,7 @@ def _create_complete_dag(
     functions_arguments_dict = {
         name: get_free_arguments(function) for name, function in functions.items()
     }
-    return nx.DiGraph(functions_arguments_dict).reverse()  # type: ignore[arg-type]
+    return nx.DiGraph(functions_arguments_dict).reverse()
 
 
 def _limit_dag_to_targets_and_their_ancestors(
@@ -483,7 +486,7 @@ def _limit_dag_to_targets_and_their_ancestors(
     """
     used_nodes = set(targets)
     for target in targets:
-        used_nodes = used_nodes | set(nx.ancestors(dag, target))
+        used_nodes = used_nodes | set(nx.ancestors(dag, target))  # ty: ignore[invalid-argument-type]
 
     all_nodes = set(dag.nodes)
 
@@ -542,7 +545,7 @@ def create_execution_info(
 
     """
     out = {}
-    for node in nx.lexicographical_topological_sort(dag, key=lexsort_key):
+    for node in nx.lexicographical_topological_sort(dag, key=lexsort_key):  # ty: ignore[invalid-argument-type]
         if node in functions:
             out[node] = FunctionExecutionInfo(
                 name=node,

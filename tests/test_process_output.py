@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 @pytest.fixture
 def f():
-    def _f(foo: bool):  # type: ignore[no-untyped-def]
+    def _f(foo: bool):
         return (int(foo), 2.0)
 
     # We need to set the annotations via __annotations__, because if we set it directly
@@ -29,12 +29,12 @@ def f():
 
 
 def test_single_output(f: Callable[..., Any]) -> None:
-    g = single_output(f)  # type: ignore[var-annotated]
+    g = single_output(f)
     assert g(foo=True) == 1
 
 
 def test_single_output_annotations(f: Callable[..., Any]) -> None:
-    g = single_output(f, set_annotations=True)  # type: ignore[var-annotated]
+    g = single_output(f, set_annotations=True)
     assert inspect.get_annotations(g) == {"foo": "bool", "return": "int"}
 
 
@@ -67,12 +67,12 @@ def test_aggregated_output_decorator(f: Callable[..., Any]) -> None:
 
 
 def test_single_output_direct_call(f: Callable[..., Any]) -> None:
-    g = single_output(f)  # type: ignore[var-annotated]
+    g = single_output(f)
     assert g(foo=True) == 1
 
 
 def test_single_output_decorator() -> None:
-    @single_output  # type: ignore[arg-type]
+    @single_output
     def f():
         return (1, 2)
 

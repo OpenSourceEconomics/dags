@@ -59,11 +59,15 @@ def _create_annotations(
     args_types: dict[str, str] | dict[str, type[inspect._empty]],
     kwargs_types: dict[str, str] | dict[str, type[inspect._empty]],
     return_annotation: Any,
-) -> dict[str, str | Any] | dict[str, str | type[inspect._empty]]:
+) -> (
+    dict[str, str]
+    | dict[str, str | type[inspect._empty]]
+    | dict[str, type[inspect._empty]]
+):
     annotations = args_types | kwargs_types
     if return_annotation is not inspect.Parameter.empty:
         annotations["return"] = return_annotation
-    return annotations  # type: ignore[return-value]
+    return annotations
 
 
 @overload
@@ -138,7 +142,7 @@ def with_signature(
                 )
             return func(*args, **kwargs)
 
-        wrapper_with_signature.__signature__ = signature  # type: ignore[attr-defined]
+        wrapper_with_signature.__signature__ = signature  # ty: ignore[unresolved-attribute]
         wrapper_with_signature.__annotations__ = annotations
         return wrapper_with_signature
 
@@ -249,7 +253,7 @@ def rename_arguments(  # noqa: C901
                     internal_kwargs[name] = value
             return func(*args, **internal_kwargs)
 
-        wrapper_rename_arguments.__signature__ = signature  # type: ignore[attr-defined]
+        wrapper_rename_arguments.__signature__ = signature  # ty: ignore[unresolved-attribute]
         wrapper_rename_arguments.__annotations__ = annotations
 
         # Preserve function type

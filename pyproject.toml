@@ -88,10 +88,10 @@ pre-commit = "*"
 pytest = "*"
 pytest-cov = "*"
 pytest-xdist = "*"
-mypy = "~=1.16"
 
 [tool.pixi.pypi-dependencies]
 dags = {path = ".", editable = true}
+ty = ">=0.0.3"
 types-networkx = "*"
 pdbp = "*"
 
@@ -203,23 +203,26 @@ none_representation = "null"
 
 
 # ======================================================================================
-# mypy configuration
+# ty configuration -- set all rules to error.
 # ======================================================================================
 
-[tool.mypy]
-files = ["src", "tests"]
-check_untyped_defs = true
-disallow_any_generics = true
-disallow_untyped_defs = true
-disallow_incomplete_defs = true
-no_implicit_optional = true
-warn_redundant_casts = true
-warn_unused_ignores = true
+[tool.ty.rules]
+ambiguous-protocol-member = "error"
+deprecated = "error"
+division-by-zero = "error"
+ignore-comment-unknown-rule = "error"
+invalid-argument-type = "error"
+invalid-ignore-comment = "error"
+possibly-missing-attribute = "error"
+possibly-missing-implicit-call = "error"
+possibly-missing-import = "error"
+possibly-unresolved-reference = "error"
+redundant-cast = "error"
+undefined-reveal = "error"
+unresolved-global = "error"
+unsupported-base = "error"
+unused-ignore-comment = "error"
+useless-overload-body = "error"
 
-[[tool.mypy.overrides]]
-module = ["tests.*"]
-disallow_untyped_defs = false
-
-[[tool.mypy.overrides]]
-module = ["flatten_dict.*"]
-ignore_missing_imports = true
+[tool.ty.src]
+exclude = ["docs/source/example/example.ipynb"]

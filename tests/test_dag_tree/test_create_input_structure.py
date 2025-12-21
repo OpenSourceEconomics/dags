@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     )
 
 
-def f(g: int, a: int, b: float, c) -> float:  # type: ignore[no-untyped-def]
+def f(g: int, a: int, b: float, c) -> float:
     # We expect to see "no_annotation_found" for c, because it is not annotated.
     return g + a + b + c
 
@@ -114,7 +114,7 @@ def functions_nested_and_duplicate_g() -> NestedFunctionDict:
         ),
     ],
 )
-def test_create_input_structure_tree_simple(
+def test_create_tree_with_input_types_simple(
     functions_simple: NestedFunctionDict,
     targets: NestedTargetDict | None,
     top_level_inputs: set[str],
@@ -122,10 +122,18 @@ def test_create_input_structure_tree_simple(
 ) -> None:
     if "raises_error" in expected:
         with pytest.raises(RepeatedTopLevelElementError):
-            create_tree_with_input_types(functions_simple, targets, top_level_inputs)
+            create_tree_with_input_types(
+                functions=functions_simple,
+                targets=targets,
+                top_level_inputs=top_level_inputs,
+            )
     else:
         assert (
-            create_tree_with_input_types(functions_simple, targets, top_level_inputs)
+            create_tree_with_input_types(
+                functions=functions_simple,
+                targets=targets,
+                top_level_inputs=top_level_inputs,
+            )
             == expected
         )
 
@@ -166,7 +174,7 @@ def test_create_input_structure_tree_simple(
         ),
     ],
 )
-def test_create_input_structure_tree_nested_and_duplicate_g(
+def test_create_tree_with_input_types_nested_and_duplicate_g(
     functions_nested_and_duplicate_g: NestedFunctionDict,
     targets: NestedTargetDict | None,
     top_level_inputs: set[str],
@@ -175,18 +183,22 @@ def test_create_input_structure_tree_nested_and_duplicate_g(
     if "raises_error" in expected:
         with pytest.raises(RepeatedTopLevelElementError):
             create_tree_with_input_types(
-                functions_nested_and_duplicate_g, targets, top_level_inputs
+                functions=functions_nested_and_duplicate_g,
+                targets=targets,
+                top_level_inputs=top_level_inputs,
             )
     else:
         assert (
             create_tree_with_input_types(
-                functions_nested_and_duplicate_g, targets, top_level_inputs
+                functions=functions_nested_and_duplicate_g,
+                targets=targets,
+                top_level_inputs=top_level_inputs,
             )
             == expected
         )
 
 
-def test_create_input_structure_tree_duplicates_lower_in_hierarchy() -> None:
+def test_create_tree_with_input_types_duplicates_lower_in_hierarchy() -> None:
     assert create_tree_with_input_types(
         functions={
             "n1": {"a": {"f": f}},
