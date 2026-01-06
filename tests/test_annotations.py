@@ -177,7 +177,7 @@ def test_python314_annotation_extraction_bug_with_functools_wraps() -> None:
 
     def income_func(
         wealth: float,
-        bool_func: bool,  # This annotation extraction fails in Python 3.14
+        bool_func: bool,
     ) -> float:
         """A function that takes a bool parameter."""
         return wealth * 0.8 if bool_func else wealth
@@ -188,7 +188,7 @@ def test_python314_annotation_extraction_bug_with_functools_wraps() -> None:
     # copying from the wrapped object
     @functools.wraps(income_func)
     def wrapped_income_func(*args: P.args, **kwargs: P.kwargs) -> float:
-        return income_func(*args, **kwargs)
+        return income_func(*args, **kwargs)  # ty: ignore[invalid-argument-type]
 
     # In Python 3.14, manually set __annotations__ to simulate the bug condition
     # where wrapping a non-function object causes __annotations__ to contain
