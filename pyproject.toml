@@ -82,7 +82,7 @@ platforms = ["linux-64", "osx-64", "osx-arm64", "win-64"]
 # --------------------------------------------------------------------------------------
 
 [tool.pixi.dependencies]
-python = ">=3.10,<3.14"
+python = ">=3.10,<3.15"
 jupyterlab = "*"
 pre-commit = "*"
 pytest = "*"
@@ -117,6 +117,9 @@ python = "~=3.12"
 [tool.pixi.feature.py313.dependencies]
 python = "~=3.13"
 
+[tool.pixi.feature.py314.dependencies]
+python = "~=3.14"
+
 # Environments
 # --------------------------------------------------------------------------------------
 
@@ -125,6 +128,7 @@ py310 = ["test", "py310"]
 py311 = ["test", "py311"]
 py312 = ["test", "py312"]
 py313 = ["test", "py313"]
+py314 = ["test", "py314"]
 
 # ======================================================================================
 # Ruff configuration

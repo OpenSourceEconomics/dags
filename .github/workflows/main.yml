@@ -28,25 +28,26 @@ jobs:
           - py311
           - py312
           - py313
+          - py314
     steps:
       - uses: actions/checkout@v6
       - uses: prefix-dev/setup-pixi@v0.9.3
         with:
-          pixi-version: v0.62.1
+          pixi-version: v0.62.2
           cache: true
           cache-write: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
           frozen: true
           environments: ${{ matrix.environment }}
-      - name: Run all tests except Linux and py313.
-        if: runner.os != 'Linux' || matrix.environment != 'py313'
+      - name: Run all tests except Linux and py314.
+        if: runner.os != 'Linux' || matrix.environment != 'py314'
         shell: bash -el {0}
         run: pixi run -e ${{ matrix.environment }} tests
-      - name: Run tests with codecov on Linux and py313.
-        if: runner.os == 'Linux' && matrix.environment == 'py313'
+      - name: Run tests with codecov on Linux and py314.
+        if: runner.os == 'Linux' && matrix.environment == 'py314'
         shell: bash -el {0}
         run: pixi run -e ${{ matrix.environment }} tests-with-cov
       - name: Upload coverage report.
-        if: runner.os == 'Linux' && matrix.environment == 'py313'
+        if: runner.os == 'Linux' && matrix.environment == 'py314'
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
