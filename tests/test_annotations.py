@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import functools
 import inspect
-from typing import Literal
+import sys
+from typing import Literal, ParamSpec
 
 import numpy as np
 import pytest
@@ -164,3 +165,59 @@ def test_verify_annotations_are_strings_non_string_argument_and_return() -> None
         ),
     ):
         verify_annotations_are_strings({"a": int, "return": float}, "f")  # ty: ignore[invalid-argument-type]
+
+
+def test_python314_annotation_extraction_bug_with_functools_wraps() -> None:
+    """Reproducer for Python 3.14 annotation extraction bug."""
+    P = ParamSpec("P")  # noqa: N806
+
+    def bool_func(p_id: int) -> bool:  # noqa: ARG001
+        """A function that returns a boolean."""
+        return True
+
+    def income_func(
+        wealth: float,
+        bool_func: bool,  # This annotation extraction fails in Python 3.14
+    ) -> float:
+        """A function that takes a bool parameter."""
+        return wealth * 0.8 if bool_func else wealth
+
+    # Wrap income_func with functools.wraps using ParamSpec. Then manually set
+    # __annotations__ to simulate what happens when wrapping a non-function object
+    # (like PolicyFunction) - the wrapper's own annotations are used instead of
+    # copying from the wrapped object
+    @functools.wraps(income_func)
+    def wrapped_income_func(*args: P.args, **kwargs: P.kwargs) -> float:
+        return income_func(*args, **kwargs)
+
+    # In Python 3.14, manually set __annotations__ to simulate the bug condition
+    # where wrapping a non-function object causes __annotations__ to contain
+    # {'args': 'P.args', 'kwargs': 'P.kwargs'} instead of the actual parameter
+    # annotations. This is what happens when wrapping PolicyFunction objects in ttsim.
+    # In Python 3.13, functools.wraps correctly copies __annotations__, so we
+    # don't need to modify it.
+    if sys.version_info >= (3, 14):
+        wrapped_income_func.__annotations__ = {
+            "args": "P.args",
+            "kwargs": "P.kwargs",
+            "return": "float",
+        }
+
+    functions_dict = {
+        "bool_func": bool_func,
+        "income_func": wrapped_income_func,
+    }
+
+    # In Python 3.14, this will raise AnnotationMismatchError because
+    # get_annotations on wrapped_income_func loses the 'bool_func' parameter
+    # annotation, returning 'no_annotation_found' instead of 'bool'.
+    # The test is expected to FAIL in Python 3.14 due to this bug.
+    # In Python 3.13 and earlier, this should work correctly and the test should PASS.
+    concatenated = concatenate_functions(
+        functions=functions_dict,
+        targets=["income_func"],
+        set_annotations=True,
+    )
+    # Verify it works (returns tuple for single target)
+    result = concatenated(wealth=1000.0, p_id=0)
+    assert result == (800.0,)
