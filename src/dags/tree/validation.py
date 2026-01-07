@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from dags.dag import format_list_linewise
 from dags.tree.exceptions import (
     RepeatedTopLevelElementError,
     TrailingUnderscoreError,
 )
 from dags.tree.tree_utils import tree_path_from_qname, tree_paths
+from dags.utils import format_list_linewise
 
 if TYPE_CHECKING:
     from dags.tree.typing import (
@@ -70,16 +70,11 @@ def fail_if_paths_are_invalid(
         TrailingUnderscoreError: If the paths in the functions tree are invalid.
         RepeatedTopLevelElementError: If the paths in the functions tree are invalid.
     """
-    if functions is None:
-        functions = {}
-    if abs_qnames_functions is None:
-        abs_qnames_functions = {}
-    if data_tree is None:
-        data_tree = {}
-    if input_structure is None:
-        input_structure = {}
-    if targets is None:
-        targets = {}
+    functions = functions or {}
+    abs_qnames_functions = abs_qnames_functions or {}
+    data_tree = data_tree or {}
+    input_structure = input_structure or {}
+    targets = targets or {}
     all_tree_paths = (
         set(tree_paths(functions))
         | {tree_path_from_qname(qn) for qn in abs_qnames_functions}
@@ -123,6 +118,14 @@ def fail_if_path_elements_have_trailing_undersores(
         raise TrailingUnderscoreError(msg)
 
 
+def _path_repeats_top_level_element(
+    path: tuple[str, ...],
+    top_level_namespace: set[str],
+) -> bool:
+    """Check if any non-root element of path is in the top-level namespace."""
+    return len(path) > 1 and any(name in top_level_namespace for name in path[1:])
+
+
 def fail_if_top_level_elements_repeated_in_paths(
     all_tree_paths: set[tuple[str, ...]],
     top_level_namespace: set[str],
@@ -144,7 +147,7 @@ def fail_if_top_level_elements_repeated_in_paths(
     collected_errors = {
         path
         for path in all_tree_paths
-        if len(path) > 1 and any((name in top_level_namespace) for name in path[1:])
+        if _path_repeats_top_level_element(path, top_level_namespace)
     }
     if collected_errors:
         paths = "\n".join(str(p) for p in collected_errors)
@@ -174,9 +177,7 @@ def fail_if_top_level_elements_repeated_in_single_path(
         RepeatedTopLevelElementError: If any element of `tree_path` equals an element in
             the top-level namespace.
     """
-    if len(tree_path) > 1 and any(
-        (name in top_level_namespace) for name in tree_path[1:]
-    ):
+    if _path_repeats_top_level_element(tree_path, top_level_namespace):
         msg = (
             "Elements of the top-level namespace must not be repeated further down "
             f"in the hierarchy. Path:\n\n{tree_path}\n\n\n"

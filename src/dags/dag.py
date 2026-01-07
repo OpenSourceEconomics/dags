@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import functools
 import inspect
-import textwrap
 import warnings
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Literal, cast
@@ -22,9 +21,10 @@ from dags.exceptions import (
 )
 from dags.output import aggregated_output, dict_output, list_output, single_output
 from dags.signature import with_signature
+from dags.utils import format_list_linewise
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Sequence
+    from collections.abc import Callable
 
     from dags.typing import T
 
@@ -79,7 +79,7 @@ class FunctionExecutionInfo:
     @property
     def arguments(self) -> list[str]:
         """The names of the arguments of the function."""
-        return list(set(self.annotations) - {"return"})
+        return [k for k in self.annotations if k != "return"]
 
     @property
     def argument_annotations(self) -> dict[str, str]:
@@ -362,7 +362,7 @@ def get_ancestors(
 
     ancestors: set[str] = set()
     for target in _targets:
-        ancestors = ancestors.union(nx.ancestors(dag, target))  # ty: ignore[invalid-argument-type]
+        ancestors |= nx.ancestors(dag, target)  # ty: ignore[invalid-argument-type]
         if include_targets:
             ancestors.add(target)
     return ancestors
@@ -692,14 +692,3 @@ def get_annotations_from_execution_info(
     args_annotations = {arg: types[arg] for arg in arglist}
     return_annotation = tuple(types[target] for target in targets)
     return args_annotations, return_annotation
-
-
-def format_list_linewise(seq: Sequence[object]) -> str:
-    formatted_list = '",\n    "'.join([str(c) for c in seq])
-    return textwrap.dedent(
-        """
-        [
-            "{formatted_list}",
-        ]
-        """,
-    ).format(formatted_list=formatted_list)

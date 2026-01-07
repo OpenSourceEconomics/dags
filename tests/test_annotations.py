@@ -164,3 +164,24 @@ def test_verify_annotations_are_strings_non_string_argument_and_return() -> None
         ),
     ):
         verify_annotations_are_strings({"a": int, "return": float}, "f")  # ty: ignore[invalid-argument-type]
+
+
+def test_get_annotations_fallback_for_args_kwargs_mismatch() -> None:
+    """Test fallback to signature when annotations have args/kwargs mismatch."""
+
+    def inner(wealth: float, flag: bool) -> float:  # noqa: ARG001
+        return wealth
+
+    @functools.wraps(inner)
+    def wrapper(*args, **kwargs) -> float:
+        return inner(*args, **kwargs)
+
+    # Force the mismatch condition
+    wrapper.__annotations__ = {
+        "args": "P.args",
+        "kwargs": "P.kwargs",
+        "return": "float",
+    }
+
+    result = get_annotations(wrapper)
+    assert result == {"wealth": "float", "flag": "bool", "return": "float"}

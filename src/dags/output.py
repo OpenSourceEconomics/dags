@@ -8,10 +8,29 @@ from dags.exceptions import DagsError
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+    from typing import Any
 
     from typing_extensions import Unpack
 
     from dags.typing import MixedTupleType, P, T
+
+
+def _apply_return_annotation(
+    wrapper: Callable[..., Any],
+    func: Callable[..., Any],
+    return_annotation: Any,
+) -> None:
+    """Apply a new return annotation to a wrapper function.
+
+    Updates both __signature__ and __annotations__ on the wrapper.
+    """
+    signature = inspect.signature(func)
+    annotations = inspect.get_annotations(func)
+    if "return" in annotations:
+        signature = signature.replace(return_annotation=return_annotation)
+        annotations["return"] = return_annotation
+    wrapper.__signature__ = signature  # ty: ignore[unresolved-attribute]
+    wrapper.__annotations__ = annotations
 
 
 def single_output(
@@ -26,17 +45,10 @@ def single_output(
         return raw[0]
 
     if set_annotations:
-        signature = inspect.signature(func)
         annotations = inspect.get_annotations(func)
-
         if "return" in annotations:
             tuple_of_types: tuple[str, ...] = annotations["return"]
-            return_annotation = tuple_of_types[0]
-            signature = signature.replace(return_annotation=return_annotation)
-            annotations["return"] = return_annotation
-
-        wrapper_single_output.__signature__ = signature  # ty: ignore[unresolved-attribute]
-        wrapper_single_output.__annotations__ = annotations
+            _apply_return_annotation(wrapper_single_output, func, tuple_of_types[0])
 
     return wrapper_single_output
 
@@ -78,15 +90,11 @@ def dict_output(
             return dict(zip(keys, raw, strict=True))
 
         if set_annotations:
-            signature = inspect.signature(func)
             annotations = inspect.get_annotations(func)
             if "return" in annotations:
                 tuple_of_types: tuple[str, ...] = annotations["return"]
                 return_annotation = dict(zip(keys, tuple_of_types, strict=True))
-                signature = signature.replace(return_annotation=return_annotation)
-                annotations["return"] = return_annotation
-            wrapper_dict_output.__signature__ = signature  # ty: ignore[unresolved-attribute]
-            wrapper_dict_output.__annotations__ = annotations
+                _apply_return_annotation(wrapper_dict_output, func, return_annotation)
 
         return wrapper_dict_output
 
@@ -106,16 +114,10 @@ def list_output(
         return list(raw)
 
     if set_annotations:
-        signature = inspect.signature(func)
         annotations = inspect.get_annotations(func)
         if "return" in annotations:
             tuple_of_types: tuple[str, ...] = annotations["return"]
-            return_annotation = list(tuple_of_types)
-            signature = signature.replace(return_annotation=return_annotation)
-            annotations["return"] = return_annotation
-
-        wrapper_list_output.__signature__ = signature  # ty: ignore[unresolved-attribute]
-        wrapper_list_output.__annotations__ = annotations
+            _apply_return_annotation(wrapper_list_output, func, list(tuple_of_types))
 
     return wrapper_list_output
 
