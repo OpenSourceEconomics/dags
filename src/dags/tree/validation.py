@@ -70,16 +70,11 @@ def fail_if_paths_are_invalid(
         TrailingUnderscoreError: If the paths in the functions tree are invalid.
         RepeatedTopLevelElementError: If the paths in the functions tree are invalid.
     """
-    if functions is None:
-        functions = {}
-    if abs_qnames_functions is None:
-        abs_qnames_functions = {}
-    if data_tree is None:
-        data_tree = {}
-    if input_structure is None:
-        input_structure = {}
-    if targets is None:
-        targets = {}
+    functions = functions or {}
+    abs_qnames_functions = abs_qnames_functions or {}
+    data_tree = data_tree or {}
+    input_structure = input_structure or {}
+    targets = targets or {}
     all_tree_paths = (
         set(tree_paths(functions))
         | {tree_path_from_qname(qn) for qn in abs_qnames_functions}

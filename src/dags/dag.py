@@ -79,7 +79,7 @@ class FunctionExecutionInfo:
     @property
     def arguments(self) -> list[str]:
         """The names of the arguments of the function."""
-        return list(set(self.annotations) - {"return"})
+        return [k for k in self.annotations if k != "return"]
 
     @property
     def argument_annotations(self) -> dict[str, str]:
@@ -362,7 +362,7 @@ def get_ancestors(
 
     ancestors: set[str] = set()
     for target in _targets:
-        ancestors = ancestors.union(nx.ancestors(dag, target))  # ty: ignore[invalid-argument-type]
+        ancestors |= nx.ancestors(dag, target)  # ty: ignore[invalid-argument-type]
         if include_targets:
             ancestors.add(target)
     return ancestors
