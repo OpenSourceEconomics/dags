@@ -6,8 +6,7 @@ releases are available on [conda-forge](https://anaconda.org/conda-forge/dags).
 
 ## 0.4.2
 
-- :gh:`59` Add Python 3.14 support, fix annotation extraction for wrapped functions
-  (:ghuser:`hmgaudecker`).
+- :gh:`59` Add support for Python 3.14, simplify (:ghuser:`hmgaudecker`).
 - :gh:`58` Move from mypy to ty (:ghuser:`hmgaudecker`).
 
 ## 0.4.1
