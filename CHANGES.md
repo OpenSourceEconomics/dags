@@ -4,6 +4,33 @@ This is a record of all past dags releases and what went into them in reverse
 chronological order. We follow [semantic versioning](https://semver.org/) and all
 releases are available on [conda-forge](https://anaconda.org/conda-forge/dags).
 
+## 0.4.2
+
+- :gh:`59` Add Python 3.14 support, fix annotation extraction for wrapped functions
+  (:ghuser:`hmgaudecker`).
+- :gh:`58` Move from mypy to ty (:ghuser:`hmgaudecker`).
+
+## 0.4.1
+
+- :gh:`52` Only import from typing_extensions if TYPE_CHECKING (:ghuser:`timmens`).
+
+## 0.4.0
+
+- :gh:`49` Optionally use lexicographical sort to control execution order
+  (:ghuser:`hmgaudecker`).
+- :gh:`48` Make type hints more expressive (:ghuser:`timmens`).
+- :gh:`47` Rename qual_name -> qname (:ghuser:`hmgaudecker`).
+- :gh:`45` Make creation of DAG optional in calling concatenate_functions
+  (:ghuser:`hmgaudecker`).
+- :gh:`44` Annotation behavior updates and bug fixes (:ghuser:`timmens`).
+- :gh:`43` Refactor annotation handling (:ghuser:`timmens`).
+- :gh:`42` Sort the outputs of the top-level namespace and format line-wise
+  (:ghuser:`hmgaudecker`).
+- :gh:`41` Implement `get_input_types` function (:ghuser:`timmens`).
+- :gh:`40` Add new custom exceptions (:ghuser:`timmens`).
+- :gh:`37` Validate consistency of type annotations during function-creation time
+  (:ghuser:`timmens`).
+
 ## 0.3.0
 
 - :gh:`33` Simplify interfaces, expose more functions (:ghuser:`hmgaudecker`)
