@@ -75,28 +75,8 @@ def get_annotations(
     annotation_keys = {k for k in annotations if k != "return"}
     signature_params = set(free_arguments)
 
-    # In Python 3.14, when functools.wraps wraps a non-function object (like
-    # PolicyFunction in ttsim) and the wrapper defines annotations with ParamSpec
-    # (*args: P.args, **kwargs: P.kwargs), functools.wraps no longer copies
-    # __annotations__ from the wrapped object; it uses the wrapper's annotations
-    # ({'args': 'P.args', 'kwargs': 'P.kwargs'}), which don't match the signature
-    # parameters that functools.wraps still copies correctly.
-    if annotation_keys != signature_params and annotation_keys == {"args", "kwargs"}:
-        sig = inspect.signature(func)
-        annotations = {}
-        for param_name, param in sig.parameters.items():
-            if param.annotation != inspect.Parameter.empty:
-                annotations[param_name] = (
-                    param.annotation
-                    if eval_str or isinstance(param.annotation, str)
-                    else _get_str_repr(param.annotation)
-                )
-        if sig.return_annotation != inspect.Signature.empty:
-            annotations["return"] = (
-                sig.return_annotation
-                if eval_str or isinstance(sig.return_annotation, str)
-                else _get_str_repr(sig.return_annotation)
-            )
+    if _has_args_kwargs_annotation_mismatch(annotation_keys, signature_params):
+        annotations = _get_annotations_from_signature(func, eval_str)
 
     return {arg: annotations.get(arg, default) for arg in ["return", *free_arguments]}
 
@@ -162,3 +142,46 @@ def verify_annotations_are_strings(
 
 def _get_str_repr(obj: object) -> str:
     return getattr(obj, "__name__", str(obj))
+
+
+def _has_args_kwargs_annotation_mismatch(
+    annotation_keys: set[str], signature_params: set[str]
+) -> bool:
+    """Check if annotations have the args/kwargs mismatch from Python 3.14.
+
+    In Python 3.14, when functools.wraps wraps a non-function object (like
+    PolicyFunction in ttsim) and the wrapper defines annotations with ParamSpec
+    (*args: P.args, **kwargs: P.kwargs), functools.wraps no longer copies
+    __annotations__ from the wrapped object; it uses the wrapper's annotations
+    ({'args': 'P.args', 'kwargs': 'P.kwargs'}), which don't match the signature
+    parameters that functools.wraps still copies correctly.
+
+    """
+    return annotation_keys != signature_params and annotation_keys == {"args", "kwargs"}
+
+
+def _get_annotations_from_signature(
+    func: Callable[..., Any], eval_str: bool
+) -> dict[str, Any]:
+    """Extract annotations from the function signature.
+
+    This is a fallback for when inspect.get_annotations returns incorrect results,
+    such as in Python 3.14's args/kwargs annotation mismatch case.
+
+    """
+    sig = inspect.signature(func)
+    annotations: dict[str, Any] = {}
+    for param_name, param in sig.parameters.items():
+        if param.annotation != inspect.Parameter.empty:
+            annotations[param_name] = (
+                param.annotation
+                if eval_str or isinstance(param.annotation, str)
+                else _get_str_repr(param.annotation)
+            )
+    if sig.return_annotation != inspect.Signature.empty:
+        annotations["return"] = (
+            sig.return_annotation
+            if eval_str or isinstance(sig.return_annotation, str)
+            else _get_str_repr(sig.return_annotation)
+        )
+    return annotations
