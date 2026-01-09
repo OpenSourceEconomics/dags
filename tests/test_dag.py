@@ -347,3 +347,65 @@ def test_concatenate_functions_no_annotations_set_annotations() -> None:
         "a": "no_annotation_found",
         "return": ("no_annotation_found",),
     }
+
+
+def test_concatenate_functions_mixed_annotations_no_mismatch_error() -> None:
+    """Test that missing annotations don't cause AnnotationMismatchError.
+
+    When one function has type annotations and another doesn't, the missing
+    annotations (represented as "no_annotation_found") should be treated as
+    compatible with any type, not as a mismatch.
+    """
+
+    def f_with_annotations(x: int) -> int:
+        return x + 1
+
+    def g_without_annotations(x):
+        return x * 2
+
+    def h_uses_both(f_with_annotations: int, g_without_annotations) -> int:
+        return f_with_annotations + g_without_annotations
+
+    # This should not raise AnnotationMismatchError
+    concatenated = concatenate_functions(
+        functions=[f_with_annotations, g_without_annotations, h_uses_both],
+        targets="h_uses_both",
+        set_annotations=True,
+    )
+
+    # The result should work correctly
+    assert concatenated(x=5) == (5 + 1) + (5 * 2)
+
+    # Annotations should preserve the known types where available
+    annotations = inspect.get_annotations(concatenated)
+    assert annotations["x"] == "int"  # From f_with_annotations
+    assert annotations["return"] == "int"
+
+
+def test_concatenate_functions_preserves_good_annotations() -> None:
+    """Test that good annotations are preserved over no_annotation_found.
+
+    When processing functions in order, if a later function has
+    "no_annotation_found" for an argument that already has a proper annotation,
+    the proper annotation should be kept.
+    """
+
+    def first_with_annotation(a: float) -> float:
+        return a * 2
+
+    def second_without_annotation(a):
+        return a + 1
+
+    def combine(first_with_annotation: float, second_without_annotation) -> float:
+        return first_with_annotation + second_without_annotation
+
+    concatenated = concatenate_functions(
+        functions=[first_with_annotation, second_without_annotation, combine],
+        targets="combine",
+        set_annotations=True,
+    )
+
+    annotations = inspect.get_annotations(concatenated)
+    # 'a' should have the 'float' annotation from first_with_annotation,
+    # not 'no_annotation_found' from second_without_annotation
+    assert annotations["a"] == "float"

@@ -668,7 +668,15 @@ def get_annotations_from_execution_info(
             # required an int or a float. We will not be able to do much better unless
             # we switch away from string-type annotations or replicate the entire logic
             # of a static type checker, both of which are infeasible at the moment.
-            if earlier_type not in current_type and current_type not in earlier_type:
+            # We also skip comparison if either type is "no_annotation_found", which
+            # indicates a missing annotation that should be treated as compatible with
+            # any type.
+            if (
+                earlier_type not in current_type
+                and current_type not in earlier_type
+                and earlier_type != "no_annotation_found"
+                and current_type != "no_annotation_found"
+            ):
                 arg_is_function = arg in execution_info
                 if arg_is_function:
                     explanation = f"function {arg} has return type: {earlier_type}."
@@ -682,7 +690,11 @@ def get_annotations_from_execution_info(
                     f"{current_type}', but {explanation}"
                 )
 
-        types.update(info.argument_annotations)
+        # Update types with argument annotations, but don't overwrite existing
+        # annotations with "no_annotation_found" (missing annotations).
+        for arg, annot in info.argument_annotations.items():
+            if annot != "no_annotation_found" or arg not in types:
+                types[arg] = annot
 
     if errors:
         raise AnnotationMismatchError(
