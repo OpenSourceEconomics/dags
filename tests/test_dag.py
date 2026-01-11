@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import inspect
+import warnings
 from functools import partial
 from typing import TYPE_CHECKING, Any, Literal
 
@@ -463,3 +464,53 @@ def test_aggregator_return_type_mixed_target_types_uses_aggregator() -> None:
     assert aggregated() == 3.0
     # Return type should be inferred from aggregator since target types differ
     assert inspect.get_annotations(aggregated)["return"] == "float"
+
+
+def test_aggregator_return_type_ignored_when_set_annotations_false() -> None:
+    """Test that aggregator_return_type is ignored when set_annotations=False."""
+
+    def f1() -> bool:
+        return True
+
+    def f2() -> bool:
+        return False
+
+    # Even nonsensical return type should not cause issues
+    aggregated = concatenate_functions(
+        functions={"f1": f1, "f2": f2},
+        targets=["f1", "f2"],
+        aggregator=lambda a, b: a and b,
+        aggregator_return_type="CompletelyFakeType",
+        set_annotations=False,
+    )
+
+    assert aggregated() is False
+    # No return annotation should be set
+    assert "return" not in inspect.get_annotations(aggregated)
+
+
+def test_aggregator_no_inference_when_set_annotations_false() -> None:
+    """Test that no inference happens when set_annotations=False.
+
+    This guards against the original bug where inference/warning would trigger
+    even when annotations weren't being set.
+    """
+
+    def f1():
+        return True
+
+    def f2():
+        return False
+
+    # Should not warn, should not try to infer anything
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")  # Turn warnings into errors
+        aggregated = concatenate_functions(
+            functions={"f1": f1, "f2": f2},
+            targets=["f1", "f2"],
+            aggregator=lambda a, b: a and b,
+            set_annotations=False,
+        )
+
+    assert aggregated() is False
+    assert "return" not in inspect.get_annotations(aggregated)
