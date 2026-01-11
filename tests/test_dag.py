@@ -8,6 +8,7 @@ import pytest
 
 from dags.annotations import _get_str_repr
 from dags.dag import (
+    DagsWarning,
     FunctionExecutionInfo,
     concatenate_functions,
     create_dag,
@@ -347,3 +348,118 @@ def test_concatenate_functions_no_annotations_set_annotations() -> None:
         "a": "no_annotation_found",
         "return": ("no_annotation_found",),
     }
+
+
+# ======================================================================================
+# Tests for aggregator return type inference
+# ======================================================================================
+
+
+def test_aggregator_return_type_explicit() -> None:
+    """Test that explicit aggregator_return_type is used."""
+
+    def f1() -> bool:
+        return True
+
+    def f2() -> bool:
+        return False
+
+    aggregated = concatenate_functions(
+        functions={"f1": f1, "f2": f2},
+        targets=["f1", "f2"],
+        aggregator=lambda a, b: a and b,
+        aggregator_return_type="bool",
+        set_annotations=True,
+    )
+
+    assert aggregated() is False
+    assert inspect.get_annotations(aggregated)["return"] == "bool"
+
+
+def test_aggregator_return_type_inferred_from_targets() -> None:
+    """Test that return type is inferred from targets when all have same type."""
+
+    def f1() -> bool:
+        return True
+
+    def f2() -> bool:
+        return False
+
+    aggregated = concatenate_functions(
+        functions={"f1": f1, "f2": f2},
+        targets=["f1", "f2"],
+        aggregator=lambda a, b: a and b,
+        set_annotations=True,
+    )
+
+    assert aggregated() is False
+    # Return type should be inferred from targets (both bool)
+    assert inspect.get_annotations(aggregated)["return"] == "bool"
+
+
+def test_aggregator_return_type_inferred_from_typed_aggregator() -> None:
+    """Test that return type is inferred from aggregator annotations."""
+
+    def f1():
+        return True
+
+    def f2():
+        return False
+
+    def typed_and(a: bool, b: bool) -> bool:
+        return a and b
+
+    aggregated = concatenate_functions(
+        functions={"f1": f1, "f2": f2},
+        targets=["f1", "f2"],
+        aggregator=typed_and,
+        set_annotations=True,
+    )
+
+    assert aggregated() is False
+    # Return type should be inferred from aggregator
+    assert inspect.get_annotations(aggregated)["return"] == "bool"
+
+
+def test_aggregator_return_type_warns_when_cannot_infer() -> None:
+    """Test that a warning is issued when return type cannot be inferred."""
+
+    def f1():
+        return True
+
+    def f2():
+        return False
+
+    with pytest.warns(DagsWarning, match="Consider providing aggregator_return_type"):
+        aggregated = concatenate_functions(
+            functions={"f1": f1, "f2": f2},
+            targets=["f1", "f2"],
+            aggregator=lambda a, b: a and b,
+            set_annotations=True,
+        )
+
+    assert aggregated() is False
+
+
+def test_aggregator_return_type_mixed_target_types_uses_aggregator() -> None:
+    """Test inference when targets have different types but aggregator is typed."""
+
+    def f1() -> int:
+        return 1
+
+    def f2() -> float:
+        return 2.0
+
+    def typed_add(a: float, b: float) -> float:
+        return a + b
+
+    aggregated = concatenate_functions(
+        functions={"f1": f1, "f2": f2},
+        targets=["f1", "f2"],
+        aggregator=typed_add,
+        set_annotations=True,
+    )
+
+    assert aggregated() == 3.0
+    # Return type should be inferred from aggregator since target types differ
+    assert inspect.get_annotations(aggregated)["return"] == "float"

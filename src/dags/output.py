@@ -124,13 +124,20 @@ def list_output(
 
 @overload
 def aggregated_output(
-    func: Callable[P, tuple[T, ...]], *, aggregator: Callable[[T, T], T]
+    func: Callable[P, tuple[T, ...]],
+    *,
+    aggregator: Callable[[T, T], T],
+    set_annotations: bool = False,
+    return_annotation: str | None = None,
 ) -> Callable[P, T]: ...
 
 
 @overload
 def aggregated_output(
-    *, aggregator: Callable[[T, T], T]
+    *,
+    aggregator: Callable[[T, T], T],
+    set_annotations: bool = False,
+    return_annotation: str | None = None,
 ) -> Callable[[Callable[P, tuple[T, ...]]], Callable[P, T]]: ...
 
 
@@ -138,8 +145,19 @@ def aggregated_output(
     func: Callable[P, tuple[T, ...]] | None = None,
     *,
     aggregator: Callable[[T, T], T] | None = None,
+    set_annotations: bool = False,
+    return_annotation: str | None = None,
 ) -> Callable[P, T] | Callable[[Callable[P, tuple[T, ...]]], Callable[P, T]]:
-    """Aggregate tuple output."""
+    """Aggregate tuple output.
+
+    Args:
+        func: The function to wrap. If provided, the decorator is applied immediately.
+        aggregator: Binary reduction function to combine the output values.
+        set_annotations: If True, set the return annotation on the wrapper function.
+        return_annotation: The return type annotation to use. Only used when
+            set_annotations is True.
+
+    """
     if aggregator is None:
         raise DagsError(
             "The 'aggregator' parameter is required for aggregated_output. Please "
@@ -155,6 +173,9 @@ def aggregated_output(
             for entry in raw[1:]:
                 agg = aggregator(agg, entry)  # aggregator is assumed not None
             return agg
+
+        if set_annotations and return_annotation is not None:
+            _apply_return_annotation(wrapper_aggregated_output, func, return_annotation)
 
         return wrapper_aggregated_output
 
