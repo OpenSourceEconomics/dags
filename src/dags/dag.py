@@ -650,7 +650,11 @@ def _infer_aggregator_return_type(
     Uses a three-tier approach:
     1. If explicit_type is provided, use it directly.
     2. Try to get the return annotation from the aggregator function.
-    3. If all targets have the same type, use that (aggregators preserve type).
+    3. If all targets have the same type, assume the aggregator preserves it.
+
+    Note: Tier 3 is a heuristic that works for aggregators like `logical_and` or
+    `max`, but may be wrong for type-promoting aggregators (e.g., summing bools
+    returns int, not bool). Use explicit_type or a typed aggregator in such cases.
 
     Args:
         aggregator: The binary reduction function.
@@ -675,7 +679,7 @@ def _infer_aggregator_return_type(
     except Exception:  # noqa: BLE001, S110
         pass
 
-    # 3. If all targets have the same type, use it (aggregators typically preserve type)
+    # 3. If all targets have the same type, assume the aggregator preserves it
     non_missing = [t for t in target_types if t != "no_annotation_found"]
     if non_missing and len(set(non_missing)) == 1:
         return non_missing[0]
