@@ -117,6 +117,15 @@ python = "~=3.13.0"
 [tool.pixi.feature.py314.dependencies]
 python = "~=3.14.0"
 
+[tool.pixi.feature.docs.dependencies]
+pydata-sphinx-theme = "*"
+sphinx = "*"
+sphinx-copybutton = "*"
+sphinx-design = "*"
+
+[tool.pixi.feature.docs.tasks]
+docs = "sphinx-build -T -b html docs/source docs/source/_build/html"
+
 # Environments
 # --------------------------------------------------------------------------------------
 
@@ -125,6 +134,7 @@ py311 = ["test", "py311"]
 py312 = ["test", "py312"]
 py313 = ["test", "py313"]
 py314 = ["test", "py314"]
+docs = ["docs", "py313"]
 
 # ======================================================================================
 # Ruff configuration
