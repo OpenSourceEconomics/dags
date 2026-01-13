@@ -91,7 +91,7 @@ pytest-xdist = "*"
 
 [tool.pixi.pypi-dependencies]
 dags = {path = ".", editable = true}
-ty = ">=0.0.3"
+ty = ">=0.0.11"
 types-networkx = ">=3.6.1.20251220"
 pdbp = "*"
 
@@ -194,10 +194,6 @@ convention = "numpy"
 # ======================================================================================
 
 [tool.pytest.ini_options]
-markers = [
-    "wip: Tests that are work-in-progress.",
-    "slow: Tests that take a long time to run and are skipped in continuous integration.",
-]
 norecursedirs = ["docs"]
 addopts = ["--pdbcls=pdbp:Pdb"]
 
