@@ -4,6 +4,11 @@ This is a record of all past dags releases and what went into them in reverse
 chronological order. We follow [semantic versioning](https://semver.org/) and all
 releases are available on [conda-forge](https://anaconda.org/conda-forge/dags).
 
+## 0.5.0
+
+- :gh:`62` Drop Python 3.10 support, improve typing thanks to requiring current networkx
+  (:ghuser:`hmgaudecker`).
+
 ## 0.4.3
 
 - :gh:`61` Allow passing return type of aggregated outputs or try to infer it.
