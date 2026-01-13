@@ -189,7 +189,7 @@ def test_rename_arguments_direct_call(example_signature: inspect.Signature) -> N
 
     assert inspect.signature(g) == example_signature
 
-    assert g(b=2, c=3, a=1) == (1, 2, 3)  # ty: ignore[missing-argument,unknown-argument]
+    assert g(b=2, c=3, a=1) == (1, 2, 3)
 
 
 def test_rename_arguments_direct_call_annotated() -> None:
