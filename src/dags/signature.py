@@ -189,18 +189,18 @@ def rename_arguments(
     func: Callable[P, R],
     *,
     mapper: dict[str, str],
-) -> Callable[P, R]: ...
+) -> Callable[..., R]: ...
 
 
 @overload
 def rename_arguments(
     *, mapper: dict[str, str]
-) -> Callable[[Callable[P, R]], Callable[P, R]]: ...
+) -> Callable[[Callable[P, R]], Callable[..., R]]: ...
 
 
 def rename_arguments(  # noqa: C901
     func: Callable[P, R] | None = None, *, mapper: dict[str, str] | None = None
-) -> Callable[P, R] | Callable[[Callable[P, R]], Callable[P, R]]:
+) -> Callable[..., R] | Callable[[Callable[P, R]], Callable[..., R]]:
     """Rename positional and keyword arguments of func.
 
     Args:
@@ -213,7 +213,7 @@ def rename_arguments(  # noqa: C901
         function: The function with renamed arguments.
     """
 
-    def decorator_rename_arguments(func: Callable[P, R]) -> Callable[P, R]:
+    def decorator_rename_arguments(func: Callable[P, R]) -> Callable[..., R]:
         old_signature = inspect.signature(func)
         old_parameters: dict[str, inspect.Parameter] = dict(old_signature.parameters)
         old_annotations = get_annotations(func)
