@@ -24,7 +24,6 @@ jobs:
           - macos-latest  # arm
           - windows-latest
         environment:
-          - py310
           - py311
           - py312
           - py313
