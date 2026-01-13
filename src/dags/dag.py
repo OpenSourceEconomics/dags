@@ -99,6 +99,7 @@ def concatenate_functions(
     dag: nx.DiGraph[str] | None = None,
     return_type: Literal["tuple", "list", "dict"] = "tuple",
     aggregator: Callable[[T, T], T] | None = None,
+    aggregator_return_type: str | None = None,
     enforce_signature: bool = True,
     set_annotations: bool = False,
     lexsort_key: Callable[[str], Any] | None = None,
@@ -126,6 +127,11 @@ def concatenate_functions(
             targets are a single string or if an aggregator is provided.
         aggregator (callable or None): Binary reduction function that is used to
             aggregate the targets into a single target.
+        aggregator_return_type (str or None): Explicit return type annotation for the
+            aggregated result. If None and set_annotations is True, the return type
+            is inferred from the aggregator's annotations or from the target types
+            (if all targets have the same type). This parameter is only used when
+            an aggregator is provided.
         enforce_signature (bool): If True, the signature of the concatenated function
             is enforced. Otherwise it is only provided for introspection purposes.
             Enforcing the signature has a small runtime overhead.
@@ -167,6 +173,7 @@ def concatenate_functions(
         targets=targets,
         return_type=return_type,
         aggregator=aggregator,
+        aggregator_return_type=aggregator_return_type,
         enforce_signature=enforce_signature,
         set_annotations=set_annotations,
         lexsort_key=lexsort_key,
@@ -219,6 +226,7 @@ def _create_combined_function_from_dag(
     targets: str | list[str] | None,
     return_type: Literal["tuple", "list", "dict"] = "tuple",
     aggregator: Callable[[T, T], T] | None = None,
+    aggregator_return_type: str | None = None,
     enforce_signature: bool = True,
     set_annotations: bool = False,
     lexsort_key: Callable[[str], Any] | None = None,
@@ -298,16 +306,29 @@ def _create_combined_function_from_dag(
     if isinstance(targets, str) or (aggregator is not None and len(_targets) == 1):
         out = single_output(func=_concatenated, set_annotations=set_annotations)
     elif aggregator is not None:
-        out = aggregated_output(func=_concatenated, aggregator=aggregator)
+        inferred_return_type: str | None = None
         if set_annotations:
-            warnings.warn(
-                message=(
-                    "Cannot infer return annotation when using an aggregator on "
-                    "multiple targets."
-                ),
-                category=DagsWarning,
-                stacklevel=2,
+            target_types = tuple(_exec_info[t].return_annotation for t in _targets)
+            inferred_return_type = _infer_aggregator_return_type(
+                aggregator=aggregator,
+                explicit_type=aggregator_return_type,
+                target_types=target_types,
             )
+            if inferred_return_type is None:
+                warnings.warn(
+                    message=(
+                        "Cannot infer return annotation when using an aggregator on "
+                        "multiple targets. Consider providing aggregator_return_type."
+                    ),
+                    category=DagsWarning,
+                    stacklevel=2,
+                )
+        out = aggregated_output(
+            func=_concatenated,
+            aggregator=aggregator,
+            set_annotations=set_annotations,
+            return_annotation=inferred_return_type,
+        )
     elif return_type == "list":
         out = cast(
             "Callable[..., Any]",
@@ -617,6 +638,53 @@ def _create_concatenated_function(
         return tuple(results[target] for target in targets)
 
     return concatenated
+
+
+def _infer_aggregator_return_type(
+    aggregator: Callable[[T, T], T],
+    explicit_type: str | None,
+    target_types: tuple[str, ...],
+) -> str | None:
+    """Infer the return type annotation for an aggregated function.
+
+    Uses a three-tier approach:
+    1. If explicit_type is provided, use it directly.
+    2. Try to get the return annotation from the aggregator function.
+    3. If all targets have the same type, assume the aggregator preserves it.
+
+    Note: Tier 3 is a heuristic that works for aggregators like `logical_and` or
+    `max`, but may be wrong for type-promoting aggregators (e.g., summing bools
+    returns int, not bool). Use explicit_type or a typed aggregator in such cases.
+
+    Args:
+        aggregator: The binary reduction function.
+        explicit_type: Explicitly provided return type, if any.
+        target_types: The return types of the target functions.
+
+    Returns
+    -------
+        The inferred return type as a string, or None if inference failed.
+
+    """
+    # 1. Explicit type wins
+    if explicit_type is not None:
+        return explicit_type
+
+    # 2. Try aggregator's annotations
+    try:
+        agg_annot = get_annotations(aggregator)
+        ret = agg_annot.get("return", "no_annotation_found")
+        if ret != "no_annotation_found":
+            return ret
+    except Exception:  # noqa: BLE001, S110
+        pass
+
+    # 3. If all targets have the same type, assume the aggregator preserves it
+    non_missing = [t for t in target_types if t != "no_annotation_found"]
+    if non_missing and len(set(non_missing)) == 1:
+        return non_missing[0]
+
+    return None
 
 
 def get_annotations_from_execution_info(
