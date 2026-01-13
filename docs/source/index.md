@@ -37,14 +37,12 @@ combined = dags.concatenate_functions(
 result = combined(x=5)  # Returns {"c": 51}
 ```
 
-## Projects Using dags
-
-dags is used by several open source projects:
-
-- [pylcm](https://github.com/OpenSourceEconomics/pylcm) - Life Cycle Models
-- [ttsim](https://github.com/ttsim-dev/ttsim) /
-  [gettsim](https://github.com/ttsim-dev/gettsim) - Tax-Transfer Simulator Backend and
-  Taxes and Transfers Simulator for Germany
+The key is that you can build the combined function at runtime, which allows you to
+compose a computational pipeline in a way that you do not need to specify in advance, or
+in a multitude of ways. It has proven very helpful in a framework to solve life cycle
+models ([pylcm](https://github.com/OpenSourceEconomics/pylcm)) and to model the German
+taxes and transfers system ([ttsim](https://github.com/ttsim-dev/ttsim) /
+[gettsim](https://github.com/ttsim-dev/gettsim)).
 
 ## Installation
 
