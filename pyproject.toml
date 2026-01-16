@@ -180,6 +180,7 @@ extend-ignore = [
 "src/dags/tree/__init__.py" = ["RUF022"]
 "tests/*" = ["D401", "FBT001", "INP001", "PLC2401"]
 "tests/test_dag.py" = ["ARG001"]
+"docs/**/*.ipynb" = ["T201", "ARG001"]
 
 
 [tool.ruff.lint.pydocstyle]
@@ -228,4 +229,4 @@ unused-ignore-comment = "error"
 useless-overload-body = "error"
 
 [tool.ty.src]
-exclude = ["docs/source/example/example.ipynb"]
+exclude = ["docs/**/*.ipynb"]
