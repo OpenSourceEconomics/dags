@@ -18,6 +18,9 @@ project:
     - python
   jupyter:
     lite: true
+  thebe:
+    codeMirrorConfig:
+      readOnly: false
   toc:
     - file: index.md
     - file: getting_started.md
