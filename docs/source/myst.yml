@@ -19,7 +19,7 @@ project:
   toc:
     - file: index.md
     - file: getting_started.md
-    - file: usage_patterns.md
+    - file: usage_patterns.ipynb
     - file: tree.md
   error_rules:
     - rule: link-resolves
