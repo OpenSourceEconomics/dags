@@ -18,7 +18,9 @@ project:
     - python
   jupyter:
     binder:
+      url: https://notebooks.gesis.org/binder
       repo: OpenSourceEconomics/dags
+      provider: github
   toc:
     - file: index.md
     - file: getting_started.md
