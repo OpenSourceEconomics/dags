@@ -206,7 +206,3 @@ result = combined(wage=20, hours=40, pension=1000, leisure=10)
 nested_result = dt.unflatten_from_qnames(result)
 # {"working": {"utility": ...}, "retired": {"utility": ...}}
 ```
-
-## API Reference
-
-See the [API documentation](api.md) for complete function signatures and details.

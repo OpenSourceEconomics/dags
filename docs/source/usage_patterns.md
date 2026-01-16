@@ -395,7 +395,6 @@ functions from different sources or creating wrappers.
 
 ```python
 import dags
-from dags.signature import with_signature
 
 # Inspect a function's arguments
 def model(alpha, beta, gamma):

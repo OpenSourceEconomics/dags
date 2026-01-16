@@ -18,7 +18,7 @@ def y(x):  # depends on x because parameter is named "x"
 
 ### Creating a Combined Function
 
-The main entry point is {func}`~dags.concatenate_functions`:
+The main entry point is `concatenate_functions`:
 
 ```python
 import dags
@@ -91,7 +91,7 @@ result = combined()  # {"a": ..., "b": ..., "c": ...}
 
 ## Inspecting the DAG
 
-Use {func}`~dags.create_dag` to create and inspect the dependency graph:
+Use `create_dag` to create and inspect the dependency graph:
 
 ```python
 import dags
@@ -108,7 +108,7 @@ print(list(dag.edges()))  # [('income', 'tax'), ('tax', 'net_income'), ...]
 
 ## Finding Dependencies
 
-Use {func}`~dags.get_ancestors` to find all functions that a target depends on:
+Use `get_ancestors` to find all functions that a target depends on:
 
 ```python
 ancestors = dags.get_ancestors(
@@ -122,7 +122,7 @@ ancestors = dags.get_ancestors(
 
 ### Getting Function Arguments
 
-{func}`~dags.get_free_arguments` returns the parameter names of a function:
+`get_free_arguments` returns the parameter names of a function:
 
 ```python
 def my_func(a, b, c=1):
@@ -134,7 +134,7 @@ args = dags.get_free_arguments(my_func)
 
 ### Getting Type Annotations
 
-{func}`~dags.get_annotations` returns type annotations:
+`get_annotations` returns type annotations:
 
 ```python
 def my_func(a: int, b: float) -> float:
@@ -146,7 +146,7 @@ annotations = dags.get_annotations(my_func)
 
 ## Renaming Arguments
 
-Use {func}`~dags.rename_arguments` to change parameter names:
+Use `rename_arguments` to change parameter names:
 
 ```python
 def original(x, y):
@@ -162,4 +162,3 @@ This is useful when integrating functions from different sources that use differ
 
 - Learn about [common usage patterns](usage_patterns.md) from real projects
 - Explore [tree structures](tree.md) for nested data
-- See the complete [API reference](api.md)

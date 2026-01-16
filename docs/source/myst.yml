@@ -18,11 +18,13 @@ project:
     - python
   toc:
     - file: index.md
-    - file: installation.md
-    - file: examples.md
-    - file: tree_examples.md
+    - file: getting_started.md
+    - file: usage_patterns.md
+    - file: tree.md
   error_rules:
     - rule: link-resolves
       severity: ignore
 site:
   template: book-theme
+  options:
+    logo_text: dags
