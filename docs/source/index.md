@@ -32,6 +32,7 @@ def c(a, b):
 combined = dags.concatenate_functions(
     functions={"a": a, "b": b, "c": c},
     targets=["c"],
+    return_type="dict",
 )
 
 result = combined(x=5)  # Returns {"c": 51}

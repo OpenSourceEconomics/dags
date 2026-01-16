@@ -39,10 +39,11 @@ def net_income(income, tax):
 combined = dags.concatenate_functions(
     functions={"income": income, "tax_rate": tax_rate, "tax": tax, "net_income": net_income},
     targets=["net_income", "tax"],
+    return_type="dict",
 )
 
 result = combined()
-# result = {"net_income": 35000, "tax": 15000}
+# result = {"net_income": 35000.0, "tax": 15000.0}
 ```
 
 ### Providing External Inputs
@@ -59,25 +60,33 @@ def net_income(income, tax):
 combined = dags.concatenate_functions(
     functions={"tax": tax, "net_income": net_income},
     targets=["net_income"],
+    return_type="dict",
 )
 
 # income and tax_rate are external inputs
 result = combined(income=50000, tax_rate=0.3)
-# result = {"net_income": 35000}
+# result = {"net_income": 35000.0}
 ```
 
 ### Return Types
 
-By default, `concatenate_functions` returns a dictionary. You can also get a tuple:
+By default, `concatenate_functions` returns a tuple. You can also get a dictionary:
 
 ```python
+# Default: returns tuple
 combined = dags.concatenate_functions(
     functions=functions,
     targets=["a", "b", "c"],
-    return_type="tuple",  # or "dict" (default)
 )
-
 a, b, c = combined()
+
+# Returns dictionary with target names as keys
+combined = dags.concatenate_functions(
+    functions=functions,
+    targets=["a", "b", "c"],
+    return_type="dict",
+)
+result = combined()  # {"a": ..., "b": ..., "c": ...}
 ```
 
 ## Inspecting the DAG
@@ -125,14 +134,14 @@ args = dags.get_free_arguments(my_func)
 
 ### Getting Type Annotations
 
-{func}`~dags.get_annotations` returns type annotations as strings:
+{func}`~dags.get_annotations` returns type annotations:
 
 ```python
 def my_func(a: int, b: float) -> float:
     return a + b
 
 annotations = dags.get_annotations(my_func)
-# annotations = {"a": "int", "b": "float", "return": "float"}
+# annotations = {"a": int, "b": float, "return": float}
 ```
 
 ## Renaming Arguments
