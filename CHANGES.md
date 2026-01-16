@@ -6,6 +6,9 @@ releases are available on [conda-forge](https://anaconda.org/conda-forge/dags).
 
 ## 0.5.0
 
+- :gh:`63` Build docs using pixi, update docs (:ghuser:`hmgaudecker`).
+- :gh:`64`  Loosen type annotation of `rename_arguments` decorator to prevent lots of
+  `# ty: ignore`s. (:ghuser:`hmgaudecker`).
 - :gh:`62` Drop Python 3.10 support, improve typing thanks to requiring current networkx
   (:ghuser:`hmgaudecker`).
 
