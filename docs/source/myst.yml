@@ -16,6 +16,8 @@ project:
     - directed acyclic graph
     - functions
     - python
+  jupyter:
+    lite: true
   toc:
     - file: index.md
     - file: getting_started.md
