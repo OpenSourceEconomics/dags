@@ -17,10 +17,8 @@ project:
     - functions
     - python
   jupyter:
-    lite: true
-  thebe:
-    codeMirrorConfig:
-      readOnly: false
+    binder:
+      repo: OpenSourceEconomics/dags
   toc:
     - file: index.md
     - file: getting_started.md
