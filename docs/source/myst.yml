@@ -16,11 +16,8 @@ project:
     - directed acyclic graph
     - functions
     - python
-  jupyter:
-    binder:
-      url: https://notebooks.gesis.org/binder
-      repo: OpenSourceEconomics/dags
-      provider: github
+  github: https://github.com/OpenSourceEconomics/dags
+  jupyter: true
   toc:
     - file: index.md
     - file: getting_started.md
