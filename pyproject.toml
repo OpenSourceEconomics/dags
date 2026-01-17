@@ -118,15 +118,14 @@ python = "~=3.13.0"
 python = "~=3.14.0"
 
 [tool.pixi.feature.docs.dependencies]
-myst-parser = "*"
-pydata-sphinx-theme = "*"
-sphinx = "*"
-sphinx-autodoc-typehints = "*"
-sphinx-copybutton = "*"
-sphinx-design = "*"
+jupyter-book = ">=2.0"
+mystmd = "*"
+numpy = "*"
 
 [tool.pixi.feature.docs.tasks]
-docs = "sphinx-build -T -b html docs/source docs/source/_build/html"
+docs = {cmd = "jupyter book build --html", cwd = "docs"}
+docs-view = {cmd = "jupyter book start", cwd = "docs"}
+
 
 # Environments
 # --------------------------------------------------------------------------------------
@@ -181,10 +180,10 @@ extend-ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"docs/source/conf.py" = ["INP001", "ERA001", "RUF100"]
 "src/dags/tree/__init__.py" = ["RUF022"]
 "tests/*" = ["D401", "FBT001", "INP001", "PLC2401"]
 "tests/test_dag.py" = ["ARG001"]
+"docs/**/*.ipynb" = ["T201", "ARG001"]
 
 
 [tool.ruff.lint.pydocstyle]
@@ -233,4 +232,4 @@ unused-ignore-comment = "error"
 useless-overload-body = "error"
 
 [tool.ty.src]
-exclude = ["docs/source/example/example.ipynb"]
+exclude = ["docs/**/*.ipynb"]

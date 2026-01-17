@@ -1,0 +1,67 @@
+# dags
+
+> A Python library for creating executable DAGs (Directed Acyclic Graphs) from interdependent functions. It automatically determines execution order based on function signatures and enables efficient composition of complex computational pipelines.
+
+dags works by analyzing function signatures to build a dependency graph. If a function has a parameter named `x`, and another function is named `x`, then the first function depends on the second. This allows you to build combined functions at runtime without specifying the execution order in advance.
+
+## Core API
+
+- [concatenate_functions](https://github.com/OpenSourceEconomics/dags/blob/main/src/dags/dag.py): Combine multiple functions into a single callable that executes them in the correct order based on their dependencies. Supports multiple return types (tuple, list, dict) and optional aggregation.
+- [create_dag](https://github.com/OpenSourceEconomics/dags/blob/main/src/dags/dag.py): Build a networkx.DiGraph representing the dependency structure of functions without creating the combined function.
+- [get_ancestors](https://github.com/OpenSourceEconomics/dags/blob/main/src/dags/dag.py): Find all functions that a target depends on.
+
+## Annotations and Signatures
+
+- [get_annotations](https://github.com/OpenSourceEconomics/dags/blob/main/src/dags/annotations.py): Get type annotations from a function, handling functools.partial and Python 3.14 edge cases.
+- [get_free_arguments](https://github.com/OpenSourceEconomics/dags/blob/main/src/dags/annotations.py): Get parameter names of a function, excluding partialled arguments.
+- [rename_arguments](https://github.com/OpenSourceEconomics/dags/blob/main/src/dags/signature.py): Rename function parameters using a mapping dict, useful for integrating functions with different naming conventions.
+
+## Tree Utilities
+
+The `dags.tree` module provides utilities for working with nested dictionary structures:
+
+- [flatten_to_qnames](https://github.com/OpenSourceEconomics/dags/blob/main/src/dags/tree/__init__.py): Convert nested dict to flat dict with qualified names (e.g., `{"a": {"b": 1}}` to `{"a__b": 1}`).
+- [unflatten_from_qnames](https://github.com/OpenSourceEconomics/dags/blob/main/src/dags/tree/__init__.py): Convert flat qualified names back to nested dict.
+- [concatenate_functions_tree](https://github.com/OpenSourceEconomics/dags/blob/main/src/dags/tree/__init__.py): Like concatenate_functions but works with nested function dicts and returns nested results.
+- [create_dag_tree](https://github.com/OpenSourceEconomics/dags/blob/main/src/dags/tree/__init__.py): Create a DAG from nested function dictionaries.
+
+## Exceptions
+
+- [DagsError](https://github.com/OpenSourceEconomics/dags/blob/main/src/dags/exceptions.py): Base exception for all dags-specific errors.
+- [CyclicDependencyError](https://github.com/OpenSourceEconomics/dags/blob/main/src/dags/exceptions.py): Raised when the DAG contains a cycle.
+- [MissingFunctionsError](https://github.com/OpenSourceEconomics/dags/blob/main/src/dags/exceptions.py): Raised when target functions are not provided.
+- [AnnotationMismatchError](https://github.com/OpenSourceEconomics/dags/blob/main/src/dags/exceptions.py): Raised when type annotations conflict between functions.
+
+## Quick Example
+
+```python
+import dags
+
+def a(x):
+    return x ** 2
+
+def b(a):
+    return a + 1
+
+def c(a, b):
+    return a + b
+
+combined = dags.concatenate_functions(
+    functions={"a": a, "b": b, "c": c},
+    targets=["c"],
+    return_type="dict",
+)
+
+result = combined(x=5)  # Returns {"c": 51}
+```
+
+## Installation
+
+```bash
+pip install dags
+```
+
+## Optional
+
+- [Source Code](https://github.com/OpenSourceEconomics/dags/tree/main/src/dags): Full source code repository.
+- [Tests](https://github.com/OpenSourceEconomics/dags/tree/main/tests): Test suite with usage examples.

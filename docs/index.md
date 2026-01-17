@@ -1,7 +1,7 @@
 # dags
 
 ```{image} _static/images/logo.svg
-:width: 400
+:width: 400px
 :align: center
 ```
 
@@ -55,15 +55,4 @@ Or with conda:
 
 ```bash
 conda install -c conda-forge dags
-```
-
-## Table of Contents
-
-```{toctree}
-:maxdepth: 2
-
-getting_started
-usage_patterns
-tree
-api
 ```
