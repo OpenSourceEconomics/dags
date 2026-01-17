@@ -1,3 +1,5 @@
+"""Utilities for function signature manipulation."""
+
 from __future__ import annotations
 
 import functools
@@ -167,7 +169,7 @@ def _fail_if_duplicated_arguments(
 ) -> None:
     problematic = present_args & present_kwargs
     if problematic:
-        s = "s" if len(problematic) >= 2 else ""
+        s = "s" if len(problematic) >= 2 else ""  # noqa: PLR2004
         problem_str = ", ".join(list(problematic))
         msg = f"{funcname}() got multiple values for argument{s} {problem_str}"
         raise InvalidFunctionArgumentsError(msg)
@@ -178,7 +180,7 @@ def _fail_if_invalid_keyword_arguments(
 ) -> None:
     problematic = present_kwargs - valid_kwargs
     if problematic:
-        s = "s" if len(problematic) >= 2 else ""
+        s = "s" if len(problematic) >= 2 else ""  # noqa: PLR2004
         problem_str = ", ".join(list(problematic))
         msg = f"{funcname}() got unexpected keyword argument{s} {problem_str}"
         raise InvalidFunctionArgumentsError(msg)

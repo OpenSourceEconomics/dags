@@ -1,3 +1,5 @@
+"""Output format converters for concatenated functions."""
+
 from __future__ import annotations
 
 import functools

@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     )
 
 
-def fail_if_paths_are_invalid(
+def fail_if_paths_are_invalid(  # noqa: PLR0913
     functions: NestedFunctionDict | None = None,
     abs_qnames_functions: QNameFunctionDict | None = None,
     data_tree: NestedStructureDict | None = None,

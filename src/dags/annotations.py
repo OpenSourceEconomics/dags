@@ -1,3 +1,5 @@
+"""Utilities for extracting and verifying function annotations."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Literal, overload
@@ -14,6 +16,19 @@ import inspect
 def get_free_arguments(
     func: Callable[..., Any],
 ) -> list[str]:
+    """Get the names of all free (non-partialled) arguments of a function.
+
+    For regular functions, this returns all parameter names. For partial functions,
+    arguments that have been bound via keywords are excluded.
+
+    Args:
+        func: The function to inspect.
+
+    Returns
+    -------
+        A list of argument names that are not bound.
+
+    """
     arguments = list(inspect.signature(func).parameters)
     if isinstance(func, functools.partial):
         # arguments that are partialled by position are not part of the signature
@@ -84,6 +99,20 @@ def get_annotations(
 def verify_annotations_are_strings(
     annotations: dict[str, str], function_name: str
 ) -> None:
+    """Verify that all type annotations are strings.
+
+    Raises NonStringAnnotationError with a helpful message if any annotation
+    is not a string, suggesting the use of `from __future__ import annotations`.
+
+    Args:
+        annotations: Dictionary of annotation names to their values.
+        function_name: Name of the function, used in error messages.
+
+    Raises
+    ------
+        NonStringAnnotationError: If any annotation value is not a string.
+
+    """
     # If all annotations are strings, we are done.
     if all(isinstance(v, str) for v in annotations.values()):
         return
