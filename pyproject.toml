@@ -139,25 +139,13 @@ unsafe-fixes = false
 select = ["ALL"]
 extend-ignore = [
     "ANN401",  # Dynamically typed expressions (typing.Any) are disallowed in `return_annotation`
+    "COM812", # ignored to avoid conflict with formatter
     "EM101",  # exception must not use a string literal
     "EM102",  # exception must not use an f-string literal
-    "FIX002",  # line contains a todo
-    "PLR0913",  # too many arguments to function call
-    "PLR2004",  # magic value used in comparison
-    "S101",  # use of `assert` detected
+    "FBT001", # Boolean-typed positional argument in function definition
+    "FBT002", # Boolean default positional argument in function definition
+    "ISC001", # ignored to avoid conflict with formatter
     "TRY003", # "long" messages outside exception class.
-
-    # Rules to be fixed in the future
-    # ----------------------------------------------------------------------------------
-
-    "FBT001",
-    "FBT002",
-
-
-    # Rules ignored to avoid conflict with formatter
-    # ----------------------------------------------------------------------------------
-    "COM812",
-    "ISC001",
 ]
 
 [tool.ruff.lint.per-file-ignores]
@@ -180,7 +168,9 @@ extend-ignore = [
     "D401",
     "FBT001",
     "INP001",
-    "PLC2401"
+    "PLC2401",
+    "PLR2004",  # magic value used in comparison
+    "S101",  # use of `assert` detected
 ]
 "tests/test_dag.py" = ["ARG001"]
 

@@ -94,7 +94,7 @@ class FunctionExecutionInfo:
         return self.annotations["return"]
 
 
-def concatenate_functions(
+def concatenate_functions(  # noqa: PLR0913
     functions: dict[str, Callable[..., Any]] | list[Callable[..., Any]],
     targets: str | list[str] | None = None,
     *,
@@ -222,7 +222,7 @@ def create_dag(
     return dag
 
 
-def _create_combined_function_from_dag(
+def _create_combined_function_from_dag(  # noqa: PLR0913
     dag: nx.DiGraph[str],
     functions: dict[str, Callable[..., Any]] | list[Callable[..., Any]],
     targets: str | list[str] | None,
