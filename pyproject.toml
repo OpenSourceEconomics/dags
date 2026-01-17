@@ -138,15 +138,7 @@ unsafe-fixes = false
 [tool.ruff.lint]
 select = ["ALL"]
 extend-ignore = [
-    "ANN001",  # missing type annotation
-    "ANN002",  # missing type annotation for `*args`
-    "ANN003",  # missing type annotation for `**kwargs`
-    "ANN201",  # missing return type annotation for public function
-    "ANN202",  # missing return type annotation for private function
     "ANN401",  # Dynamically typed expressions (typing.Any) are disallowed in `return_annotation`
-    "D100",  # missing docstring in public module
-    "D103",  # missing docstring in public function
-    "D104",  # missing docstring in public package
     "EM101",  # exception must not use a string literal
     "EM102",  # exception must not use an f-string literal
     "FIX002",  # line contains a todo
@@ -170,8 +162,26 @@ extend-ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "docs/source/conf.py" = ["INP001", "ERA001", "RUF100"]
+"docs/*" = [
+    "D100",  # missing docstring in public module
+    "D103",  # missing docstring in public function
+    "D104",  # missing docstring in public package
+]
 "src/dags/tree/__init__.py" = ["RUF022"]
-"tests/*" = ["D401", "FBT001", "INP001", "PLC2401"]
+"tests/*" = [
+    "ANN001",  # missing type annotation
+    "ANN002",  # missing type annotation for `*args`
+    "ANN003",  # missing type annotation for `**kwargs`
+    "ANN201",
+    "ANN202",
+    "D100",  # missing docstring in public module
+    "D103",  # missing docstring in public function
+    "D104",  # missing docstring in public package
+    "D401",
+    "FBT001",
+    "INP001",
+    "PLC2401"
+]
 "tests/test_dag.py" = ["ARG001"]
 
 

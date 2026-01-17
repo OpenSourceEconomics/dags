@@ -1,3 +1,5 @@
+"""Utilities for function signature manipulation."""
+
 from __future__ import annotations
 
 import functools

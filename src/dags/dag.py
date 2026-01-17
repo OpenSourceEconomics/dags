@@ -1,3 +1,5 @@
+"""Core DAG functionality for combining interdependent functions."""
+
 from __future__ import annotations
 
 import functools
