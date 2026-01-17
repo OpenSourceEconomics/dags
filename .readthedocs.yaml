@@ -4,6 +4,7 @@ build:
   os: ubuntu-24.04
   tools:
     python: '3.13'
+    nodejs: '20'
   jobs:
     create_environment:
       - asdf plugin add pixi
@@ -18,4 +19,5 @@ build:
       # Jupyter Book 2.0 builds site content to _build/html.
       # For ReadTheDocs, we build and then copy to the expected output location.
       - mkdir --parents $READTHEDOCS_OUTPUT/html/
-      - cp -r docs/source/_build/html/* $READTHEDOCS_OUTPUT/html/
+      - BASE_URL="/$READTHEDOCS_VERSION" nox -s docs
+      - cp -a docs/_build/html/. "$READTHEDOCS_OUTPUT/html" && rm -r docs/_build

@@ -120,9 +120,14 @@ python = "~=3.14.0"
 [tool.pixi.feature.docs.dependencies]
 jupyter-book = ">=2.0"
 mystmd = "*"
+nox = "*"
+numpy = "*"
+requests = "*"
 
 [tool.pixi.feature.docs.tasks]
-docs = {cmd = "./build-docs.sh", cwd = "docs/source"}
+docs = {cmd = "jupyter book build --html", cwd = "docs"}
+docs-view = {cmd = "jupyter book start", cwd = "docs"}
+
 
 # Environments
 # --------------------------------------------------------------------------------------
