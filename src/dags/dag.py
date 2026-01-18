@@ -5,6 +5,7 @@ from __future__ import annotations
 import functools
 import inspect
 import warnings
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Literal, cast
 
@@ -95,7 +96,7 @@ class FunctionExecutionInfo:
 
 
 def concatenate_functions(  # noqa: PLR0913
-    functions: dict[str, Callable[..., Any]] | list[Callable[..., Any]],
+    functions: Mapping[str, Callable[..., Any]] | list[Callable[..., Any]],
     targets: str | list[str] | None = None,
     *,
     dag: nx.DiGraph[str] | None = None,
@@ -183,7 +184,7 @@ def concatenate_functions(  # noqa: PLR0913
 
 
 def create_dag(
-    functions: dict[str, Callable[..., Any]] | list[Callable[..., Any]],
+    functions: Mapping[str, Callable[..., Any]] | list[Callable[..., Any]],
     targets: str | list[str] | None,
 ) -> nx.DiGraph[str]:
     """Build a directed acyclic graph (DAG) from functions.
@@ -224,7 +225,7 @@ def create_dag(
 
 def _create_combined_function_from_dag(  # noqa: PLR0913
     dag: nx.DiGraph[str],
-    functions: dict[str, Callable[..., Any]] | list[Callable[..., Any]],
+    functions: Mapping[str, Callable[..., Any]] | list[Callable[..., Any]],
     targets: str | list[str] | None,
     return_type: Literal["tuple", "list", "dict"] = "tuple",
     aggregator: Callable[[T, T], T] | None = None,
@@ -356,7 +357,7 @@ def _create_combined_function_from_dag(  # noqa: PLR0913
 
 
 def get_ancestors(
-    functions: dict[str, Callable[..., Any]] | list[Callable[..., Any]],
+    functions: Mapping[str, Callable[..., Any]] | list[Callable[..., Any]],
     targets: str | list[str] | None,
     include_targets: bool = False,
 ) -> set[str]:
@@ -392,7 +393,7 @@ def get_ancestors(
 
 
 def harmonize_and_check_functions_and_targets(
-    functions: dict[str, Callable[..., Any]] | list[Callable[..., Any]],
+    functions: Mapping[str, Callable[..., Any]] | list[Callable[..., Any]],
     targets: str | list[str] | None,
 ) -> tuple[dict[str, Callable[..., Any]], list[str]]:
     """Harmonize the type of specified functions and targets and do some checks.
@@ -419,14 +420,11 @@ def harmonize_and_check_functions_and_targets(
 
 
 def _harmonize_functions(
-    functions: dict[str, Callable[..., Any]] | list[Callable[..., Any]],
+    functions: Mapping[str, Callable[..., Any]] | list[Callable[..., Any]],
 ) -> dict[str, Callable[..., Any]]:
-    if not isinstance(functions, dict):
-        functions_dict = {func.__name__: func for func in functions}  # ty: ignore[unresolved-attribute]
-    else:
-        functions_dict = functions
-
-    return functions_dict
+    if isinstance(functions, Mapping):
+        return {k: v for k, v in functions.items()}  # noqa: C416  # ty: ignore[invalid-return-type]
+    return {func.__name__: func for func in functions}  # ty: ignore[unresolved-attribute]
 
 
 def _harmonize_targets(

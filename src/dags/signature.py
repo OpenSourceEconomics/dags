@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import functools
 import inspect
+from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, cast, overload
 
 from dags.annotations import get_annotations
@@ -76,8 +77,8 @@ def _create_annotations(
 def with_signature(
     func: Callable[P, R],
     *,
-    args: dict[str, str] | list[str] | None = None,
-    kwargs: dict[str, str] | list[str] | None = None,
+    args: Mapping[str, str] | list[str] | None = None,
+    kwargs: Mapping[str, str] | list[str] | None = None,
     enforce: bool = True,
     return_annotation: Any = inspect.Parameter.empty,
 ) -> Callable[P, R]: ...
@@ -86,8 +87,8 @@ def with_signature(
 @overload
 def with_signature(
     *,
-    args: dict[str, str] | list[str] | None = None,
-    kwargs: dict[str, str] | list[str] | None = None,
+    args: Mapping[str, str] | list[str] | None = None,
+    kwargs: Mapping[str, str] | list[str] | None = None,
     enforce: bool = True,
     return_annotation: Any = inspect.Parameter.empty,
 ) -> Callable[[Callable[P, R]], Callable[P, R]]: ...
@@ -96,8 +97,8 @@ def with_signature(
 def with_signature(
     func: Callable[P, R] | None = None,
     *,
-    args: dict[str, str] | list[str] | None = None,
-    kwargs: dict[str, str] | list[str] | None = None,
+    args: Mapping[str, str] | list[str] | None = None,
+    kwargs: Mapping[str, str] | list[str] | None = None,
     enforce: bool = True,
     return_annotation: Any = inspect.Parameter.empty,
 ) -> Callable[P, R] | Callable[[Callable[P, R]], Callable[P, R]]:
@@ -190,18 +191,18 @@ def _fail_if_invalid_keyword_arguments(
 def rename_arguments(
     func: Callable[P, R],
     *,
-    mapper: dict[str, str],
+    mapper: Mapping[str, str],
 ) -> Callable[..., R]: ...
 
 
 @overload
 def rename_arguments(
-    *, mapper: dict[str, str]
+    *, mapper: Mapping[str, str]
 ) -> Callable[[Callable[P, R]], Callable[..., R]]: ...
 
 
 def rename_arguments(  # noqa: C901
-    func: Callable[P, R] | None = None, *, mapper: dict[str, str] | None = None
+    func: Callable[P, R] | None = None, *, mapper: Mapping[str, str] | None = None
 ) -> Callable[..., R] | Callable[[Callable[P, R]], Callable[..., R]]:
     """Rename positional and keyword arguments of func.
 
@@ -275,12 +276,14 @@ def rename_arguments(  # noqa: C901
 
 
 def _map_names_to_types(
-    arg: dict[str, str] | list[str] | None,
+    arg: Mapping[str, str] | list[str] | None,
 ) -> dict[str, str] | dict[str, type[inspect._empty]]:
     if arg is None:
         return {}
     if isinstance(arg, list):
         return dict.fromkeys(arg, inspect.Parameter.empty)
-    if isinstance(arg, dict):
-        return arg
-    raise DagsError(f"Invalid type for arg: {type(arg)}. Expected dict, list, or None.")
+    if isinstance(arg, Mapping):
+        return dict(arg)
+    raise DagsError(
+        f"Invalid type for arg: {type(arg)}. Expected Mapping, list, or None."
+    )
