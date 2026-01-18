@@ -12,9 +12,9 @@ from typing import TYPE_CHECKING, Any, Literal, cast
 import networkx as nx
 
 from dags.annotations import (
+    ensure_annotations_are_strings,
     get_annotations,
     get_free_arguments,
-    verify_annotations_are_strings,
 )
 from dags.exceptions import (
     AnnotationMismatchError,
@@ -69,15 +69,13 @@ class FunctionExecutionInfo:
     func: Callable[..., Any]
     verify_annotations: bool = False
 
-    def __post_init__(self) -> None:
-        """Verify that the annotations are strings."""
-        if self.verify_annotations:
-            verify_annotations_are_strings(self.annotations, self.name)
-
     @functools.cached_property
     def annotations(self) -> dict[str, str]:
         """The annotations of the function."""
-        return get_annotations(self.func)
+        raw_annotations = get_annotations(self.func)
+        if self.verify_annotations:
+            return ensure_annotations_are_strings(raw_annotations, self.name)
+        return raw_annotations
 
     @property
     def arguments(self) -> list[str]:

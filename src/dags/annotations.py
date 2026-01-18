@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Literal, overload
 
-from dags.exceptions import NonStringAnnotationError
-
 if TYPE_CHECKING:
     from collections.abc import Callable
 
@@ -96,77 +94,28 @@ def get_annotations(
     return {arg: annotations.get(arg, default) for arg in ["return", *free_arguments]}
 
 
-def verify_annotations_are_strings(
-    annotations: dict[str, str], function_name: str
-) -> None:
-    """Verify that all type annotations are strings.
+def ensure_annotations_are_strings(
+    annotations: dict[str, Any],
+    function_name: str,  # noqa: ARG001
+) -> dict[str, str]:
+    """Ensure all type annotations are strings, converting if necessary.
 
-    Raises NonStringAnnotationError with a helpful message if any annotation
-    is not a string, suggesting the use of `from __future__ import annotations`.
+    In Python 3.14+, annotations may be evaluated at runtime rather than stored
+    as strings. This function converts any non-string annotations to their string
+    representation.
 
     Args:
         annotations: Dictionary of annotation names to their values.
-        function_name: Name of the function, used in error messages.
+        function_name: Name of the function (unused, kept for backwards compatibility).
 
-    Raises
-    ------
-        NonStringAnnotationError: If any annotation value is not a string.
+    Returns
+    -------
+        Dictionary with all annotation values as strings.
 
     """
-    # If all annotations are strings, we are done.
-    if all(isinstance(v, str) for v in annotations.values()):
-        return
-
-    non_string_annotations = [
-        k for k, v in annotations.items() if not isinstance(v, str)
-    ]
-    arg_annotations = {k: v for k, v in annotations.items() if k != "return"}
-    return_annotation = annotations["return"]
-
-    # Create a representation of the signature with string annotations
-    # ----------------------------------------------------------------------------------
-    stringified_arg_annotations = []
-    for k, v in arg_annotations.items():
-        if k in non_string_annotations:
-            stringified_arg_annotations.append(f"{k}: '{_get_str_repr(v)}'")
-        else:
-            annot = f"{k}: '{v}'"
-            stringified_arg_annotations.append(annot)
-
-    if "return" in non_string_annotations:
-        stringified_return_annotation = f"'{_get_str_repr(return_annotation)}'"
-    else:
-        stringified_return_annotation = f"'{return_annotation}'"
-
-    stringified_signature = (
-        f"{function_name}({', '.join(stringified_arg_annotations)}) -> "
-        f"{stringified_return_annotation}"
-    )
-
-    # Create message on which argument and/or return annotation is invalid
-    # ----------------------------------------------------------------------------------
-    invalid_arg_annotations = [k for k in non_string_annotations if k != "return"]
-    if invalid_arg_annotations:
-        s = "s" if len(invalid_arg_annotations) > 1 else ""
-        invalid_arg_msg = f"argument{s} ({', '.join(invalid_arg_annotations)})"
-    else:
-        invalid_arg_msg = ""
-
-    invalid_annotations_msg = ""
-    if invalid_arg_msg and "return" in non_string_annotations:
-        invalid_annotations_msg = f"{invalid_arg_msg} and the return value"
-    elif invalid_arg_msg:
-        invalid_annotations_msg = invalid_arg_msg
-    elif "return" in non_string_annotations:
-        invalid_annotations_msg = "return value"
-
-    raise NonStringAnnotationError(
-        f"All function annotations must be strings. The annotations for the "
-        f"{invalid_annotations_msg} are not strings.\nA simple way for Python to treat "
-        "type annotations as strings is to add\n\n\tfrom __future__ import annotations"
-        "\n\nat the top of your file. Alternatively, you can do it manually by "
-        f"enclosing the annotations in quotes:\n\n\t{stringified_signature}."
-    )
+    return {
+        k: v if isinstance(v, str) else _get_str_repr(v) for k, v in annotations.items()
+    }
 
 
 def _get_str_repr(obj: object) -> str:

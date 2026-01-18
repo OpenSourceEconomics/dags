@@ -8,9 +8,9 @@ import numpy as np
 import pytest
 from numpy.typing import NDArray
 
-from dags.annotations import get_annotations, verify_annotations_are_strings
+from dags.annotations import ensure_annotations_are_strings, get_annotations
 from dags.dag import concatenate_functions
-from dags.exceptions import AnnotationMismatchError, NonStringAnnotationError
+from dags.exceptions import AnnotationMismatchError
 
 
 def test_argument_annotations_mismatch() -> None:
@@ -113,57 +113,38 @@ def test_get_annotations_with_numpy() -> None:
     }
 
 
-def test_verify_annotations_are_strings() -> None:
-    verify_annotations_are_strings({"a": "int", "return": "float"}, "f")
+def test_ensure_annotations_are_strings_already_strings() -> None:
+    """Test that string annotations are passed through unchanged."""
+    result = ensure_annotations_are_strings({"a": "int", "return": "float"}, "f")
+    assert result == {"a": "int", "return": "float"}
 
 
-def test_verify_annotations_are_strings_non_string_argument_full_message() -> None:
-    with pytest.raises(
-        NonStringAnnotationError,
-        match=(
-            r"All function annotations must be strings. The annotations for the "
-            r"argument \(a\) are not strings.\n"
-            r"A simple way for Python to treat type annotations as strings is to add\n"
-            r"\n\tfrom __future__ import annotations\n\n"
-            r"at the top of your file. Alternatively, you can do it manually by "
-            r"enclosing the annotations in quotes:\n\n"
-            r"\tf\(a: 'int'\) -> 'float'\."
-        ),
-    ):
-        verify_annotations_are_strings({"a": int, "return": "float"}, "f")  # ty: ignore[invalid-argument-type]
+def test_ensure_annotations_are_strings_converts_non_string_argument() -> None:
+    """Test that non-string argument annotations are converted to strings."""
+    result = ensure_annotations_are_strings({"a": int, "return": "float"}, "f")
+    assert result == {"a": "int", "return": "float"}
 
 
-def test_verify_annotations_are_strings_multiple_non_string_argument() -> None:
-    with pytest.raises(
-        NonStringAnnotationError,
-        match=(
-            "All function annotations must be strings. The annotations for the "
-            r"arguments \(a, b\) are not strings."
-        ),
-    ):
-        verify_annotations_are_strings({"a": int, "b": bool, "return": "float"}, "f")  # ty: ignore[invalid-argument-type]
+def test_ensure_annotations_are_strings_converts_multiple_non_string_arguments() -> (
+    None
+):
+    """Test that multiple non-string argument annotations are converted."""
+    result = ensure_annotations_are_strings(
+        {"a": int, "b": bool, "return": "float"}, "f"
+    )
+    assert result == {"a": "int", "b": "bool", "return": "float"}
 
 
-def test_verify_annotations_are_strings_non_string_return() -> None:
-    with pytest.raises(
-        NonStringAnnotationError,
-        match=(
-            r"All function annotations must be strings. The annotations for the return"
-            r" value are not strings."
-        ),
-    ):
-        verify_annotations_are_strings({"a": "int", "return": float}, "f")  # ty: ignore[invalid-argument-type]
+def test_ensure_annotations_are_strings_converts_non_string_return() -> None:
+    """Test that non-string return annotation is converted to string."""
+    result = ensure_annotations_are_strings({"a": "int", "return": float}, "f")
+    assert result == {"a": "int", "return": "float"}
 
 
-def test_verify_annotations_are_strings_non_string_argument_and_return() -> None:
-    with pytest.raises(
-        NonStringAnnotationError,
-        match=(
-            "All function annotations must be strings. The annotations for the argument"
-            r" \(a\) and the return value are not strings."
-        ),
-    ):
-        verify_annotations_are_strings({"a": int, "return": float}, "f")  # ty: ignore[invalid-argument-type]
+def test_ensure_annotations_are_strings_converts_all_non_strings() -> None:
+    """Test that all non-string annotations are converted."""
+    result = ensure_annotations_are_strings({"a": int, "return": float}, "f")
+    assert result == {"a": "int", "return": "float"}
 
 
 def test_get_annotations_fallback_for_args_kwargs_mismatch() -> None:
