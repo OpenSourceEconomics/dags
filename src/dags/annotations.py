@@ -22,7 +22,7 @@ def get_free_arguments(
     Args:
         func: The function to inspect.
 
-    Returns
+    Returns:
     -------
         A list of argument names that are not bound.
 
@@ -70,7 +70,7 @@ def get_annotations(
             default value is inspect.Parameter.empty if eval_str is True, otherwise
             "no_annotation_found".
 
-    Returns
+    Returns:
     -------
         A dictionary with the argument names as keys and the type annotations as values.
         The type annotations are strings if eval_str is False, otherwise they are types.
@@ -108,7 +108,7 @@ def ensure_annotations_are_strings(
         annotations: Dictionary of annotation names to their values.
         function_name: Name of the function (unused, kept for backwards compatibility).
 
-    Returns
+    Returns:
     -------
         Dictionary with all annotation values as strings.
 

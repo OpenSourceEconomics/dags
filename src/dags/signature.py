@@ -31,7 +31,7 @@ def _create_signature(
         return_annotation: The return annotation. By default, the return annotation is
             `inspect.Parameter.empty`.
 
-    Returns
+    Returns:
     -------
         The signature.
 
@@ -120,7 +120,7 @@ def with_signature(
         return_annotation: The return annotation. By default, the return annotation is
             `inspect.Parameter.empty`.
 
-    Returns
+    Returns:
     -------
         function: The function with signature.
     """
@@ -211,7 +211,7 @@ def rename_arguments(  # noqa: C901
         mapper (dict): Dict of strings where keys are old names and values are new
             of arguments.
 
-    Returns
+    Returns:
     -------
         function: The function with renamed arguments.
     """
