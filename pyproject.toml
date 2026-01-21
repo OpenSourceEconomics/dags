@@ -99,8 +99,9 @@ pdbp = "*"
 # --------------------------------------------------------------------------------------
 
 [tool.pixi.feature.test.tasks]
-tests = "pytest tests"
-tests-with-cov = "pytest tests --cov-report=xml --cov=./"
+test = "pytest tests"
+test-cov = "pytest tests --cov-report=xml --cov=./"
+ty = "ty check"
 
 # Python versions for testing
 # --------------------------------------------------------------------------------------
@@ -139,13 +140,15 @@ unsafe-fixes = false
 select = ["ALL"]
 extend-ignore = [
     "ANN401",  # Dynamically typed expressions (typing.Any) are disallowed in `return_annotation`
-    "COM812", # ignored to avoid conflict with formatter
-    "EM101",  # exception must not use a string literal
-    "EM102",  # exception must not use an f-string literal
-    "FBT001", # Boolean-typed positional argument in function definition
-    "FBT002", # Boolean default positional argument in function definition
-    "ISC001", # ignored to avoid conflict with formatter
-    "TRY003", # "long" messages outside exception class.
+    "COM812",  # ignored to avoid conflict with formatter
+    "EM101",   # exception must not use a string literal
+    "EM102",   # exception must not use an f-string literal
+    "FBT001",  # Boolean-typed positional argument in function definition
+    "FBT002",  # Boolean default positional argument in function definition
+    "ISC001",  # ignored to avoid conflict with formatter
+    "TC002",   # Move third-party import into a type-checking block
+    "TC003",   # Move standard library import into a type-checking block
+    "TRY003",  # "long" messages outside exception class.
 ]
 
 [tool.ruff.lint.per-file-ignores]
@@ -176,7 +179,7 @@ extend-ignore = [
 
 
 [tool.ruff.lint.pydocstyle]
-convention = "numpy"
+convention = "google"
 
 
 # ======================================================================================
@@ -184,10 +187,6 @@ convention = "numpy"
 # ======================================================================================
 
 [tool.pytest.ini_options]
-markers = [
-    "wip: Tests that are work-in-progress.",
-    "slow: Tests that take a long time to run and are skipped in continuous integration.",
-]
 norecursedirs = ["docs"]
 addopts = ["--pdbcls=pdbp:Pdb"]
 
