@@ -2,31 +2,30 @@
 name = "dags"
 description = "Tools to create executable dags from interdependent functions."
 requires-python = ">=3.11"
-dynamic = ["version"]
+dynamic = [ "version" ]
 dependencies = [
-    "networkx>=3.6",
-    "flatten-dict",
+  "networkx>=3.6",
+  "flatten-dict",
 ]
 classifiers = [
-    "Development Status :: 3 - Alpha",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: MacOS :: MacOS X",
-    "Operating System :: Microsoft :: Windows",
-    "Operating System :: POSIX",
-    "Operating System :: Unix",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3 :: Only",
-    "Topic :: Utilities",
-    "Typing :: Typed",
+  "Development Status :: 3 - Alpha",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: MacOS :: MacOS X",
+  "Operating System :: Microsoft :: Windows",
+  "Operating System :: POSIX",
+  "Operating System :: Unix",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Topic :: Utilities",
+  "Typing :: Typed",
 ]
 authors = [
-    {name = "Janoś Gabler", email = "janos.gabler@gmail.com"},
-    {name = "Tobias Raabe"}
+  { name = "Janoś Gabler", email = "janos.gabler@gmail.com" },
+  { name = "Tobias Raabe" },
 ]
 maintainers = [
-    {name = "Hans-Martin von Gaudecker", email = "hmgaudecker@uni-bonn.de" }
+  { name = "Hans-Martin von Gaudecker", email = "hmgaudecker@uni-bonn.de" },
 ]
-
 
 [project.readme]
 file = "README.md"
@@ -40,27 +39,26 @@ Repository = "https://github.com/OpenSourceEconomics/dags"
 Github = "https://github.com/OpenSourceEconomics/dags"
 Tracker = "https://github.com/OpenSourceEconomics/dags/issues"
 
-
 # ======================================================================================
 # Build system configuration
 # ======================================================================================
 
 [build-system]
-requires = ["hatchling", "hatch_vcs"]
+requires = [ "hatchling", "hatch_vcs" ]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.hooks.vcs]
 version-file = "src/dags/_version.py"
 
 [tool.hatch.build.targets.sdist]
-exclude = ["tests"]
+exclude = [ "tests" ]
 only-packages = true
 
 [tool.hatch.build.targets.wheel]
-only-include = ["src"]
-sources = ["src"]
+only-include = [ "src" ]
+sources = [ "src" ]
 include = [
-    "src/dags/py.typed",
+  "src/dags/py.typed",
 ]
 
 [tool.hatch.version]
@@ -69,14 +67,13 @@ source = "vcs"
 [tool.hatch.metadata]
 allow-direct-references = true
 
-
 # ======================================================================================
 # Pixi
 # ======================================================================================
 
 [tool.pixi.workspace]
-channels = ["conda-forge"]
-platforms = ["linux-64", "osx-64", "osx-arm64", "win-64"]
+channels = [ "conda-forge" ]
+platforms = [ "linux-64", "osx-64", "osx-arm64", "win-64" ]
 
 # Development Dependencies
 # --------------------------------------------------------------------------------------
@@ -90,7 +87,7 @@ pytest-cov = "*"
 pytest-xdist = "*"
 
 [tool.pixi.pypi-dependencies]
-dags = {path = ".", editable = true}
+dags = { path = ".", editable = true }
 ty = ">=0.0.11"
 types-networkx = ">=3.6.1.20251220"
 pdbp = "*"
@@ -98,9 +95,10 @@ pdbp = "*"
 # Features and Tasks
 # --------------------------------------------------------------------------------------
 
-[tool.pixi.feature.test.tasks]
+[tool.pixi.feature.tests.tasks]
 tests = "pytest tests"
 tests-with-cov = "pytest tests --cov-report=xml --cov=./"
+ty = "ty check"
 
 # Python versions for testing
 # --------------------------------------------------------------------------------------
@@ -121,89 +119,72 @@ python = "~=3.14.0"
 # --------------------------------------------------------------------------------------
 
 [tool.pixi.environments]
-py311 = ["test", "py311"]
-py312 = ["test", "py312"]
-py313 = ["test", "py313"]
-py314 = ["test", "py314"]
+py311 = [ "py311", "tests" ]
+py312 = [ "py312", "tests" ]
+py313 = [ "py313", "tests" ]
+py314 = [ "py314", "tests" ]
 
 # ======================================================================================
 # Ruff configuration
 # ======================================================================================
 
 [tool.ruff]
-target-version = "py311"
 fix = true
+target-version = "py311"
 unsafe-fixes = false
 
 [tool.ruff.lint]
-select = ["ALL"]
 extend-ignore = [
-    "ANN401",  # Dynamically typed expressions (typing.Any) are disallowed in `return_annotation`
-    "COM812", # ignored to avoid conflict with formatter
-    "EM101",  # exception must not use a string literal
-    "EM102",  # exception must not use an f-string literal
-    "FBT001", # Boolean-typed positional argument in function definition
-    "FBT002", # Boolean default positional argument in function definition
-    "ISC001", # ignored to avoid conflict with formatter
-    "TRY003", # "long" messages outside exception class.
+  "ANN401", # Dynamically typed expressions (typing.Any) are disallowed
+  "COM812", # Conflicts with ruff-format
+  "EM101",  # Exception must not use a string literal
+  "EM102",  # Exception must not use an f-string literal
+  "ISC001", # Conflicts with ruff-format
+  "TC002",  # Move third-party import into a type-checking block
+  "TC003",  # Move standard library import into a type-checking block
+  "TRY003", # Long messages outside exception class
 ]
+select = [ "ALL" ]
 
 [tool.ruff.lint.per-file-ignores]
-"docs/source/conf.py" = ["INP001", "ERA001", "RUF100"]
 "docs/*" = [
-    "D100",  # missing docstring in public module
-    "D103",  # missing docstring in public function
-    "D104",  # missing docstring in public package
+  "D100", # Missing docstring in public module
+  "D103", # Missing docstring in public function
+  "D104", # Missing docstring in public package
 ]
-"src/dags/tree/__init__.py" = ["RUF022"]
+"docs/source/conf.py" = [
+  "ERA001", # Found commented-out code
+  "INP001", # Implicit namespace package
+  "RUF100", # Unused noqa directive
+]
+"src/dags/tree/__init__.py" = [
+  "RUF022", # __all__ is not sorted
+]
 "tests/*" = [
-    "ANN001",  # missing type annotation
-    "ANN002",  # missing type annotation for `*args`
-    "ANN003",  # missing type annotation for `**kwargs`
-    "ANN201",
-    "ANN202",
-    "D100",  # missing docstring in public module
-    "D103",  # missing docstring in public function
-    "D104",  # missing docstring in public package
-    "D401",
-    "FBT001",
-    "INP001",
-    "PLC2401",
-    "PLR2004",  # magic value used in comparison
-    "S101",  # use of `assert` detected
+  "ANN001",  # Missing type annotation for function argument
+  "ANN002",  # Missing type annotation for *args
+  "ANN003",  # Missing type annotation for **kwargs
+  "ANN201",  # Missing return type annotation for public function
+  "ANN202",  # Missing return type annotation for private function
+  "D100",    # Missing docstring in public module
+  "D103",    # Missing docstring in public function
+  "D104",    # Missing docstring in public package
+  "D401",    # First line of docstring should be in imperative mood
+  "FBT001",  # Boolean-typed positional argument in function definition
+  "INP001",  # Implicit namespace package
+  "PLC2401", # Variable name contains non-ASCII character
+  "PLR2004", # Magic value used in comparison
+  "S101",    # Use of assert detected
 ]
-"tests/test_dag.py" = ["ARG001"]
-
+"tests/test_dag.py" = [
+  "ARG001", # Unused function argument
+]
 
 [tool.ruff.lint.pydocstyle]
-convention = "numpy"
-
-
-# ======================================================================================
-# Pytest configuration
-# ======================================================================================
-
-[tool.pytest.ini_options]
-markers = [
-    "wip: Tests that are work-in-progress.",
-    "slow: Tests that take a long time to run and are skipped in continuous integration.",
-]
-norecursedirs = ["docs"]
-addopts = ["--pdbcls=pdbp:Pdb"]
-
+convention = "google"
 
 # ======================================================================================
-# yamlfix configuration
-# ======================================================================================
-
-[tool.yamlfix]
-line_length = 88
-sequence_style = "block_style"
-none_representation = "null"
-
-
-# ======================================================================================
-# ty configuration -- set all rules to error.
+# ty configuration
 # ======================================================================================
 
 [tool.ty.rules]
@@ -213,6 +194,7 @@ division-by-zero = "error"
 ignore-comment-unknown-rule = "error"
 invalid-argument-type = "error"
 invalid-ignore-comment = "error"
+invalid-return-type = "error"
 possibly-missing-attribute = "error"
 possibly-missing-implicit-call = "error"
 possibly-missing-import = "error"
@@ -225,4 +207,26 @@ unused-ignore-comment = "error"
 useless-overload-body = "error"
 
 [tool.ty.src]
-exclude = ["docs/source/example/example.ipynb"]
+exclude = [ "docs/source/example/example.ipynb" ]
+
+# ======================================================================================
+# pytest configuration
+# ======================================================================================
+
+[tool.pytest.ini_options]
+addopts = [ "--pdbcls=pdbp:Pdb" ]
+filterwarnings = [  ]
+markers = [
+  "wip: Tests that are work-in-progress.",
+  "slow: Tests that take a long time to run and are skipped in continuous integration.",
+]
+norecursedirs = [ "docs" ]
+
+# ======================================================================================
+# yamlfix configuration
+# ======================================================================================
+
+[tool.yamlfix]
+line_length = 88
+none_representation = "null"
+sequence_style = "block_style"

@@ -54,7 +54,7 @@ def create_tree_with_input_types(
         targets: A nested dictionary of targets (or None).
         top_level_inputs: Names of inputs in the top-level namespace.
 
-    Returns
+    Returns:
     -------
         A nested dictionary representing the expected input structure.
     """
@@ -106,7 +106,7 @@ def create_dag_tree(
         inputs: A nested dictionary with the inputs or their structure.
         targets: A nested dictionary of targets (or None).
 
-    Returns
+    Returns:
     -------
         A networkx.DiGraph representing the DAG.
     """
@@ -127,6 +127,7 @@ def concatenate_functions_tree(
     functions: NestedFunctionDict,
     inputs: NestedInputDict,
     targets: NestedTargetDict | None,
+    *,
     enforce_signature: bool = True,
 ) -> Callable[[NestedInputDict], NestedOutputDict]:
     """Combine a nested dictionary of functions into a single callable.
@@ -137,7 +138,7 @@ def concatenate_functions_tree(
         targets: The nested dictionary of targets (or None).
         enforce_signature: Whether to enforce the function signature strictly.
 
-    Returns
+    Returns:
     -------
         A callable that takes a NestedInputDict and returns a NestedOutputDict.
     """
@@ -186,7 +187,7 @@ def functions_without_tree_logic(
             The elements of the top-level namespace.
 
 
-    Returns
+    Returns:
     -------
     A flat dictionary mapping qualified absolute names to functions taking qualified
     absolute names as arguments.
@@ -214,11 +215,11 @@ def one_function_without_tree_logic(
     """Convert a single function to work without tree logic.
 
     Args:
-        func: The function to convert.
-        path: The tree path of the function.
+        function: The function to convert.
+        tree_path: The tree path of the function.
         top_level_namespace: The elements of the top level namespace.
 
-    Returns
+    Returns:
     -------
         A function that takes qualified absolute names as arguments.
     """
@@ -242,7 +243,7 @@ def _get_top_level_namespace_initial(
         functions: The nested dictionary of functions.
         top_level_inputs: A set of input names in the top-level namespace.
 
-    Returns
+    Returns:
     -------
         The elements of the top-level namespace.
     """
@@ -270,7 +271,7 @@ def _map_parameters_rel_to_abs(
         current_namespace: The function's namespace.
         top_level_namespace: The elements of the top level namespace.
 
-    Returns
+    Returns:
     -------
         A dictionary mapping original parameter names to qualified absolute names.
     """
@@ -299,7 +300,7 @@ def _get_parameter_absolute_path(
         top_level_namespace:
             The elements of the top level namespace.
 
-    Returns
+    Returns:
     -------
         The qualified parameter name.
 
@@ -333,7 +334,7 @@ def _get_parameter_tree_path(
         top_level_namespace:
             The elements of the top level namespace.
 
-    Returns
+    Returns:
     -------
         The path to the function/input that the parameter points to.
     """

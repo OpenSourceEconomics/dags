@@ -2,7 +2,9 @@
 
 ## Project Overview
 
-**dags** is a Python library for creating executable DAGs (Directed Acyclic Graphs) from interdependent functions. It provides tools to concatenate functions, manage type annotations, and execute function graphs.
+**dags** is a Python library for creating executable DAGs (Directed Acyclic Graphs) from
+interdependent functions. It provides tools to concatenate functions, manage type
+annotations, and execute function graphs.
 
 ## Development Setup
 
@@ -49,8 +51,10 @@ tests/
 
 ## Key Modules
 
-- **annotations.py**: Handles function type annotations, including a workaround for Python 3.14's `functools.wraps` annotation mismatch bug
-- **dag.py**: Core `concatenate_functions()` for combining interdependent functions into a single callable
+- **annotations.py**: Handles function type annotations, including a workaround for
+  Python 3.14's `functools.wraps` annotation mismatch bug
+- **dag.py**: Core `concatenate_functions()` for combining interdependent functions into
+  a single callable
 - **exceptions.py**: `AnnotationMismatchError`, `NonStringAnnotationError`, etc.
 
 ## Code Style

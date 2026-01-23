@@ -22,7 +22,7 @@ def get_free_arguments(
     Args:
         func: The function to inspect.
 
-    Returns
+    Returns:
     -------
         A list of argument names that are not bound.
 
@@ -40,6 +40,7 @@ def get_free_arguments(
 @overload
 def get_annotations(
     func: Callable[..., Any],
+    *,
     eval_str: Literal[False] = False,
     default: str | None = None,
 ) -> dict[str, str]: ...
@@ -48,6 +49,7 @@ def get_annotations(
 @overload
 def get_annotations(
     func: Callable[..., Any],
+    *,
     eval_str: Literal[True] = True,
     default: type | None = None,
 ) -> dict[str, type]: ...
@@ -55,6 +57,7 @@ def get_annotations(
 
 def get_annotations(
     func: Callable[..., Any],
+    *,
     eval_str: bool = False,
     default: str | type | None = None,
 ) -> dict[str, str] | dict[str, type]:
@@ -70,7 +73,7 @@ def get_annotations(
             default value is inspect.Parameter.empty if eval_str is True, otherwise
             "no_annotation_found".
 
-    Returns
+    Returns:
     -------
         A dictionary with the argument names as keys and the type annotations as values.
         The type annotations are strings if eval_str is False, otherwise they are types.
@@ -89,7 +92,7 @@ def get_annotations(
     signature_params = set(free_arguments)
 
     if _has_args_kwargs_annotation_mismatch(annotation_keys, signature_params):
-        annotations = _get_annotations_from_signature(func, eval_str)
+        annotations = _get_annotations_from_signature(func, eval_str=eval_str)
 
     return {arg: annotations.get(arg, default) for arg in ["return", *free_arguments]}
 
@@ -108,7 +111,7 @@ def ensure_annotations_are_strings(
         annotations: Dictionary of annotation names to their values.
         function_name: Name of the function (unused, kept for backwards compatibility).
 
-    Returns
+    Returns:
     -------
         Dictionary with all annotation values as strings.
 
@@ -139,7 +142,7 @@ def _has_args_kwargs_annotation_mismatch(
 
 
 def _get_annotations_from_signature(
-    func: Callable[..., Any], eval_str: bool
+    func: Callable[..., Any], *, eval_str: bool
 ) -> dict[str, Any]:
     """Extract annotations from the function signature.
 

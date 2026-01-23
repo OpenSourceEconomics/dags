@@ -40,7 +40,7 @@ class DagsWarning(UserWarning):
 class FunctionExecutionInfo:
     """Information about a function that is needed to execute it.
 
-    Attributes
+    Attributes:
     ----------
         name: The name of the function.
         func: The function to execute.
@@ -58,7 +58,7 @@ class FunctionExecutionInfo:
         argument_annotations: The argument annotations of the function.
         return_annotation: The return annotation of the function.
 
-    Raises
+    Raises:
     ------
         NonStringAnnotationError: If `verify_annotations` is `True` and the type
             annotations are not strings.
@@ -150,11 +150,11 @@ def concatenate_functions(  # noqa: PLR0913
             value that can be used to sort the nodes. This is used to sort the nodes
             in the topological sort. If None, the nodes are sorted alphabetically.
 
-    Returns
+    Returns:
     -------
         function: A function that produces targets when called with suitable arguments.
 
-    Raises
+    Raises:
     ------
         - NonStringAnnotationError: If `set_annotations` is `True` and the type
             annotations are not strings.
@@ -200,7 +200,7 @@ def create_dag(
             list of such function names. If the value is `None`, all variables are
             returned.
 
-    Returns
+    Returns:
     -------
         dag: the DAG (as networkx.DiGraph object)
 
@@ -228,6 +228,7 @@ def _create_combined_function_from_dag(  # noqa: PLR0913
     return_type: Literal["tuple", "list", "dict"] = "tuple",
     aggregator: Callable[[T, T], T] | None = None,
     aggregator_return_type: str | None = None,
+    *,
     enforce_signature: bool = True,
     set_annotations: bool = False,
     lexsort_key: Callable[[str], Any] | None = None,
@@ -249,6 +250,8 @@ def _create_combined_function_from_dag(  # noqa: PLR0913
             targets are a single string or if an aggregator is provided.
         aggregator (callable or None): Binary reduction function that is used to
             aggregate the targets into a single target.
+        aggregator_return_type (str or None): The return type annotation for the
+            aggregated result. Only used when an aggregator is provided.
         enforce_signature (bool): If True, the signature of the concatenated function
             is enforced. Otherwise it is only provided for introspection purposes.
             Enforcing the signature has a small runtime overhead.
@@ -266,11 +269,11 @@ def _create_combined_function_from_dag(  # noqa: PLR0913
             value that can be used to sort the nodes. This is used to sort the nodes
             in the topological sort. If None, the nodes are sorted alphabetically.
 
-    Returns
+    Returns:
     -------
         function: A function that produces targets when called with suitable arguments.
 
-    Raises
+    Raises:
     ------
         - NonStringAnnotationError: If `set_annotations` is `True` and the type
             annotations are not strings.
@@ -297,8 +300,8 @@ def _create_combined_function_from_dag(  # noqa: PLR0913
         _exec_info,
         _arglist,
         _targets,
-        enforce_signature,
-        set_annotations,
+        enforce_signature=enforce_signature,
+        set_annotations=set_annotations,
     )
 
     # Update the actual return type, as well as the return annotation of the
@@ -357,6 +360,7 @@ def _create_combined_function_from_dag(  # noqa: PLR0913
 def get_ancestors(
     functions: Mapping[str, Callable[..., Any]] | list[Callable[..., Any]],
     targets: str | list[str] | None,
+    *,
     include_targets: bool = False,
 ) -> set[str]:
     """Build a DAG and extract all ancestors of targets.
@@ -368,7 +372,7 @@ def get_ancestors(
         targets (str): Name of the function that produces the target function.
         include_targets (bool): Whether to include the target as its own ancestor.
 
-    Returns
+    Returns:
     -------
         set: The ancestors
 
@@ -384,7 +388,7 @@ def get_ancestors(
 
     ancestors: set[str] = set()
     for target in _targets:
-        ancestors |= nx.ancestors(dag, target)
+        ancestors |= nx.ancestors(dag, target)  # type: ignore[invalid-argument-type]
         if include_targets:
             ancestors.add(target)
     return ancestors
@@ -403,7 +407,7 @@ def harmonize_and_check_functions_and_targets(
         targets (str or list): Name of the function that produces the target or list of
             such function names.
 
-    Returns
+    Returns:
     -------
         functions_harmonized: harmonized functions
         targets_harmonized: harmonized targets
@@ -458,7 +462,7 @@ def _fail_if_functions_are_missing(
 
 def _fail_if_dag_contains_cycle(dag: nx.DiGraph[str]) -> None:
     """Check for cycles in DAG."""
-    cycles = list(nx.simple_cycles(dag))
+    cycles = list(nx.simple_cycles(dag))  # type: ignore[invalid-argument-type]
 
     if len(cycles) > 0:
         formatted = format_list_linewise(cycles)
@@ -477,7 +481,7 @@ def _create_complete_dag(
     Args:
         functions (dict): Dictionary containing functions to build the DAG.
 
-    Returns
+    Returns:
     -------
         networkx.DiGraph: The complete DAG
 
@@ -498,14 +502,14 @@ def _limit_dag_to_targets_and_their_ancestors(
         dag (networkx.DiGraph): The complete DAG.
         targets (str): Variable of interest.
 
-    Returns
+    Returns:
     -------
         networkx.DiGraph: The pruned DAG.
 
     """
     used_nodes = set(targets)
     for target in targets:
-        used_nodes = used_nodes | set(nx.ancestors(dag, target))
+        used_nodes = used_nodes | set(nx.ancestors(dag, target))  # type: ignore[invalid-argument-type]
 
     all_nodes = set(dag.nodes)
 
@@ -526,7 +530,7 @@ def create_arguments_of_concatenated_function(
         functions (dict): Dictionary containing functions to build the DAG.
         dag (networkx.DiGraph): The complete DAG.
 
-    Returns
+    Returns:
     -------
         list: The arguments of the concatenated function.
 
@@ -539,6 +543,7 @@ def create_arguments_of_concatenated_function(
 def create_execution_info(
     functions: dict[str, Callable[..., Any]],
     dag: nx.DiGraph[str],
+    *,
     verify_annotations: bool = False,
     lexsort_key: Callable[[str], Any] | None = None,
 ) -> dict[str, FunctionExecutionInfo]:
@@ -552,19 +557,19 @@ def create_execution_info(
             value that can be used to sort the nodes. This is used to sort the nodes
             in the topological sort. If None, the nodes are sorted alphabetically.
 
-    Returns
+    Returns:
     -------
         dict: Dictionary with functions and their arguments for each node in the DAG.
             The functions are already in topological_sort order.
 
-    Raises
+    Raises:
     ------
         NonStringAnnotationError: If `verify_annotations` is `True` and the type
             annotations are not strings.
 
     """
     out = {}
-    for node in nx.lexicographical_topological_sort(dag, key=lexsort_key):
+    for node in nx.lexicographical_topological_sort(dag, key=lexsort_key):  # type: ignore[invalid-argument-type]
         if node in functions:
             out[node] = FunctionExecutionInfo(
                 name=node,
@@ -578,6 +583,7 @@ def _create_concatenated_function(
     execution_info: dict[str, FunctionExecutionInfo],
     arglist: list[str],
     targets: list[str],
+    *,
     enforce_signature: bool,
     set_annotations: bool,
 ) -> Callable[..., tuple[Any, ...]]:
@@ -603,7 +609,7 @@ def _create_concatenated_function(
             __future__ import annotations" at the top of your file. An
             AnnotationMismatchError is raised if annotations differ between functions.
 
-    Returns
+    Returns:
     -------
         The concatenated function
 
@@ -659,7 +665,7 @@ def _infer_aggregator_return_type(
         explicit_type: Explicitly provided return type, if any.
         target_types: The return types of the target functions.
 
-    Returns
+    Returns:
     -------
         The inferred return type as a string, or None if inference failed.
 
@@ -698,13 +704,13 @@ def get_annotations_from_execution_info(
         arglist: The list of arguments of the concatenated function.
         targets: The list of targets of the concatenated function.
 
-    Returns
+    Returns:
     -------
         - Dictionary with argument names as keys and their expected types in string
           format as values.
         - The expected type of the return value as a string.
 
-    Raises
+    Raises:
     ------
         AnnotationMismatchError: If there are incompatible annotations in the DAG's
             components.
