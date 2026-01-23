@@ -1,3 +1,5 @@
+"""Utilities for function signature manipulation."""
+
 from __future__ import annotations
 
 import functools
@@ -28,7 +30,7 @@ def _create_signature(
         return_annotation: The return annotation. By default, the return annotation is
             `inspect.Parameter.empty`.
 
-    Returns
+    Returns:
     -------
         The signature.
 
@@ -117,7 +119,7 @@ def with_signature(
         return_annotation: The return annotation. By default, the return annotation is
             `inspect.Parameter.empty`.
 
-    Returns
+    Returns:
     -------
         function: The function with signature.
     """
@@ -167,7 +169,7 @@ def _fail_if_duplicated_arguments(
 ) -> None:
     problematic = present_args & present_kwargs
     if problematic:
-        s = "s" if len(problematic) >= 2 else ""
+        s = "s" if len(problematic) >= 2 else ""  # noqa: PLR2004
         problem_str = ", ".join(list(problematic))
         msg = f"{funcname}() got multiple values for argument{s} {problem_str}"
         raise InvalidFunctionArgumentsError(msg)
@@ -178,7 +180,7 @@ def _fail_if_invalid_keyword_arguments(
 ) -> None:
     problematic = present_kwargs - valid_kwargs
     if problematic:
-        s = "s" if len(problematic) >= 2 else ""
+        s = "s" if len(problematic) >= 2 else ""  # noqa: PLR2004
         problem_str = ", ".join(list(problematic))
         msg = f"{funcname}() got unexpected keyword argument{s} {problem_str}"
         raise InvalidFunctionArgumentsError(msg)
@@ -208,7 +210,7 @@ def rename_arguments(  # noqa: C901
         mapper (dict): Dict of strings where keys are old names and values are new
             of arguments.
 
-    Returns
+    Returns:
     -------
         function: The function with renamed arguments.
     """

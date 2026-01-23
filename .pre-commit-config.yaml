@@ -4,7 +4,10 @@ repos:
     hooks:
       - id: check-hooks-apply
       - id: check-useless-excludes
-      # - id: identity  # Prints all files passed to pre-commits. Debugging.
+  - repo: https://github.com/tox-dev/tox-toml-fmt
+    rev: v1.2.2
+    hooks:
+      - id: tox-toml-fmt
   - repo: https://github.com/lyz-code/yamlfix
     rev: 1.19.1
     hooks:
@@ -15,17 +18,18 @@ repos:
       - id: check-added-large-files
         args:
           - --maxkb=10000
+      - id: check-ast
       - id: check-case-conflict
+      - id: check-docstring-first
       - id: check-merge-conflict
+      - id: check-toml
       - id: check-vcs-permalinks
       - id: check-yaml
-      - id: check-toml
       - id: debug-statements
       - id: end-of-file-fixer
       - id: fix-byte-order-marker
         types:
           - text
-      - id: forbid-submodules
       - id: mixed-line-ending
         args:
           - --fix=lf
@@ -38,8 +42,6 @@ repos:
           - --branch
           - main
       - id: trailing-whitespace
-      - id: check-ast
-      - id: check-docstring-first
   - repo: https://github.com/adrienverge/yamllint.git
     rev: v1.38.0
     hooks:
@@ -48,37 +50,27 @@ repos:
     rev: v0.14.11
     hooks:
       - id: ruff-check
-        types_or:
-          - python
-          - pyi
-          - jupyter
         args:
           - --fix
+        types_or:
+          - jupyter
+          - pyi
+          - python
       - id: ruff-format
         types_or:
-          - python
-          - pyi
           - jupyter
+          - pyi
+          - python
   - repo: https://github.com/executablebooks/mdformat
     rev: 1.0.0
     hooks:
       - id: mdformat
         additional_dependencies:
           - mdformat-gfm
-          - mdformat-gfm-alerts
           - mdformat-ruff
         args:
           - --wrap
           - '88'
-        files: (README\.md)
-  # - repo: local
-  #   hooks:
-  #     - id: ty
-  #       name: ty-check
-  #       entry: pixi run ty check
-  #       language: python
-  #       types:
-  #         - python
-  #       pass_filenames: false
+        files: (CLAUDE\.md|README\.md)
 ci:
   autoupdate_schedule: monthly

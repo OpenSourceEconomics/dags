@@ -1,3 +1,5 @@
+"""Type definitions used across the dags package."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, ParamSpec, TypeVar

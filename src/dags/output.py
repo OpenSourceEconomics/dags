@@ -1,3 +1,5 @@
+"""Output format converters for concatenated functions."""
+
 from __future__ import annotations
 
 import functools
@@ -35,6 +37,7 @@ def _apply_return_annotation(
 
 def single_output(
     func: Callable[P, tuple[T, *Unpack[MixedTupleType]]] | Callable[P, tuple[T, ...]],
+    *,
     set_annotations: bool = False,
 ) -> Callable[P, T]:
     """Convert tuple output to single output; i.e. the first element of the tuple."""
