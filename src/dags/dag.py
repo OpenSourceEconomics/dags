@@ -5,15 +5,16 @@ from __future__ import annotations
 import functools
 import inspect
 import warnings
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Literal, cast
 
 import networkx as nx
 
 from dags.annotations import (
+    ensure_annotations_are_strings,
     get_annotations,
     get_free_arguments,
-    verify_annotations_are_strings,
 )
 from dags.exceptions import (
     AnnotationMismatchError,
@@ -68,15 +69,13 @@ class FunctionExecutionInfo:
     func: Callable[..., Any]
     verify_annotations: bool = False
 
-    def __post_init__(self) -> None:
-        """Verify that the annotations are strings."""
-        if self.verify_annotations:
-            verify_annotations_are_strings(self.annotations, self.name)
-
     @functools.cached_property
     def annotations(self) -> dict[str, str]:
         """The annotations of the function."""
-        return get_annotations(self.func)
+        raw_annotations = get_annotations(self.func)
+        if self.verify_annotations:
+            return ensure_annotations_are_strings(raw_annotations)
+        return raw_annotations
 
     @property
     def arguments(self) -> list[str]:
@@ -95,7 +94,7 @@ class FunctionExecutionInfo:
 
 
 def concatenate_functions(  # noqa: PLR0913
-    functions: dict[str, Callable[..., Any]] | list[Callable[..., Any]],
+    functions: Mapping[str, Callable[..., Any]] | list[Callable[..., Any]],
     targets: str | list[str] | None = None,
     *,
     dag: nx.DiGraph[str] | None = None,
@@ -183,7 +182,7 @@ def concatenate_functions(  # noqa: PLR0913
 
 
 def create_dag(
-    functions: dict[str, Callable[..., Any]] | list[Callable[..., Any]],
+    functions: Mapping[str, Callable[..., Any]] | list[Callable[..., Any]],
     targets: str | list[str] | None,
 ) -> nx.DiGraph[str]:
     """Build a directed acyclic graph (DAG) from functions.
@@ -224,7 +223,7 @@ def create_dag(
 
 def _create_combined_function_from_dag(  # noqa: PLR0913
     dag: nx.DiGraph[str],
-    functions: dict[str, Callable[..., Any]] | list[Callable[..., Any]],
+    functions: Mapping[str, Callable[..., Any]] | list[Callable[..., Any]],
     targets: str | list[str] | None,
     return_type: Literal["tuple", "list", "dict"] = "tuple",
     aggregator: Callable[[T, T], T] | None = None,
@@ -359,7 +358,7 @@ def _create_combined_function_from_dag(  # noqa: PLR0913
 
 
 def get_ancestors(
-    functions: dict[str, Callable[..., Any]] | list[Callable[..., Any]],
+    functions: Mapping[str, Callable[..., Any]] | list[Callable[..., Any]],
     targets: str | list[str] | None,
     *,
     include_targets: bool = False,
@@ -389,14 +388,14 @@ def get_ancestors(
 
     ancestors: set[str] = set()
     for target in _targets:
-        ancestors |= nx.ancestors(dag, target)
+        ancestors |= nx.ancestors(dag, target)  # type: ignore[invalid-argument-type]
         if include_targets:
             ancestors.add(target)
     return ancestors
 
 
 def harmonize_and_check_functions_and_targets(
-    functions: dict[str, Callable[..., Any]] | list[Callable[..., Any]],
+    functions: Mapping[str, Callable[..., Any]] | list[Callable[..., Any]],
     targets: str | list[str] | None,
 ) -> tuple[dict[str, Callable[..., Any]], list[str]]:
     """Harmonize the type of specified functions and targets and do some checks.
@@ -423,14 +422,11 @@ def harmonize_and_check_functions_and_targets(
 
 
 def _harmonize_functions(
-    functions: dict[str, Callable[..., Any]] | list[Callable[..., Any]],
+    functions: Mapping[str, Callable[..., Any]] | list[Callable[..., Any]],
 ) -> dict[str, Callable[..., Any]]:
-    if not isinstance(functions, dict):
-        functions_dict = {func.__name__: func for func in functions}  # ty: ignore[unresolved-attribute]
-    else:
-        functions_dict = functions
-
-    return functions_dict
+    if isinstance(functions, Mapping):
+        return {k: v for k, v in functions.items()}  # noqa: C416  # ty: ignore[invalid-return-type]
+    return {func.__name__: func for func in functions}  # ty: ignore[unresolved-attribute]
 
 
 def _harmonize_targets(
@@ -466,7 +462,7 @@ def _fail_if_functions_are_missing(
 
 def _fail_if_dag_contains_cycle(dag: nx.DiGraph[str]) -> None:
     """Check for cycles in DAG."""
-    cycles = list(nx.simple_cycles(dag))
+    cycles = list(nx.simple_cycles(dag))  # type: ignore[invalid-argument-type]
 
     if len(cycles) > 0:
         formatted = format_list_linewise(cycles)
@@ -513,7 +509,7 @@ def _limit_dag_to_targets_and_their_ancestors(
     """
     used_nodes = set(targets)
     for target in targets:
-        used_nodes = used_nodes | set(nx.ancestors(dag, target))
+        used_nodes = used_nodes | set(nx.ancestors(dag, target))  # type: ignore[invalid-argument-type]
 
     all_nodes = set(dag.nodes)
 
@@ -573,7 +569,7 @@ def create_execution_info(
 
     """
     out = {}
-    for node in nx.lexicographical_topological_sort(dag, key=lexsort_key):
+    for node in nx.lexicographical_topological_sort(dag, key=lexsort_key):  # type: ignore[invalid-argument-type]
         if node in functions:
             out[node] = FunctionExecutionInfo(
                 name=node,

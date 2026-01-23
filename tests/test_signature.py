@@ -4,7 +4,7 @@ import inspect
 
 import pytest
 
-from dags.exceptions import InvalidFunctionArgumentsError
+from dags.exceptions import DagsError, InvalidFunctionArgumentsError
 from dags.signature import _create_signature, rename_arguments, with_signature
 
 
@@ -204,3 +204,11 @@ def test_rename_arguments_direct_call_annotated() -> None:
         "c": "bool",
         "return": "float",
     }
+
+
+def test_with_signature_invalid_args_type() -> None:
+    with pytest.raises(DagsError, match="Invalid type for arg"):
+
+        @with_signature(args="invalid")  # ty: ignore[invalid-argument-type]
+        def f(*args, **kwargs):
+            pass

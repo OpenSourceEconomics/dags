@@ -6,6 +6,11 @@ releases are available on [conda-forge](https://anaconda.org/conda-forge/dags).
 
 ## 0.5.0
 
+- :gh:`67` Change `dict` annotations to `Mapping`; do not require string annotations
+  from users (:ghuser:`hmgaudecker`).
+
+- :gh:`66` Improve linting and development setup (:ghuser:`hmgaudecker`).
+
 - :gh:`62` Drop Python 3.10 support, improve typing thanks to requiring current networkx
   (:ghuser:`hmgaudecker`).
 
