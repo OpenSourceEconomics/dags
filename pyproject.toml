@@ -139,8 +139,6 @@ extend-ignore = [
   "COM812", # Conflicts with ruff-format
   "EM101",  # Exception must not use a string literal
   "EM102",  # Exception must not use an f-string literal
-  "FBT001", # Boolean-typed positional argument in function definition
-  "FBT002", # Boolean default positional argument in function definition
   "ISC001", # Conflicts with ruff-format
   "TC002",  # Move third-party import into a type-checking block
   "TC003",  # Move standard library import into a type-checking block

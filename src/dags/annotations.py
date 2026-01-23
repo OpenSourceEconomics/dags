@@ -42,6 +42,7 @@ def get_free_arguments(
 @overload
 def get_annotations(
     func: Callable[..., Any],
+    *,
     eval_str: Literal[False] = False,
     default: str | None = None,
 ) -> dict[str, str]: ...
@@ -50,6 +51,7 @@ def get_annotations(
 @overload
 def get_annotations(
     func: Callable[..., Any],
+    *,
     eval_str: Literal[True] = True,
     default: type | None = None,
 ) -> dict[str, type]: ...
@@ -57,6 +59,7 @@ def get_annotations(
 
 def get_annotations(
     func: Callable[..., Any],
+    *,
     eval_str: bool = False,
     default: str | type | None = None,
 ) -> dict[str, str] | dict[str, type]:
@@ -91,7 +94,7 @@ def get_annotations(
     signature_params = set(free_arguments)
 
     if _has_args_kwargs_annotation_mismatch(annotation_keys, signature_params):
-        annotations = _get_annotations_from_signature(func, eval_str)
+        annotations = _get_annotations_from_signature(func, eval_str=eval_str)
 
     return {arg: annotations.get(arg, default) for arg in ["return", *free_arguments]}
 
@@ -190,7 +193,7 @@ def _has_args_kwargs_annotation_mismatch(
 
 
 def _get_annotations_from_signature(
-    func: Callable[..., Any], eval_str: bool
+    func: Callable[..., Any], *, eval_str: bool
 ) -> dict[str, Any]:
     """Extract annotations from the function signature.
 

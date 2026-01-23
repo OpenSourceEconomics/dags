@@ -229,6 +229,7 @@ def _create_combined_function_from_dag(  # noqa: PLR0913
     return_type: Literal["tuple", "list", "dict"] = "tuple",
     aggregator: Callable[[T, T], T] | None = None,
     aggregator_return_type: str | None = None,
+    *,
     enforce_signature: bool = True,
     set_annotations: bool = False,
     lexsort_key: Callable[[str], Any] | None = None,
@@ -300,8 +301,8 @@ def _create_combined_function_from_dag(  # noqa: PLR0913
         _exec_info,
         _arglist,
         _targets,
-        enforce_signature,
-        set_annotations,
+        enforce_signature=enforce_signature,
+        set_annotations=set_annotations,
     )
 
     # Update the actual return type, as well as the return annotation of the
@@ -360,6 +361,7 @@ def _create_combined_function_from_dag(  # noqa: PLR0913
 def get_ancestors(
     functions: dict[str, Callable[..., Any]] | list[Callable[..., Any]],
     targets: str | list[str] | None,
+    *,
     include_targets: bool = False,
 ) -> set[str]:
     """Build a DAG and extract all ancestors of targets.
@@ -545,6 +547,7 @@ def create_arguments_of_concatenated_function(
 def create_execution_info(
     functions: dict[str, Callable[..., Any]],
     dag: nx.DiGraph[str],
+    *,
     verify_annotations: bool = False,
     lexsort_key: Callable[[str], Any] | None = None,
 ) -> dict[str, FunctionExecutionInfo]:
@@ -584,6 +587,7 @@ def _create_concatenated_function(
     execution_info: dict[str, FunctionExecutionInfo],
     arglist: list[str],
     targets: list[str],
+    *,
     enforce_signature: bool,
     set_annotations: bool,
 ) -> Callable[..., tuple[Any, ...]]:
