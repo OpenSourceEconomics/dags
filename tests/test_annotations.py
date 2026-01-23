@@ -115,13 +115,13 @@ def test_get_annotations_with_numpy() -> None:
 
 def test_ensure_annotations_are_strings_already_strings() -> None:
     """Test that string annotations are passed through unchanged."""
-    result = ensure_annotations_are_strings({"a": "int", "return": "float"}, "f")
+    result = ensure_annotations_are_strings({"a": "int", "return": "float"})
     assert result == {"a": "int", "return": "float"}
 
 
 def test_ensure_annotations_are_strings_converts_non_string_argument() -> None:
     """Test that non-string argument annotations are converted to strings."""
-    result = ensure_annotations_are_strings({"a": int, "return": "float"}, "f")
+    result = ensure_annotations_are_strings({"a": int, "return": "float"})
     assert result == {"a": "int", "return": "float"}
 
 
@@ -129,21 +129,19 @@ def test_ensure_annotations_are_strings_converts_multiple_non_string_arguments()
     None
 ):
     """Test that multiple non-string argument annotations are converted."""
-    result = ensure_annotations_are_strings(
-        {"a": int, "b": bool, "return": "float"}, "f"
-    )
+    result = ensure_annotations_are_strings({"a": int, "b": bool, "return": "float"})
     assert result == {"a": "int", "b": "bool", "return": "float"}
 
 
 def test_ensure_annotations_are_strings_converts_non_string_return() -> None:
     """Test that non-string return annotation is converted to string."""
-    result = ensure_annotations_are_strings({"a": "int", "return": float}, "f")
+    result = ensure_annotations_are_strings({"a": "int", "return": float})
     assert result == {"a": "int", "return": "float"}
 
 
 def test_ensure_annotations_are_strings_converts_all_non_strings() -> None:
     """Test that all non-string annotations are converted."""
-    result = ensure_annotations_are_strings({"a": int, "return": float}, "f")
+    result = ensure_annotations_are_strings({"a": int, "return": float})
     assert result == {"a": "int", "return": "float"}
 
 

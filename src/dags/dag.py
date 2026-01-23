@@ -74,7 +74,7 @@ class FunctionExecutionInfo:
         """The annotations of the function."""
         raw_annotations = get_annotations(self.func)
         if self.verify_annotations:
-            return ensure_annotations_are_strings(raw_annotations, self.name)
+            return ensure_annotations_are_strings(raw_annotations)
         return raw_annotations
 
     @property

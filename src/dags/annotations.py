@@ -97,10 +97,7 @@ def get_annotations(
     return {arg: annotations.get(arg, default) for arg in ["return", *free_arguments]}
 
 
-def ensure_annotations_are_strings(
-    annotations: dict[str, Any],
-    function_name: str,  # noqa: ARG001
-) -> dict[str, str]:
+def ensure_annotations_are_strings(annotations: dict[str, Any]) -> dict[str, str]:
     """Ensure all type annotations are strings, converting if necessary.
 
     In Python 3.14+, annotations may be evaluated at runtime rather than stored
@@ -109,7 +106,6 @@ def ensure_annotations_are_strings(
 
     Args:
         annotations: Dictionary of annotation names to their values.
-        function_name: Name of the function (unused, kept for backwards compatibility).
 
     Returns:
     -------
