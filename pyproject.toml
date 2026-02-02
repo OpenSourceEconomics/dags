@@ -27,12 +27,12 @@ maintainers = [
   { name = "Hans-Martin von Gaudecker", email = "hmgaudecker@uni-bonn.de" },
 ]
 
+[project.license]
+file = "LICENSE"
+
 [project.readme]
 file = "README.md"
 content-type = "text/markdown"
-
-[project.license]
-file = "LICENSE"
 
 [project.urls]
 Repository = "https://github.com/OpenSourceEconomics/dags"
@@ -61,22 +61,11 @@ include = [
   "src/dags/py.typed",
 ]
 
-[tool.hatch.version]
-source = "vcs"
-
 [tool.hatch.metadata]
 allow-direct-references = true
 
-# ======================================================================================
-# Pixi
-# ======================================================================================
-
-[tool.pixi.workspace]
-channels = [ "conda-forge" ]
-platforms = [ "linux-64", "osx-64", "osx-arm64", "win-64" ]
-
-# Development Dependencies
-# --------------------------------------------------------------------------------------
+[tool.hatch.version]
+source = "vcs"
 
 [tool.pixi.dependencies]
 python = ">=3.11,<3.15"
@@ -86,22 +75,18 @@ pytest = "*"
 pytest-cov = "*"
 pytest-xdist = "*"
 
-[tool.pixi.pypi-dependencies]
-dags = { path = ".", editable = true }
-ty = ">=0.0.11"
-types-networkx = ">=3.6.1.20251220"
-pdbp = "*"
-
-# Features and Tasks
+# Environments
 # --------------------------------------------------------------------------------------
 
-[tool.pixi.feature.tests.tasks]
-tests = "pytest tests"
-tests-with-cov = "pytest tests --cov-report=xml --cov=./"
-ty = "ty check"
+[tool.pixi.environments]
+py311 = [ "py311", "tests" ]
+py312 = [ "py312", "tests" ]
+py313 = [ "py313", "tests" ]
+py314 = [ "py314", "tests" ]
 
-# Python versions for testing
-# --------------------------------------------------------------------------------------
+# ======================================================================================
+# Ruff configuration
+# ======================================================================================
 
 [tool.pixi.feature.py311.dependencies]
 python = "~=3.11.0"
@@ -115,17 +100,49 @@ python = "~=3.13.0"
 [tool.pixi.feature.py314.dependencies]
 python = "~=3.14.0"
 
-# Environments
+# Features and Tasks
 # --------------------------------------------------------------------------------------
 
-[tool.pixi.environments]
-py311 = [ "py311", "tests" ]
-py312 = [ "py312", "tests" ]
-py313 = [ "py313", "tests" ]
-py314 = [ "py314", "tests" ]
+[tool.pixi.feature.tests.tasks]
+tests = "pytest tests"
+tests-with-cov = "pytest tests --cov-report=xml --cov=./"
+ty = "ty check"
+
+# Python versions for testing
+# --------------------------------------------------------------------------------------
+
+[tool.pixi.pypi-dependencies]
+dags = { path = ".", editable = true }
+ty = ">=0.0.11"
+types-networkx = ">=3.6.1.20251220"
+pdbp = "*"
 
 # ======================================================================================
-# Ruff configuration
+# Pixi
+# ======================================================================================
+
+[tool.pixi.workspace]
+channels = [ "conda-forge" ]
+platforms = [ "linux-64", "osx-64", "osx-arm64", "win-64" ]
+
+# Development Dependencies
+# --------------------------------------------------------------------------------------
+
+# ======================================================================================
+# pytest configuration
+# ======================================================================================
+
+[tool.pytest.ini_options]
+addopts = [ "--pdbcls=pdbp:Pdb" ]
+filterwarnings = [  ]
+markers = [
+  "wip: Tests that are work-in-progress.",
+  "slow: Tests that take a long time to run and are skipped in continuous integration.",
+]
+norecursedirs = [ "docs" ]
+
+# ======================================================================================
+# yamlfix configuration
 # ======================================================================================
 
 [tool.ruff]
@@ -208,23 +225,6 @@ useless-overload-body = "error"
 
 [tool.ty.src]
 exclude = [ "docs/source/example/example.ipynb" ]
-
-# ======================================================================================
-# pytest configuration
-# ======================================================================================
-
-[tool.pytest.ini_options]
-addopts = [ "--pdbcls=pdbp:Pdb" ]
-filterwarnings = [  ]
-markers = [
-  "wip: Tests that are work-in-progress.",
-  "slow: Tests that take a long time to run and are skipped in continuous integration.",
-]
-norecursedirs = [ "docs" ]
-
-# ======================================================================================
-# yamlfix configuration
-# ======================================================================================
 
 [tool.yamlfix]
 line_length = 88
