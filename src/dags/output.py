@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, overload
 from dags.exceptions import DagsError
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Sequence
     from typing import Any
 
     from typing_extensions import Unpack
@@ -58,20 +58,23 @@ def single_output(
 
 @overload
 def dict_output(
-    func: Callable[P, tuple[T, ...]], *, keys: list[str], set_annotations: bool = False
+    func: Callable[P, tuple[T, ...]],
+    *,
+    keys: Sequence[str],
+    set_annotations: bool = False,
 ) -> Callable[P, dict[str, T]]: ...
 
 
 @overload
 def dict_output(
-    *, keys: list[str], set_annotations: bool = False
+    *, keys: Sequence[str], set_annotations: bool = False
 ) -> Callable[[Callable[P, tuple[T, ...]]], Callable[P, dict[str, T]]]: ...
 
 
 def dict_output(
     func: Callable[P, tuple[T, ...]] | None = None,
     *,
-    keys: list[str] | None = None,
+    keys: Sequence[str] | None = None,
     set_annotations: bool = False,
 ) -> (
     Callable[P, dict[str, T]]

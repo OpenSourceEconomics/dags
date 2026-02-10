@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import functools
 import inspect
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from typing import TYPE_CHECKING, Any, cast, overload
 
 from dags.annotations import get_annotations
@@ -77,8 +77,8 @@ def _create_annotations(
 def with_signature(
     func: Callable[P, R],
     *,
-    args: Mapping[str, str] | list[str] | None = None,
-    kwargs: Mapping[str, str] | list[str] | None = None,
+    args: Mapping[str, str] | Sequence[str] | None = None,
+    kwargs: Mapping[str, str] | Sequence[str] | None = None,
     enforce: bool = True,
     return_annotation: Any = inspect.Parameter.empty,
 ) -> Callable[P, R]: ...
@@ -87,8 +87,8 @@ def with_signature(
 @overload
 def with_signature(
     *,
-    args: Mapping[str, str] | list[str] | None = None,
-    kwargs: Mapping[str, str] | list[str] | None = None,
+    args: Mapping[str, str] | Sequence[str] | None = None,
+    kwargs: Mapping[str, str] | Sequence[str] | None = None,
     enforce: bool = True,
     return_annotation: Any = inspect.Parameter.empty,
 ) -> Callable[[Callable[P, R]], Callable[P, R]]: ...
@@ -97,8 +97,8 @@ def with_signature(
 def with_signature(
     func: Callable[P, R] | None = None,
     *,
-    args: Mapping[str, str] | list[str] | None = None,
-    kwargs: Mapping[str, str] | list[str] | None = None,
+    args: Mapping[str, str] | Sequence[str] | None = None,
+    kwargs: Mapping[str, str] | Sequence[str] | None = None,
     enforce: bool = True,
     return_annotation: Any = inspect.Parameter.empty,
 ) -> Callable[P, R] | Callable[[Callable[P, R]], Callable[P, R]]:
@@ -276,14 +276,18 @@ def rename_arguments(  # noqa: C901
 
 
 def _map_names_to_types(
-    arg: Mapping[str, str] | list[str] | None,
+    arg: Mapping[str, str] | Sequence[str] | None,
 ) -> dict[str, str] | dict[str, type[inspect._empty]]:
     if arg is None:
         return {}
-    if isinstance(arg, list):
-        return dict.fromkeys(arg, inspect.Parameter.empty)
     if isinstance(arg, Mapping):
         return dict(arg)
+    if isinstance(arg, str):
+        raise DagsError(
+            f"Invalid type for arg: {type(arg)}. Expected Mapping, Sequence, or None."
+        )
+    if isinstance(arg, Sequence):
+        return dict.fromkeys(arg, inspect.Parameter.empty)
     raise DagsError(
-        f"Invalid type for arg: {type(arg)}. Expected Mapping, list, or None."
+        f"Invalid type for arg: {type(arg)}. Expected Mapping, Sequence, or None."
     )
