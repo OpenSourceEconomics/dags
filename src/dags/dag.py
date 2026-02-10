@@ -5,7 +5,7 @@ from __future__ import annotations
 import functools
 import inspect
 import warnings
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Literal, cast
 
@@ -94,8 +94,8 @@ class FunctionExecutionInfo:
 
 
 def concatenate_functions(  # noqa: PLR0913
-    functions: Mapping[str, Callable[..., Any]] | list[Callable[..., Any]],
-    targets: str | list[str] | None = None,
+    functions: Mapping[str, Callable[..., Any]] | Sequence[Callable[..., Any]],
+    targets: str | Sequence[str] | None = None,
     *,
     dag: nx.DiGraph[str] | None = None,
     return_type: Literal["tuple", "list", "dict"] = "tuple",
@@ -182,8 +182,8 @@ def concatenate_functions(  # noqa: PLR0913
 
 
 def create_dag(
-    functions: Mapping[str, Callable[..., Any]] | list[Callable[..., Any]],
-    targets: str | list[str] | None,
+    functions: Mapping[str, Callable[..., Any]] | Sequence[Callable[..., Any]],
+    targets: str | Sequence[str] | None,
 ) -> nx.DiGraph[str]:
     """Build a directed acyclic graph (DAG) from functions.
 
@@ -223,8 +223,8 @@ def create_dag(
 
 def _create_combined_function_from_dag(  # noqa: PLR0913
     dag: nx.DiGraph[str],
-    functions: Mapping[str, Callable[..., Any]] | list[Callable[..., Any]],
-    targets: str | list[str] | None,
+    functions: Mapping[str, Callable[..., Any]] | Sequence[Callable[..., Any]],
+    targets: str | Sequence[str] | None,
     return_type: Literal["tuple", "list", "dict"] = "tuple",
     aggregator: Callable[[T, T], T] | None = None,
     aggregator_return_type: str | None = None,
@@ -358,8 +358,8 @@ def _create_combined_function_from_dag(  # noqa: PLR0913
 
 
 def get_ancestors(
-    functions: Mapping[str, Callable[..., Any]] | list[Callable[..., Any]],
-    targets: str | list[str] | None,
+    functions: Mapping[str, Callable[..., Any]] | Sequence[Callable[..., Any]],
+    targets: str | Sequence[str] | None,
     *,
     include_targets: bool = False,
 ) -> set[str]:
@@ -395,8 +395,8 @@ def get_ancestors(
 
 
 def harmonize_and_check_functions_and_targets(
-    functions: Mapping[str, Callable[..., Any]] | list[Callable[..., Any]],
-    targets: str | list[str] | None,
+    functions: Mapping[str, Callable[..., Any]] | Sequence[Callable[..., Any]],
+    targets: str | Sequence[str] | None,
 ) -> tuple[dict[str, Callable[..., Any]], list[str]]:
     """Harmonize the type of specified functions and targets and do some checks.
 
@@ -422,7 +422,7 @@ def harmonize_and_check_functions_and_targets(
 
 
 def _harmonize_functions(
-    functions: Mapping[str, Callable[..., Any]] | list[Callable[..., Any]],
+    functions: Mapping[str, Callable[..., Any]] | Sequence[Callable[..., Any]],
 ) -> dict[str, Callable[..., Any]]:
     if isinstance(functions, Mapping):
         return {k: v for k, v in functions.items()}  # noqa: C416  # ty: ignore[invalid-return-type]
@@ -430,14 +430,14 @@ def _harmonize_functions(
 
 
 def _harmonize_targets(
-    targets: str | list[str] | None,
+    targets: str | Sequence[str] | None,
     function_names: list[str],
 ) -> list[str]:
     if targets is None:
-        targets = function_names
-    elif isinstance(targets, str):
-        targets = [targets]
-    return targets
+        return function_names
+    if isinstance(targets, str):
+        return [targets]
+    return list(targets)
 
 
 def _fail_if_targets_have_wrong_types(
