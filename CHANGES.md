@@ -6,6 +6,8 @@ releases are available on [conda-forge](https://anaconda.org/conda-forge/dags).
 
 ## 0.5.0
 
+- :gh:`71` Change `list` annotations to `Sequence` (:ghuser:`hmgaudecker`).
+
 - :gh:`67` Change `dict` annotations to `Mapping`; do not require string annotations
   from users (:ghuser:`hmgaudecker`).
 
