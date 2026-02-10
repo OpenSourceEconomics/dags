@@ -2,35 +2,32 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from collections.abc import Sequence
 
 from dags.tree.exceptions import (
     RepeatedTopLevelElementError,
     TrailingUnderscoreError,
 )
 from dags.tree.tree_utils import tree_path_from_qname, tree_paths
+from dags.tree.typing import (
+    NestedFunctionDict,
+    NestedInputDict,
+    NestedStructureDict,
+    NestedTargetDict,
+    QNameFunctionDict,
+)
 from dags.utils import format_list_linewise
 
-if TYPE_CHECKING:
-    from dags.tree.typing import (
-        NestedFunctionDict,
-        NestedInputDict,
-        NestedStructureDict,
-        NestedTargetDict,
-        QNameFunctionDict,
-    )
 
-
-def fail_if_paths_are_invalid(
+def fail_if_paths_are_invalid(  # noqa: PLR0913
     functions: NestedFunctionDict | None = None,
     abs_qnames_functions: QNameFunctionDict | None = None,
     data_tree: NestedStructureDict | None = None,
     input_structure: NestedInputDict | None = None,
     targets: NestedTargetDict | None = None,
-    top_level_namespace: set[str] | list[str] | tuple[str, ...] = (),
+    top_level_namespace: set[str] | Sequence[str] = (),
 ) -> None:
-    """
-    Fail if the paths in the (different parts of the) functions tree are invalid.
+    """Fail if the paths in the (different parts of the) functions tree are invalid.
 
     The interface is designed so you can pass any argument you like, but none of them is
     required (however, not passing anything does not make sense).
@@ -65,7 +62,7 @@ def fail_if_paths_are_invalid(
             repetition of elements).
 
 
-    Raises
+    Raises:
     ------
         TrailingUnderscoreError: If the paths in the functions tree are invalid.
         RepeatedTopLevelElementError: If the paths in the functions tree are invalid.
@@ -92,14 +89,12 @@ def fail_if_paths_are_invalid(
 def fail_if_path_elements_have_trailing_undersores(
     all_tree_paths: set[tuple[str, ...]],
 ) -> None:
-    """
-    Check if any element of the tree path except for the leaf ends with an underscore.
+    """Check if any element of the tree path except the leaf ends with an underscore.
 
     Args:
-        tree_paths:
-            The tree paths.
+        all_tree_paths: The tree paths.
 
-    Raises
+    Raises:
     ------
         TrailingUnderscoreError: If any branch of the functions tree ends with an
             underscore.
@@ -130,8 +125,7 @@ def fail_if_top_level_elements_repeated_in_paths(
     all_tree_paths: set[tuple[str, ...]],
     top_level_namespace: set[str],
 ) -> None:
-    """
-    Fail if any element of the top-level namespace is repeated elsewhere.
+    """Fail if any element of the top-level namespace is repeated elsewhere.
 
     Args:
         all_tree_paths:
@@ -139,7 +133,7 @@ def fail_if_top_level_elements_repeated_in_paths(
         top_level_namespace:
             The elements of the top-level namespace.
 
-    Raises
+    Raises:
     ------
         RepeatedTopLevelElementError: If any element of the top-level namespace is
             repeated further down in the hierarchy.
@@ -172,7 +166,7 @@ def fail_if_top_level_elements_repeated_in_single_path(
         tree_path:
             A single tree path.
 
-    Raises
+    Raises:
     ------
         RepeatedTopLevelElementError: If any element of `tree_path` equals an element in
             the top-level namespace.

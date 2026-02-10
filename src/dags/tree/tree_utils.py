@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 import re
-from typing import TYPE_CHECKING
 
 import flatten_dict as fd
 
-if TYPE_CHECKING:
-    from dags.tree.typing import FlatQNameDict, FlatTreePathDict, NestedStructureDict
+from dags.tree.typing import FlatQNameDict, FlatTreePathDict, NestedStructureDict
 
 # Constants for qualified names
 QNAME_DELIMITER: str = "__"
@@ -25,7 +23,7 @@ def qname_from_tree_path(tree_path: tuple[str, ...]) -> str:
     Args:
         tree_path: A tuple of strings.
 
-    Returns
+    Returns:
     -------
         A qualified name.
     """
@@ -38,7 +36,7 @@ def tree_path_from_qname(qname: str) -> tuple[str, ...]:
     Args:
         qname: A qualified name.
 
-    Returns
+    Returns:
     -------
         A tree path.
     """
@@ -51,7 +49,7 @@ def flatten_to_qnames(nested: NestedStructureDict) -> FlatQNameDict:
     Args:
         nested: A nested dictionary.
 
-    Returns
+    Returns:
     -------
         A flat dictionary with qualified names as keys.
     """
@@ -64,7 +62,7 @@ def qnames(nested: NestedStructureDict) -> list[str]:
     Args:
         nested: A nested dictionary.
 
-    Returns
+    Returns:
     -------
         A list of qualified names.
     """
@@ -77,7 +75,7 @@ def unflatten_from_qnames(flat_qnames: FlatQNameDict) -> NestedStructureDict:
     Args:
         flat_qnames: A dictionary with qualified names as keys.
 
-    Returns
+    Returns:
     -------
         A nested dictionary.
     """
@@ -90,7 +88,7 @@ def flatten_to_tree_paths(nested: NestedStructureDict) -> FlatTreePathDict:
     Args:
         nested: A nested dictionary.
 
-    Returns
+    Returns:
     -------
         A flat dictionary with qualified names as keys.
     """
@@ -103,7 +101,7 @@ def tree_paths(nested: NestedStructureDict) -> list[tuple[str, ...]]:
     Args:
         nested: A nested dictionary.
 
-    Returns
+    Returns:
     -------
         A list of tuples.
     """
@@ -116,7 +114,7 @@ def unflatten_from_tree_paths(flat_tree_paths: FlatTreePathDict) -> NestedStruct
     Args:
         flat_tree_paths: A flat dictionary with tree paths (tuples) as keys.
 
-    Returns
+    Returns:
     -------
         A nested dictionary.
     """
@@ -129,7 +127,7 @@ def _is_python_identifier(s: str) -> bool:
     Args:
         s: String to check
 
-    Returns
+    Returns:
     -------
         True if valid identifier, False otherwise
     """

@@ -7,8 +7,17 @@ releases are available on [conda-forge](https://anaconda.org/conda-forge/dags).
 ## 0.5.0
 
 - :gh:`63` Build docs using pixi, update docs (:ghuser:`hmgaudecker`).
-- :gh:`64`  Loosen type annotation of `rename_arguments` decorator to prevent lots of
-  `# ty: ignore`s. (:ghuser:`hmgaudecker`).
+
+- :gh:`72` Improved pre-commit hooks, remove type checking blocks
+  (:ghuser:`hmgaudecker`).
+
+- :gh:`71` Change `list` annotations to `Sequence` (:ghuser:`hmgaudecker`).
+
+- :gh:`67` Change `dict` annotations to `Mapping`; do not require string annotations
+  from users (:ghuser:`hmgaudecker`).
+
+- :gh:`66` Improve linting and development setup (:ghuser:`hmgaudecker`).
+
 - :gh:`62` Drop Python 3.10 support, improve typing thanks to requiring current networkx
   (:ghuser:`hmgaudecker`).
 

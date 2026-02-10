@@ -1,18 +1,16 @@
+"""Output format converters for concatenated functions."""
+
 from __future__ import annotations
 
 import functools
 import inspect
-from typing import TYPE_CHECKING, overload
+from collections.abc import Callable, Sequence
+from typing import Any, overload
+
+from typing_extensions import Unpack
 
 from dags.exceptions import DagsError
-
-if TYPE_CHECKING:
-    from collections.abc import Callable
-    from typing import Any
-
-    from typing_extensions import Unpack
-
-    from dags.typing import MixedTupleType, P, T
+from dags.typing import MixedTupleType, P, T
 
 
 def _apply_return_annotation(
@@ -35,6 +33,7 @@ def _apply_return_annotation(
 
 def single_output(
     func: Callable[P, tuple[T, *Unpack[MixedTupleType]]] | Callable[P, tuple[T, ...]],
+    *,
     set_annotations: bool = False,
 ) -> Callable[P, T]:
     """Convert tuple output to single output; i.e. the first element of the tuple."""
@@ -55,20 +54,23 @@ def single_output(
 
 @overload
 def dict_output(
-    func: Callable[P, tuple[T, ...]], *, keys: list[str], set_annotations: bool = False
+    func: Callable[P, tuple[T, ...]],
+    *,
+    keys: Sequence[str],
+    set_annotations: bool = False,
 ) -> Callable[P, dict[str, T]]: ...
 
 
 @overload
 def dict_output(
-    *, keys: list[str], set_annotations: bool = False
+    *, keys: Sequence[str], set_annotations: bool = False
 ) -> Callable[[Callable[P, tuple[T, ...]]], Callable[P, dict[str, T]]]: ...
 
 
 def dict_output(
     func: Callable[P, tuple[T, ...]] | None = None,
     *,
-    keys: list[str] | None = None,
+    keys: Sequence[str] | None = None,
     set_annotations: bool = False,
 ) -> (
     Callable[P, dict[str, T]]

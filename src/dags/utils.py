@@ -3,10 +3,7 @@
 from __future__ import annotations
 
 import textwrap
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from collections.abc import Sequence
+from collections.abc import Sequence
 
 
 def format_list_linewise(seq: Sequence[object]) -> str:

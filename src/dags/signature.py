@@ -1,16 +1,15 @@
+"""Utilities for function signature manipulation."""
+
 from __future__ import annotations
 
 import functools
 import inspect
-from typing import TYPE_CHECKING, Any, cast, overload
+from collections.abc import Callable, Mapping, Sequence
+from typing import Any, cast, overload
 
 from dags.annotations import get_annotations
 from dags.exceptions import DagsError, InvalidFunctionArgumentsError
-
-if TYPE_CHECKING:
-    from collections.abc import Callable
-
-    from dags.typing import P, R
+from dags.typing import P, R
 
 
 def _create_signature(
@@ -28,7 +27,7 @@ def _create_signature(
         return_annotation: The return annotation. By default, the return annotation is
             `inspect.Parameter.empty`.
 
-    Returns
+    Returns:
     -------
         The signature.
 
@@ -74,8 +73,8 @@ def _create_annotations(
 def with_signature(
     func: Callable[P, R],
     *,
-    args: dict[str, str] | list[str] | None = None,
-    kwargs: dict[str, str] | list[str] | None = None,
+    args: Mapping[str, str] | Sequence[str] | None = None,
+    kwargs: Mapping[str, str] | Sequence[str] | None = None,
     enforce: bool = True,
     return_annotation: Any = inspect.Parameter.empty,
 ) -> Callable[P, R]: ...
@@ -84,8 +83,8 @@ def with_signature(
 @overload
 def with_signature(
     *,
-    args: dict[str, str] | list[str] | None = None,
-    kwargs: dict[str, str] | list[str] | None = None,
+    args: Mapping[str, str] | Sequence[str] | None = None,
+    kwargs: Mapping[str, str] | Sequence[str] | None = None,
     enforce: bool = True,
     return_annotation: Any = inspect.Parameter.empty,
 ) -> Callable[[Callable[P, R]], Callable[P, R]]: ...
@@ -94,8 +93,8 @@ def with_signature(
 def with_signature(
     func: Callable[P, R] | None = None,
     *,
-    args: dict[str, str] | list[str] | None = None,
-    kwargs: dict[str, str] | list[str] | None = None,
+    args: Mapping[str, str] | Sequence[str] | None = None,
+    kwargs: Mapping[str, str] | Sequence[str] | None = None,
     enforce: bool = True,
     return_annotation: Any = inspect.Parameter.empty,
 ) -> Callable[P, R] | Callable[[Callable[P, R]], Callable[P, R]]:
@@ -117,7 +116,7 @@ def with_signature(
         return_annotation: The return annotation. By default, the return annotation is
             `inspect.Parameter.empty`.
 
-    Returns
+    Returns:
     -------
         function: The function with signature.
     """
@@ -167,7 +166,7 @@ def _fail_if_duplicated_arguments(
 ) -> None:
     problematic = present_args & present_kwargs
     if problematic:
-        s = "s" if len(problematic) >= 2 else ""
+        s = "s" if len(problematic) >= 2 else ""  # noqa: PLR2004
         problem_str = ", ".join(list(problematic))
         msg = f"{funcname}() got multiple values for argument{s} {problem_str}"
         raise InvalidFunctionArgumentsError(msg)
@@ -178,7 +177,7 @@ def _fail_if_invalid_keyword_arguments(
 ) -> None:
     problematic = present_kwargs - valid_kwargs
     if problematic:
-        s = "s" if len(problematic) >= 2 else ""
+        s = "s" if len(problematic) >= 2 else ""  # noqa: PLR2004
         problem_str = ", ".join(list(problematic))
         msg = f"{funcname}() got unexpected keyword argument{s} {problem_str}"
         raise InvalidFunctionArgumentsError(msg)
@@ -188,18 +187,18 @@ def _fail_if_invalid_keyword_arguments(
 def rename_arguments(
     func: Callable[P, R],
     *,
-    mapper: dict[str, str],
+    mapper: Mapping[str, str],
 ) -> Callable[..., R]: ...
 
 
 @overload
 def rename_arguments(
-    *, mapper: dict[str, str]
+    *, mapper: Mapping[str, str]
 ) -> Callable[[Callable[P, R]], Callable[..., R]]: ...
 
 
 def rename_arguments(  # noqa: C901
-    func: Callable[P, R] | None = None, *, mapper: dict[str, str] | None = None
+    func: Callable[P, R] | None = None, *, mapper: Mapping[str, str] | None = None
 ) -> Callable[..., R] | Callable[[Callable[P, R]], Callable[..., R]]:
     """Rename positional and keyword arguments of func.
 
@@ -208,7 +207,7 @@ def rename_arguments(  # noqa: C901
         mapper (dict): Dict of strings where keys are old names and values are new
             of arguments.
 
-    Returns
+    Returns:
     -------
         function: The function with renamed arguments.
     """
@@ -273,12 +272,18 @@ def rename_arguments(  # noqa: C901
 
 
 def _map_names_to_types(
-    arg: dict[str, str] | list[str] | None,
+    arg: Mapping[str, str] | Sequence[str] | None,
 ) -> dict[str, str] | dict[str, type[inspect._empty]]:
     if arg is None:
         return {}
-    if isinstance(arg, list):
+    if isinstance(arg, Mapping):
+        return dict(arg)
+    if isinstance(arg, str):
+        raise DagsError(
+            f"Invalid type for arg: {type(arg)}. Expected Mapping, Sequence, or None."
+        )
+    if isinstance(arg, Sequence):
         return dict.fromkeys(arg, inspect.Parameter.empty)
-    if isinstance(arg, dict):
-        return arg
-    raise DagsError(f"Invalid type for arg: {type(arg)}. Expected dict, list, or None.")
+    raise DagsError(
+        f"Invalid type for arg: {type(arg)}. Expected Mapping, Sequence, or None."
+    )

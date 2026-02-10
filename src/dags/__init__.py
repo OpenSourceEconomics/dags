@@ -1,3 +1,5 @@
+"""Tools to create executable DAGs from interdependent functions."""
+
 from __future__ import annotations
 
 from dags.annotations import get_annotations, get_free_arguments

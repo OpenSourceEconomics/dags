@@ -1,17 +1,20 @@
+"""Core DAG functionality for combining interdependent functions."""
+
 from __future__ import annotations
 
 import functools
 import inspect
 import warnings
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Literal, cast
+from typing import Any, Literal, cast
 
 import networkx as nx
 
 from dags.annotations import (
+    ensure_annotations_are_strings,
     get_annotations,
     get_free_arguments,
-    verify_annotations_are_strings,
 )
 from dags.exceptions import (
     AnnotationMismatchError,
@@ -21,12 +24,8 @@ from dags.exceptions import (
 )
 from dags.output import aggregated_output, dict_output, list_output, single_output
 from dags.signature import with_signature
+from dags.typing import T
 from dags.utils import format_list_linewise
-
-if TYPE_CHECKING:
-    from collections.abc import Callable
-
-    from dags.typing import T
 
 
 class DagsWarning(UserWarning):
@@ -37,7 +36,7 @@ class DagsWarning(UserWarning):
 class FunctionExecutionInfo:
     """Information about a function that is needed to execute it.
 
-    Attributes
+    Attributes:
     ----------
         name: The name of the function.
         func: The function to execute.
@@ -55,7 +54,7 @@ class FunctionExecutionInfo:
         argument_annotations: The argument annotations of the function.
         return_annotation: The return annotation of the function.
 
-    Raises
+    Raises:
     ------
         NonStringAnnotationError: If `verify_annotations` is `True` and the type
             annotations are not strings.
@@ -66,15 +65,13 @@ class FunctionExecutionInfo:
     func: Callable[..., Any]
     verify_annotations: bool = False
 
-    def __post_init__(self) -> None:
-        """Verify that the annotations are strings."""
-        if self.verify_annotations:
-            verify_annotations_are_strings(self.annotations, self.name)
-
     @functools.cached_property
     def annotations(self) -> dict[str, str]:
         """The annotations of the function."""
-        return get_annotations(self.func)
+        raw_annotations = get_annotations(self.func)
+        if self.verify_annotations:
+            return ensure_annotations_are_strings(raw_annotations)
+        return raw_annotations
 
     @property
     def arguments(self) -> list[str]:
@@ -92,9 +89,9 @@ class FunctionExecutionInfo:
         return self.annotations["return"]
 
 
-def concatenate_functions(
-    functions: dict[str, Callable[..., Any]] | list[Callable[..., Any]],
-    targets: str | list[str] | None = None,
+def concatenate_functions(  # noqa: PLR0913
+    functions: Mapping[str, Callable[..., Any]] | Sequence[Callable[..., Any]],
+    targets: str | Sequence[str] | None = None,
     *,
     dag: nx.DiGraph[str] | None = None,
     return_type: Literal["tuple", "list", "dict"] = "tuple",
@@ -149,11 +146,11 @@ def concatenate_functions(
             value that can be used to sort the nodes. This is used to sort the nodes
             in the topological sort. If None, the nodes are sorted alphabetically.
 
-    Returns
+    Returns:
     -------
         function: A function that produces targets when called with suitable arguments.
 
-    Raises
+    Raises:
     ------
         - NonStringAnnotationError: If `set_annotations` is `True` and the type
             annotations are not strings.
@@ -181,8 +178,8 @@ def concatenate_functions(
 
 
 def create_dag(
-    functions: dict[str, Callable[..., Any]] | list[Callable[..., Any]],
-    targets: str | list[str] | None,
+    functions: Mapping[str, Callable[..., Any]] | Sequence[Callable[..., Any]],
+    targets: str | Sequence[str] | None,
 ) -> nx.DiGraph[str]:
     """Build a directed acyclic graph (DAG) from functions.
 
@@ -199,7 +196,7 @@ def create_dag(
             list of such function names. If the value is `None`, all variables are
             returned.
 
-    Returns
+    Returns:
     -------
         dag: the DAG (as networkx.DiGraph object)
 
@@ -220,13 +217,14 @@ def create_dag(
     return dag
 
 
-def _create_combined_function_from_dag(
+def _create_combined_function_from_dag(  # noqa: PLR0913
     dag: nx.DiGraph[str],
-    functions: dict[str, Callable[..., Any]] | list[Callable[..., Any]],
-    targets: str | list[str] | None,
+    functions: Mapping[str, Callable[..., Any]] | Sequence[Callable[..., Any]],
+    targets: str | Sequence[str] | None,
     return_type: Literal["tuple", "list", "dict"] = "tuple",
     aggregator: Callable[[T, T], T] | None = None,
     aggregator_return_type: str | None = None,
+    *,
     enforce_signature: bool = True,
     set_annotations: bool = False,
     lexsort_key: Callable[[str], Any] | None = None,
@@ -248,6 +246,8 @@ def _create_combined_function_from_dag(
             targets are a single string or if an aggregator is provided.
         aggregator (callable or None): Binary reduction function that is used to
             aggregate the targets into a single target.
+        aggregator_return_type (str or None): The return type annotation for the
+            aggregated result. Only used when an aggregator is provided.
         enforce_signature (bool): If True, the signature of the concatenated function
             is enforced. Otherwise it is only provided for introspection purposes.
             Enforcing the signature has a small runtime overhead.
@@ -265,11 +265,11 @@ def _create_combined_function_from_dag(
             value that can be used to sort the nodes. This is used to sort the nodes
             in the topological sort. If None, the nodes are sorted alphabetically.
 
-    Returns
+    Returns:
     -------
         function: A function that produces targets when called with suitable arguments.
 
-    Raises
+    Raises:
     ------
         - NonStringAnnotationError: If `set_annotations` is `True` and the type
             annotations are not strings.
@@ -296,8 +296,8 @@ def _create_combined_function_from_dag(
         _exec_info,
         _arglist,
         _targets,
-        enforce_signature,
-        set_annotations,
+        enforce_signature=enforce_signature,
+        set_annotations=set_annotations,
     )
 
     # Update the actual return type, as well as the return annotation of the
@@ -354,8 +354,9 @@ def _create_combined_function_from_dag(
 
 
 def get_ancestors(
-    functions: dict[str, Callable[..., Any]] | list[Callable[..., Any]],
-    targets: str | list[str] | None,
+    functions: Mapping[str, Callable[..., Any]] | Sequence[Callable[..., Any]],
+    targets: str | Sequence[str] | None,
+    *,
     include_targets: bool = False,
 ) -> set[str]:
     """Build a DAG and extract all ancestors of targets.
@@ -367,7 +368,7 @@ def get_ancestors(
         targets (str): Name of the function that produces the target function.
         include_targets (bool): Whether to include the target as its own ancestor.
 
-    Returns
+    Returns:
     -------
         set: The ancestors
 
@@ -390,8 +391,8 @@ def get_ancestors(
 
 
 def harmonize_and_check_functions_and_targets(
-    functions: dict[str, Callable[..., Any]] | list[Callable[..., Any]],
-    targets: str | list[str] | None,
+    functions: Mapping[str, Callable[..., Any]] | Sequence[Callable[..., Any]],
+    targets: str | Sequence[str] | None,
 ) -> tuple[dict[str, Callable[..., Any]], list[str]]:
     """Harmonize the type of specified functions and targets and do some checks.
 
@@ -402,7 +403,7 @@ def harmonize_and_check_functions_and_targets(
         targets (str or list): Name of the function that produces the target or list of
             such function names.
 
-    Returns
+    Returns:
     -------
         functions_harmonized: harmonized functions
         targets_harmonized: harmonized targets
@@ -417,25 +418,22 @@ def harmonize_and_check_functions_and_targets(
 
 
 def _harmonize_functions(
-    functions: dict[str, Callable[..., Any]] | list[Callable[..., Any]],
+    functions: Mapping[str, Callable[..., Any]] | Sequence[Callable[..., Any]],
 ) -> dict[str, Callable[..., Any]]:
-    if not isinstance(functions, dict):
-        functions_dict = {func.__name__: func for func in functions}  # ty: ignore[unresolved-attribute]
-    else:
-        functions_dict = functions
-
-    return functions_dict
+    if isinstance(functions, Mapping):
+        return {k: v for k, v in functions.items()}  # noqa: C416  # ty: ignore[invalid-return-type]
+    return {func.__name__: func for func in functions}  # ty: ignore[unresolved-attribute]
 
 
 def _harmonize_targets(
-    targets: str | list[str] | None,
+    targets: str | Sequence[str] | None,
     function_names: list[str],
 ) -> list[str]:
     if targets is None:
-        targets = function_names
-    elif isinstance(targets, str):
-        targets = [targets]
-    return targets
+        return function_names
+    if isinstance(targets, str):
+        return [targets]
+    return list(targets)
 
 
 def _fail_if_targets_have_wrong_types(
@@ -461,7 +459,6 @@ def _fail_if_functions_are_missing(
 def _fail_if_dag_contains_cycle(dag: nx.DiGraph[str]) -> None:
     """Check for cycles in DAG."""
     cycles = list(nx.simple_cycles(dag))
-
     if len(cycles) > 0:
         formatted = format_list_linewise(cycles)
         msg = f"The DAG contains one or more cycles:\n{formatted}"
@@ -479,7 +476,7 @@ def _create_complete_dag(
     Args:
         functions (dict): Dictionary containing functions to build the DAG.
 
-    Returns
+    Returns:
     -------
         networkx.DiGraph: The complete DAG
 
@@ -500,7 +497,7 @@ def _limit_dag_to_targets_and_their_ancestors(
         dag (networkx.DiGraph): The complete DAG.
         targets (str): Variable of interest.
 
-    Returns
+    Returns:
     -------
         networkx.DiGraph: The pruned DAG.
 
@@ -508,7 +505,6 @@ def _limit_dag_to_targets_and_their_ancestors(
     used_nodes = set(targets)
     for target in targets:
         used_nodes = used_nodes | set(nx.ancestors(dag, target))
-
     all_nodes = set(dag.nodes)
 
     unused_nodes = all_nodes - used_nodes
@@ -528,7 +524,7 @@ def create_arguments_of_concatenated_function(
         functions (dict): Dictionary containing functions to build the DAG.
         dag (networkx.DiGraph): The complete DAG.
 
-    Returns
+    Returns:
     -------
         list: The arguments of the concatenated function.
 
@@ -541,6 +537,7 @@ def create_arguments_of_concatenated_function(
 def create_execution_info(
     functions: dict[str, Callable[..., Any]],
     dag: nx.DiGraph[str],
+    *,
     verify_annotations: bool = False,
     lexsort_key: Callable[[str], Any] | None = None,
 ) -> dict[str, FunctionExecutionInfo]:
@@ -554,12 +551,12 @@ def create_execution_info(
             value that can be used to sort the nodes. This is used to sort the nodes
             in the topological sort. If None, the nodes are sorted alphabetically.
 
-    Returns
+    Returns:
     -------
         dict: Dictionary with functions and their arguments for each node in the DAG.
             The functions are already in topological_sort order.
 
-    Raises
+    Raises:
     ------
         NonStringAnnotationError: If `verify_annotations` is `True` and the type
             annotations are not strings.
@@ -580,6 +577,7 @@ def _create_concatenated_function(
     execution_info: dict[str, FunctionExecutionInfo],
     arglist: list[str],
     targets: list[str],
+    *,
     enforce_signature: bool,
     set_annotations: bool,
 ) -> Callable[..., tuple[Any, ...]]:
@@ -605,7 +603,7 @@ def _create_concatenated_function(
             __future__ import annotations" at the top of your file. An
             AnnotationMismatchError is raised if annotations differ between functions.
 
-    Returns
+    Returns:
     -------
         The concatenated function
 
@@ -661,7 +659,7 @@ def _infer_aggregator_return_type(
         explicit_type: Explicitly provided return type, if any.
         target_types: The return types of the target functions.
 
-    Returns
+    Returns:
     -------
         The inferred return type as a string, or None if inference failed.
 
@@ -700,13 +698,13 @@ def get_annotations_from_execution_info(
         arglist: The list of arguments of the concatenated function.
         targets: The list of targets of the concatenated function.
 
-    Returns
+    Returns:
     -------
         - Dictionary with argument names as keys and their expected types in string
           format as values.
         - The expected type of the return value as a string.
 
-    Raises
+    Raises:
     ------
         AnnotationMismatchError: If there are incompatible annotations in the DAG's
             components.
