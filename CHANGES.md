@@ -6,7 +6,7 @@ releases are available on [conda-forge](https://anaconda.org/conda-forge/dags).
 
 ## 0.5.0
 
-- :gh:`63` Build docs using pixi, update docs (:ghuser:`hmgaudecker`).
+- :gh:`65` Update docs and use Jupyter Book for documentation (:ghuser:`hmgaudecker`).
 
 - :gh:`72` Improved pre-commit hooks, remove type checking blocks
   (:ghuser:`hmgaudecker`).

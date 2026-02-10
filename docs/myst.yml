@@ -17,7 +17,8 @@ project:
     - functions
     - python
   github: https://github.com/OpenSourceEconomics/dags
-  jupyter: true
+  jupyter:
+    execute: force
   toc:
     - file: index.md
     - file: getting_started.md
