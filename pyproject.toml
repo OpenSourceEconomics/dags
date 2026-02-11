@@ -161,8 +161,8 @@ mystmd = "*"
 numpy = "*"
 
 [tool.pixi.feature.docs.tasks]
-docs = { cmd = "jupyter book build --html", cwd = "docs" }
-view-docs = { cmd = "jupyter book start", cwd = "docs" }
+docs = { cmd = "jupyter book build --html --execute", cwd = "docs" }
+view-docs = { cmd = "jupyter book start --execute", cwd = "docs" }
 
 [tool.pixi.feature.py311.dependencies]
 python = "~=3.11.0"
