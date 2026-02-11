@@ -209,6 +209,6 @@ def test_rename_arguments_direct_call_annotated() -> None:
 def test_with_signature_invalid_args_type() -> None:
     with pytest.raises(DagsError, match="Invalid type for arg"):
 
-        @with_signature(args="invalid")  # ty: ignore[invalid-argument-type]
+        @with_signature(args="invalid")
         def f(*args, **kwargs):
             pass

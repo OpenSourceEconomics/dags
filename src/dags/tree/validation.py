@@ -12,6 +12,8 @@ from dags.tree.tree_utils import tree_path_from_qname, tree_paths
 from dags.utils import format_list_linewise
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from dags.tree.typing import (
         NestedFunctionDict,
         NestedInputDict,
@@ -27,7 +29,7 @@ def fail_if_paths_are_invalid(  # noqa: PLR0913
     data_tree: NestedStructureDict | None = None,
     input_structure: NestedInputDict | None = None,
     targets: NestedTargetDict | None = None,
-    top_level_namespace: set[str] | list[str] | tuple[str, ...] = (),
+    top_level_namespace: set[str] | Sequence[str] = (),
 ) -> None:
     """Fail if the paths in the (different parts of the) functions tree are invalid.
 

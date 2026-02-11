@@ -28,7 +28,7 @@ from dags.tree.validation import (
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Sequence
 
     import networkx as nx
 
@@ -45,7 +45,7 @@ if TYPE_CHECKING:
 def create_tree_with_input_types(
     functions: NestedFunctionDict,
     targets: NestedTargetDict | None = None,
-    top_level_inputs: set[str] | list[str] | tuple[str, ...] = (),
+    top_level_inputs: set[str] | Sequence[str] = (),
 ) -> NestedInputStructureDict:
     """Create a nested input structure template based on the functions and targets.
 
