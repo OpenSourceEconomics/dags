@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from collections.abc import Callable, Sequence
+from typing import Any
+
+import networkx as nx
 
 from dags.dag import (
     concatenate_functions,
@@ -23,23 +26,17 @@ from dags.tree.tree_utils import (
     tree_paths,
     unflatten_from_qnames,
 )
+from dags.tree.typing import (
+    NestedFunctionDict,
+    NestedInputDict,
+    NestedInputStructureDict,
+    NestedOutputDict,
+    NestedTargetDict,
+    QNameFunctionDict,
+)
 from dags.tree.validation import (
     fail_if_paths_are_invalid,
 )
-
-if TYPE_CHECKING:
-    from collections.abc import Callable, Sequence
-
-    import networkx as nx
-
-    from dags.tree.typing import (
-        NestedFunctionDict,
-        NestedInputDict,
-        NestedInputStructureDict,
-        NestedOutputDict,
-        NestedTargetDict,
-        QNameFunctionDict,
-    )
 
 
 def create_tree_with_input_types(

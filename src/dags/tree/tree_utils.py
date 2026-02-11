@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 import re
-from typing import TYPE_CHECKING
 
 import flatten_dict as fd
 
-if TYPE_CHECKING:
-    from dags.tree.typing import FlatQNameDict, FlatTreePathDict, NestedStructureDict
+from dags.tree.typing import FlatQNameDict, FlatTreePathDict, NestedStructureDict
 
 # Constants for qualified names
 QNAME_DELIMITER: str = "__"

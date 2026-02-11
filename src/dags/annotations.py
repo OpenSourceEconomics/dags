@@ -2,13 +2,10 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Literal, overload
-
-if TYPE_CHECKING:
-    from collections.abc import Callable
-
 import functools
 import inspect
+from collections.abc import Callable
+from typing import Any, Literal, overload
 
 
 def get_free_arguments(

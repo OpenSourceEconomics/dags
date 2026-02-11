@@ -4,17 +4,13 @@ from __future__ import annotations
 
 import functools
 import inspect
-from typing import TYPE_CHECKING, overload
+from collections.abc import Callable, Sequence
+from typing import Any, overload
+
+from typing_extensions import Unpack
 
 from dags.exceptions import DagsError
-
-if TYPE_CHECKING:
-    from collections.abc import Callable, Sequence
-    from typing import Any
-
-    from typing_extensions import Unpack
-
-    from dags.typing import MixedTupleType, P, T
+from dags.typing import MixedTupleType, P, T
 
 
 def _apply_return_annotation(

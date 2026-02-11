@@ -2,25 +2,21 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from collections.abc import Sequence
 
 from dags.tree.exceptions import (
     RepeatedTopLevelElementError,
     TrailingUnderscoreError,
 )
 from dags.tree.tree_utils import tree_path_from_qname, tree_paths
+from dags.tree.typing import (
+    NestedFunctionDict,
+    NestedInputDict,
+    NestedStructureDict,
+    NestedTargetDict,
+    QNameFunctionDict,
+)
 from dags.utils import format_list_linewise
-
-if TYPE_CHECKING:
-    from collections.abc import Sequence
-
-    from dags.tree.typing import (
-        NestedFunctionDict,
-        NestedInputDict,
-        NestedStructureDict,
-        NestedTargetDict,
-        QNameFunctionDict,
-    )
 
 
 def fail_if_paths_are_invalid(  # noqa: PLR0913

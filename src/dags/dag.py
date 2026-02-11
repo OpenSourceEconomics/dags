@@ -5,9 +5,9 @@ from __future__ import annotations
 import functools
 import inspect
 import warnings
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Literal, cast
+from typing import Any, Literal, cast
 
 import networkx as nx
 
@@ -24,12 +24,8 @@ from dags.exceptions import (
 )
 from dags.output import aggregated_output, dict_output, list_output, single_output
 from dags.signature import with_signature
+from dags.typing import T
 from dags.utils import format_list_linewise
-
-if TYPE_CHECKING:
-    from collections.abc import Callable
-
-    from dags.typing import T
 
 
 class DagsWarning(UserWarning):

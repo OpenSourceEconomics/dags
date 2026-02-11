@@ -4,16 +4,12 @@ from __future__ import annotations
 
 import functools
 import inspect
-from collections.abc import Mapping, Sequence
-from typing import TYPE_CHECKING, Any, cast, overload
+from collections.abc import Callable, Mapping, Sequence
+from typing import Any, cast, overload
 
 from dags.annotations import get_annotations
 from dags.exceptions import DagsError, InvalidFunctionArgumentsError
-
-if TYPE_CHECKING:
-    from collections.abc import Callable
-
-    from dags.typing import P, R
+from dags.typing import P, R
 
 
 def _create_signature(
