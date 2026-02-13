@@ -1,7 +1,5 @@
 """Core DAG functionality for combining interdependent functions."""
 
-from __future__ import annotations
-
 import functools
 import inspect
 import warnings
@@ -93,7 +91,7 @@ def concatenate_functions(  # noqa: PLR0913
     functions: Mapping[str, Callable[..., Any]] | Sequence[Callable[..., Any]],
     targets: str | Sequence[str] | None = None,
     *,
-    dag: nx.DiGraph[str] | None = None,
+    dag: nx.DiGraph | None = None,
     return_type: Literal["tuple", "list", "dict"] = "tuple",
     aggregator: Callable[[T, T], T] | None = None,
     aggregator_return_type: str | None = None,
@@ -180,7 +178,7 @@ def concatenate_functions(  # noqa: PLR0913
 def create_dag(
     functions: Mapping[str, Callable[..., Any]] | Sequence[Callable[..., Any]],
     targets: str | Sequence[str] | None,
-) -> nx.DiGraph[str]:
+) -> nx.DiGraph:
     """Build a directed acyclic graph (DAG) from functions.
 
     Functions can depend on the output of other functions as inputs, as long as the
@@ -218,7 +216,7 @@ def create_dag(
 
 
 def _create_combined_function_from_dag(  # noqa: PLR0913
-    dag: nx.DiGraph[str],
+    dag: nx.DiGraph,
     functions: Mapping[str, Callable[..., Any]] | Sequence[Callable[..., Any]],
     targets: str | Sequence[str] | None,
     return_type: Literal["tuple", "list", "dict"] = "tuple",
@@ -456,7 +454,7 @@ def _fail_if_functions_are_missing(
         raise MissingFunctionsError(msg)
 
 
-def _fail_if_dag_contains_cycle(dag: nx.DiGraph[str]) -> None:
+def _fail_if_dag_contains_cycle(dag: nx.DiGraph) -> None:
     """Check for cycles in DAG."""
     cycles = list(nx.simple_cycles(dag))
     if len(cycles) > 0:
@@ -467,7 +465,7 @@ def _fail_if_dag_contains_cycle(dag: nx.DiGraph[str]) -> None:
 
 def _create_complete_dag(
     functions: dict[str, Callable[..., Any]],
-) -> nx.DiGraph[str]:
+) -> nx.DiGraph:
     """Create the complete DAG.
 
     This DAG is constructed from all functions and not pruned by specified root nodes or
@@ -488,9 +486,9 @@ def _create_complete_dag(
 
 
 def _limit_dag_to_targets_and_their_ancestors(
-    dag: nx.DiGraph[str],
+    dag: nx.DiGraph,
     targets: list[str],
-) -> nx.DiGraph[str]:
+) -> nx.DiGraph:
     """Limit DAG to targets and their ancestors.
 
     Args:
@@ -516,7 +514,7 @@ def _limit_dag_to_targets_and_their_ancestors(
 
 def create_arguments_of_concatenated_function(
     functions: dict[str, Callable[..., Any]],
-    dag: nx.DiGraph[str],
+    dag: nx.DiGraph,
 ) -> list[str]:
     """Create the signature of the concatenated function.
 
@@ -536,7 +534,7 @@ def create_arguments_of_concatenated_function(
 
 def create_execution_info(
     functions: dict[str, Callable[..., Any]],
-    dag: nx.DiGraph[str],
+    dag: nx.DiGraph,
     *,
     verify_annotations: bool = False,
     lexsort_key: Callable[[str], Any] | None = None,

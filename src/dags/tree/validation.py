@@ -1,7 +1,5 @@
 """Validation utilities for DAG trees."""
 
-from __future__ import annotations
-
 from collections.abc import Sequence
 
 from dags.tree.exceptions import (

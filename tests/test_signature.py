@@ -1,3 +1,4 @@
+# Required because tests assert that annotations are strings.
 from __future__ import annotations
 
 import inspect

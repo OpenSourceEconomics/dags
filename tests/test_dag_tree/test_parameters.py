@@ -1,9 +1,7 @@
 """Tests for parameters handling in dag_tree."""
 
-from __future__ import annotations
-
 import inspect
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import pytest
 
@@ -14,13 +12,11 @@ from dags.tree.dag_tree import (
     _map_parameters_rel_to_abs,
     functions_without_tree_logic,
 )
-
-if TYPE_CHECKING:
-    from dags.tree.typing import (
-        Callable,
-        NestedFunctionDict,
-        NestedInputStructureDict,
-    )
+from dags.tree.typing import (
+    Callable,
+    NestedFunctionDict,
+    NestedInputStructureDict,
+)
 
 
 def f():
