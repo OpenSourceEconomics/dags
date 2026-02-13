@@ -1,15 +1,7 @@
 """Utilities for working with nested/flat dictionaries, tree paths, qualified names."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
-
 import pytest
 
-if TYPE_CHECKING:
-    from dags.tree.typing import NestedFunctionDict
-
-# Import fixtures
 from dags.tree.tree_utils import (
     _is_python_identifier,
     flatten_to_qnames,
@@ -21,6 +13,7 @@ from dags.tree.tree_utils import (
     unflatten_from_qnames,
     unflatten_from_tree_paths,
 )
+from dags.tree.typing import NestedFunctionDict
 
 
 @pytest.mark.parametrize(

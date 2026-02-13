@@ -1,7 +1,6 @@
-from __future__ import annotations
-
 import inspect
-from typing import TYPE_CHECKING, Any
+from collections.abc import Callable
+from typing import Any
 
 import pytest
 
@@ -12,18 +11,14 @@ from dags.output import (
     single_output,
 )
 
-if TYPE_CHECKING:
-    from collections.abc import Callable
-
 
 @pytest.fixture
 def f():
     def _f(foo: bool):
         return (int(foo), 2.0)
 
-    # We need to set the annotations via __annotations__, because if we set it directly
-    # during the function definition, the return annotation will be converted to a
-    # single string, because of the from __future__ import annotations statement.
+    # We need to set the annotations via __annotations__ to get a tuple return
+    # annotation, because Python doesn't support tuple syntax in annotation positions.
     _f.__annotations__ = {"foo": "bool", "return": ("int", "float")}
     return _f
 

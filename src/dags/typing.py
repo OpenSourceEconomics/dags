@@ -1,7 +1,5 @@
 """Type definitions used across the dags package."""
 
-from __future__ import annotations
-
 from typing import ParamSpec, TypeVar
 
 from typing_extensions import TypeVarTuple

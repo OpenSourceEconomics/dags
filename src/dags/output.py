@@ -1,7 +1,5 @@
 """Output format converters for concatenated functions."""
 
-from __future__ import annotations
-
 import functools
 import inspect
 from collections.abc import Callable, Sequence

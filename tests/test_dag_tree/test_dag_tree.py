@@ -1,21 +1,16 @@
 """Tests for the dag_tree module."""
 
-from __future__ import annotations
-
 import functools
-from typing import TYPE_CHECKING
 
 import pytest
 
 from dags.tree import concatenate_functions_tree
-
-if TYPE_CHECKING:
-    from dags.tree.typing import (
-        NestedFunctionDict,
-        NestedInputDict,
-        NestedOutputDict,
-        NestedTargetDict,
-    )
+from dags.tree.typing import (
+    NestedFunctionDict,
+    NestedInputDict,
+    NestedOutputDict,
+    NestedTargetDict,
+)
 
 
 def f(g: int, a: int, b: float) -> float:
