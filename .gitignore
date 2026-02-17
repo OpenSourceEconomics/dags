@@ -137,3 +137,7 @@ venv.bak/
 
 
 src/dags/_version.py
+docs/_build/
+
+# MyST build outputs
+_build

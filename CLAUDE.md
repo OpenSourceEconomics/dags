@@ -23,14 +23,24 @@ Available Python environments: `py310`, `py311`, `py312`, `py313`, `py314`
 ### Type Checking
 
 ```bash
-pixi run ty check src tests
+pixi run ty
 ```
 
 ### Linting & Formatting
 
 ```bash
-pixi run pre-commit run --all-files
+pixi run prek run --all-files
 ```
+
+### Building Docs
+
+```bash
+pixi run -e docs docs          # Build HTML docs with Jupyter Book
+pixi run -e docs view-docs     # Live preview of docs
+```
+
+Documentation uses **Jupyter Book 2.0** with **MyST** markdown. Config is in
+`docs/myst.yml`. Docs include executable Jupyter notebooks.
 
 ## Project Structure
 
@@ -43,9 +53,16 @@ src/dags/
 ├── signature.py        # Function signature utilities
 └── tree/               # Tree-related utilities
 
+docs/
+├── myst.yml             # Jupyter Book config
+├── index.md             # Homepage
+├── getting_started.md   # Getting started guide
+├── usage_patterns.ipynb # Interactive examples notebook
+└── tree.md              # Tree utilities docs
+
 tests/
-├── test_annotations.py # Annotation tests
-├── test_dag.py        # DAG concatenation tests
+├── test_annotations.py  # Annotation tests
+├── test_dag.py          # DAG concatenation tests
 └── ...
 ```
 
@@ -59,7 +76,8 @@ tests/
 
 ## Code Style
 
-- Uses `from __future__ import annotations` for string annotations
-- Ruff for linting (target: Python 3.10)
+- Does **not** use `from __future__ import annotations` or `TYPE_CHECKING` blocks
+- Ruff for linting (target: Python 3.11)
 - ty for type checking (all rules set to error)
 - NumPy docstring convention
+- User-facing APIs accept `Sequence` (not `list`) for input parameters

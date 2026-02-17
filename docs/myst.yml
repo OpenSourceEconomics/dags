@@ -1,0 +1,32 @@
+---
+# Jupyter Book 2.0 configuration
+# See: https://jupyterbook.org/
+version: 1
+project:
+  id: dags
+  title: dags
+  description: >-
+    Tools to create executable DAGs from interdependent functions.
+  authors:
+    - name: Janos Gabler
+      email: janos.gabler@gmail.com
+    - name: Tobias Raabe
+  keywords:
+    - dag
+    - directed acyclic graph
+    - functions
+    - python
+  github: https://github.com/OpenSourceEconomics/dags
+  jupyter: true
+  toc:
+    - file: index.md
+    - file: getting_started.md
+    - file: usage_patterns.ipynb
+    - file: tree.md
+  error_rules:
+    - rule: link-resolves
+      severity: ignore
+site:
+  template: book-theme
+  options:
+    logo_text: dags

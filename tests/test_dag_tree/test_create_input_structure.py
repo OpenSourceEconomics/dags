@@ -1,19 +1,16 @@
 """Tests for the dag_tree module."""
 
+# Required because tests assert that annotations are strings.
 from __future__ import annotations
-
-from typing import TYPE_CHECKING
 
 import pytest
 
 from dags.tree import RepeatedTopLevelElementError, create_tree_with_input_types
-
-if TYPE_CHECKING:
-    from dags.tree.typing import (
-        NestedFunctionDict,
-        NestedInputStructureDict,
-        NestedTargetDict,
-    )
+from dags.tree.typing import (
+    NestedFunctionDict,
+    NestedInputStructureDict,
+    NestedTargetDict,
+)
 
 
 def f(g: int, a: int, b: float, c) -> float:

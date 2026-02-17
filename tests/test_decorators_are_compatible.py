@@ -1,16 +1,12 @@
-from __future__ import annotations
-
 import inspect
+from collections.abc import Callable
 from functools import partial
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import pytest
 
 from dags.output import aggregated_output, dict_output, list_output, single_output
 from dags.signature import with_signature
-
-if TYPE_CHECKING:
-    from collections.abc import Callable
 
 decorators = [
     single_output,

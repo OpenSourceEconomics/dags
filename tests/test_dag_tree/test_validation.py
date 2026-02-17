@@ -1,7 +1,5 @@
 """Tests for the validation module in dag_tree."""
 
-from __future__ import annotations
-
 from typing import Literal
 
 import pytest
