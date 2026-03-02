@@ -6,7 +6,7 @@ requires = [ "hatch-vcs", "hatchling" ]
 name = "dags"
 description = "Tools to create executable dags from interdependent functions."
 readme = { file = "README.md", content-type = "text/markdown" }
-keywords = [  ]
+keywords = []
 license = { file = "LICENSE" }
 maintainers = [
   { name = "Hans-Martin von Gaudecker", email = "hmgaudecker@uni-bonn.de" },
@@ -36,33 +36,23 @@ dependencies = [
   "flatten-dict",
   "networkx>=3.6",
 ]
-
 urls.Github = "https://github.com/OpenSourceEconomics/dags"
 urls.Repository = "https://github.com/OpenSourceEconomics/dags"
 urls.Tracker = "https://github.com/OpenSourceEconomics/dags/issues"
 
-[tool.hatch.build.hooks.vcs]
-version-file = "src/dags/_version.py"
-
-[tool.hatch.build.targets.sdist]
-exclude = [ "tests" ]
-only-packages = true
-
-[tool.hatch.build.targets.wheel]
-only-include = [ "src" ]
-sources = [ "src" ]
-
-[tool.hatch.metadata]
-allow-direct-references = true
-
-[tool.hatch.version]
-source = "vcs"
+[tool.hatch]
+build.hooks.vcs.version-file = "src/dags/_version.py"
+build.targets.sdist.exclude = [ "tests" ]
+build.targets.sdist.only-packages = true
+build.targets.wheel.only-include = [ "src" ]
+build.targets.wheel.sources = [ "src" ]
+metadata.allow-direct-references = true
+version.source = "vcs"
 
 [tool.ruff]
 target-version = "py311"
 fix = true
 unsafe-fixes = false
-
 lint.select = [ "ALL" ]
 lint.extend-ignore = [
   "ANN401", # Dynamically typed expressions (typing.Any) are disallowed
@@ -110,81 +100,61 @@ lint.per-file-ignores."tests/test_dag.py" = [
 ]
 lint.pydocstyle.convention = "google"
 
-[tool.pytest.ini_options]
-addopts = [ "--pdbcls=pdbp:Pdb" ]
-filterwarnings = [  ]
-markers = [
+[tool.pytest]
+ini_options.addopts = [ "--pdbcls=pdbp:Pdb" ]
+ini_options.filterwarnings = []
+ini_options.markers = [
   "wip: Tests that are work-in-progress.",
   "slow: Tests that take a long time to run and are skipped in continuous integration.",
 ]
-norecursedirs = [ "docs" ]
+ini_options.norecursedirs = [ "docs" ]
 
-[tool.ty.rules]
-ambiguous-protocol-member = "error"
-deprecated = "error"
-division-by-zero = "error"
-ignore-comment-unknown-rule = "error"
-invalid-argument-type = "error"
-invalid-ignore-comment = "error"
-invalid-return-type = "error"
-possibly-missing-attribute = "error"
-possibly-missing-implicit-call = "error"
-possibly-missing-import = "error"
-possibly-unresolved-reference = "error"
-redundant-cast = "error"
-undefined-reveal = "error"
-unresolved-global = "error"
-unsupported-base = "error"
-unused-ignore-comment = "error"
-useless-overload-body = "error"
-
-[tool.ty.src]
-exclude = [ "docs/source/example/example.ipynb" ]
-
-[tool.pixi.dependencies]
-jupyterlab = "*"
-prek = "*"
-python = ">=3.11,<3.15"
-
-[tool.pixi.environments]
-py311 = [ "py311", "tests" ]
-py312 = [ "py312", "tests" ]
-py313 = [ "py313", "tests" ]
-py314 = [ "py314", "tests" ]
-
-[tool.pixi.feature.py311.dependencies]
-python = "~=3.11.0"
-
-[tool.pixi.feature.py312.dependencies]
-python = "~=3.12.0"
-
-[tool.pixi.feature.py313.dependencies]
-python = "~=3.13.0"
-
-[tool.pixi.feature.py314.dependencies]
-python = "~=3.14.0"
-
-[tool.pixi.feature.tests.pypi-dependencies]
-pytest = "*"
-pytest-cov = "*"
-pytest-xdist = "*"
-ty = "*"
-types-networkx = "*"
-
-[tool.pixi.feature.tests.tasks]
-tests = "pytest"
-tests-with-cov = "pytest --cov-report=xml --cov=./"
-ty = "ty check"
-
-[tool.pixi.pypi-dependencies]
-dags = { path = ".", editable = true }
-pdbp = "*"
-
-[tool.pixi.workspace]
-channels = [ "conda-forge" ]
-platforms = [ "linux-64", "osx-64", "osx-arm64", "win-64" ]
+[tool.ty]
+rules.ambiguous-protocol-member = "error"
+rules.deprecated = "error"
+rules.division-by-zero = "error"
+rules.ignore-comment-unknown-rule = "error"
+rules.invalid-argument-type = "error"
+rules.invalid-ignore-comment = "error"
+rules.invalid-return-type = "error"
+rules.possibly-missing-attribute = "error"
+rules.possibly-missing-implicit-call = "error"
+rules.possibly-missing-import = "error"
+rules.possibly-unresolved-reference = "error"
+rules.redundant-cast = "error"
+rules.undefined-reveal = "error"
+rules.unresolved-global = "error"
+rules.unsupported-base = "error"
+rules.unused-ignore-comment = "error"
+rules.useless-overload-body = "error"
+src.exclude = [ "docs/source/example/example.ipynb" ]
 
 [tool.yamlfix]
 line_length = 88
 none_representation = "null"
 sequence_style = "block_style"
+
+[tool.pixi]
+dependencies.jupyterlab = "*"
+dependencies.prek = "*"
+dependencies.python = ">=3.11,<3.15"
+environments.py311 = [ "py311", "tests" ]
+environments.py312 = [ "py312", "tests" ]
+environments.py313 = [ "py313", "tests" ]
+environments.py314 = [ "py314", "tests" ]
+feature.py311.dependencies.python = "~=3.11.0"
+feature.py312.dependencies.python = "~=3.12.0"
+feature.py313.dependencies.python = "~=3.13.0"
+feature.py314.dependencies.python = "~=3.14.0"
+feature.tests.pypi-dependencies.pytest = "*"
+feature.tests.pypi-dependencies.pytest-cov = "*"
+feature.tests.pypi-dependencies.pytest-xdist = "*"
+feature.tests.pypi-dependencies.ty = "*"
+feature.tests.pypi-dependencies.types-networkx = "*"
+feature.tests.tasks.tests = "pytest"
+feature.tests.tasks.tests-with-cov = "pytest --cov-report=xml --cov=./"
+feature.tests.tasks.ty = "ty check"
+pypi-dependencies.dags = { path = ".", editable = true }
+pypi-dependencies.pdbp = "*"
+workspace.channels = [ "conda-forge" ]
+workspace.platforms = [ "linux-64", "osx-64", "osx-arm64", "win-64" ]
