@@ -3,9 +3,7 @@
 import functools
 import inspect
 from collections.abc import Callable, Sequence
-from typing import Any, overload
-
-from typing_extensions import Unpack
+from typing import Any, Unpack, overload
 
 from dags.exceptions import DagsError
 from dags.typing import MixedTupleType, P, T
