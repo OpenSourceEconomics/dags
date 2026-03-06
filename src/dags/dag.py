@@ -743,7 +743,7 @@ def get_annotations_from_execution_info(
 
                 errors.append(
                     f"function {name} has the argument type annotation '{arg}: "
-                    f"{current_type}', but {explanation}"
+                    f"{current_type}',\nbut {explanation}"
                 )
 
         types.update(info.argument_annotations)
