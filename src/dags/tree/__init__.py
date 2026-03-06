@@ -23,7 +23,7 @@ from dags.tree.tree_utils import (
     unflatten_from_tree_paths,
 )
 from dags.tree.validation import (
-    fail_if_path_elements_have_trailing_undersores,
+    fail_if_path_elements_have_trailing_underscores,
     fail_if_paths_are_invalid,
     fail_if_top_level_elements_repeated_in_paths,
     fail_if_top_level_elements_repeated_in_single_path,
@@ -38,7 +38,7 @@ __all__ = [
     "one_function_without_tree_logic",
     # Validation functions
     "fail_if_paths_are_invalid",
-    "fail_if_path_elements_have_trailing_undersores",
+    "fail_if_path_elements_have_trailing_underscores",
     "fail_if_top_level_elements_repeated_in_paths",
     "fail_if_top_level_elements_repeated_in_single_path",
     # Exceptions

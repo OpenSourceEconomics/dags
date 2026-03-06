@@ -77,14 +77,14 @@ def fail_if_paths_are_invalid(  # noqa: PLR0913
         | set(tree_paths(input_structure))
         | set(tree_paths(targets))
     )
-    fail_if_path_elements_have_trailing_undersores(all_tree_paths)
+    fail_if_path_elements_have_trailing_underscores(all_tree_paths)
     fail_if_top_level_elements_repeated_in_paths(
         all_tree_paths=all_tree_paths,
         top_level_namespace=set(top_level_namespace),
     )
 
 
-def fail_if_path_elements_have_trailing_undersores(
+def fail_if_path_elements_have_trailing_underscores(
     all_tree_paths: set[tuple[str, ...]],
 ) -> None:
     """Check if any element of the tree path except the leaf ends with an underscore.

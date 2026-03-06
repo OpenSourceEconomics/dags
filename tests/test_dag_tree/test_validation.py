@@ -9,7 +9,7 @@ from dags.tree.exceptions import (
     TrailingUnderscoreError,
 )
 from dags.tree.validation import (
-    fail_if_path_elements_have_trailing_undersores,
+    fail_if_path_elements_have_trailing_underscores,
     fail_if_top_level_elements_repeated_in_paths,
     fail_if_top_level_elements_repeated_in_single_path,
 )
@@ -23,15 +23,15 @@ from dags.tree.validation import (
         ({("a",), ("b_", "a")}, "raise"),
     ],
 )
-def test_fail_if_path_elements_have_trailing_undersores(
+def test_fail_if_path_elements_have_trailing_underscores(
     tree_paths: set[tuple[str, ...]],
     expected: Literal["raise", "pass"],
 ) -> None:
     if expected == "raise":
         with pytest.raises(TrailingUnderscoreError):
-            fail_if_path_elements_have_trailing_undersores(tree_paths)
+            fail_if_path_elements_have_trailing_underscores(tree_paths)
     else:
-        fail_if_path_elements_have_trailing_undersores(tree_paths)
+        fail_if_path_elements_have_trailing_underscores(tree_paths)
 
 
 @pytest.mark.parametrize(

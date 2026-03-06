@@ -19,10 +19,11 @@ project:
   github: https://github.com/OpenSourceEconomics/dags
   jupyter: true
   toc:
-    - file: index.md
-    - file: getting_started.md
+    - file: index.ipynb
+    - file: getting_started.ipynb
     - file: usage_patterns.ipynb
-    - file: tree.md
+    - file: tree.ipynb
+    - file: api.md
   error_rules:
     - rule: link-resolves
       severity: ignore
@@ -30,3 +31,4 @@ site:
   template: book-theme
   options:
     logo_text: dags
+    style: custom.css

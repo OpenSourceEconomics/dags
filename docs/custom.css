@@ -1,0 +1,11 @@
+/* Fix error traceback rendering in dark mode.
+   The theme sets a light pink background (.jupyter-error) with ANSI colors
+   designed for light terminals. Override the background for dark mode and
+   brighten the ANSI colors to work on a dark background. */
+.jupyter-error:is(.dark *) {
+  background-color: inherit !important;
+}
+
+.myst-jp-error-output span[style]:is(.dark *) {
+  background-color: transparent !important;
+}
