@@ -735,7 +735,7 @@ def get_annotations_from_execution_info(
             if earlier_type not in current_type and current_type not in earlier_type:
                 arg_is_function = arg in execution_info
                 if arg_is_function:
-                    explanation = f"function {arg} has return type: {earlier_type}."
+                    explanation = f"function {arg} has return type: '{earlier_type}'."
                 else:
                     explanation = (
                         f"type annotation '{arg}: {earlier_type}' is used elsewhere."

@@ -46,7 +46,7 @@ def test_argument_annotations_mismatch_with_return_annotation() -> None:
         AnnotationMismatchError,
         match=(
             r"function f has the argument type annotation 'g: int',\n"
-            r"but function g has return type: float."
+            r"but function g has return type: 'float'."
         ),
     ):
         concatenate_functions(functions=[f, g], set_annotations=True)
