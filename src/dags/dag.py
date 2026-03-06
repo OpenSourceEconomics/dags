@@ -619,11 +619,6 @@ def _create_concatenated_function(
         args = arglist
         return_annotation = inspect.Parameter.empty
 
-    @with_signature(
-        args=args,
-        enforce=enforce_signature,
-        return_annotation=return_annotation,
-    )
     def concatenated(*args: Any, **kwargs: Any) -> tuple[Any, ...]:
         results = {**dict(zip(arglist, args, strict=False)), **kwargs}
         for name, info in execution_info.items():
@@ -633,7 +628,13 @@ def _create_concatenated_function(
 
         return tuple(results[target] for target in targets)
 
-    return concatenated
+    concatenated.__name__ = "The concatenated function"
+    return with_signature(
+        concatenated,
+        args=args,
+        enforce=enforce_signature,
+        return_annotation=return_annotation,
+    )
 
 
 def _infer_aggregator_return_type(
