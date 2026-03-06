@@ -482,7 +482,7 @@ def _create_complete_dag(
     functions_arguments_dict = {
         name: get_free_arguments(function) for name, function in functions.items()
     }
-    return nx.DiGraph(functions_arguments_dict).reverse()
+    return nx.DiGraph(functions_arguments_dict).reverse()  # ty: ignore[invalid-argument-type]
 
 
 def _limit_dag_to_targets_and_their_ancestors(
