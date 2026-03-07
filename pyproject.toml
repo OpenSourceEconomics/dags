@@ -52,7 +52,6 @@ metadata.allow-direct-references = true
 version.source = "vcs"
 
 [tool.ruff]
-target-version = "py314"
 fix = true
 unsafe-fixes = false
 [tool.ruff.lint]
@@ -165,13 +164,13 @@ docs = [ "docs", "py314" ]
 py311 = [ "py311", "tests" ]
 py312 = [ "py312", "tests" ]
 py313 = [ "py313", "tests" ]
-py314 = [ "py314", "tests" ]
+py314 = [ "py314", "tests", "ty-task" ]
 [tool.pixi.feature.docs.dependencies]
 jupyter-book = ">=2.0"
 mystmd = "*"
 numpy = "*"
 [tool.pixi.feature.docs.tasks]
-docs = { cmd = "jupyter book build --html --execute", cwd = "docs" }
+build-docs = { cmd = "jupyter book build --html --execute", cwd = "docs" }
 view-docs = { cmd = "jupyter book start --execute", cwd = "docs" }
 [tool.pixi.feature.py311.dependencies]
 python = "~=3.11.0"
@@ -181,15 +180,19 @@ python = "~=3.12.0"
 python = "~=3.13.0"
 [tool.pixi.feature.py314.dependencies]
 python = "~=3.14.0"
+[tool.pixi.feature.tests.dependencies]
+numpy = "*"
 [tool.pixi.feature.tests.pypi-dependencies]
 pytest = "*"
 pytest-cov = "*"
 pytest-xdist = "*"
-ty = "*"
-types-networkx = "*"
 [tool.pixi.feature.tests.tasks]
 tests = "pytest"
 tests-with-cov = "pytest --cov-report=xml --cov=./"
+[tool.pixi.feature.ty-task.pypi-dependencies]
+ty = "*"
+types-networkx = "*"
+[tool.pixi.feature.ty-task.tasks]
 ty = "ty check"
 [tool.pixi.pypi-dependencies]
 dags = { path = ".", editable = true }

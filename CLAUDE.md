@@ -35,7 +35,7 @@ pixi run prek run --all-files
 ### Building Docs
 
 ```bash
-pixi run -e docs docs          # Build HTML docs with Jupyter Book
+pixi run -e docs build-docs    # Build HTML docs with Jupyter Book
 pixi run -e docs view-docs     # Live preview of docs
 ```
 
