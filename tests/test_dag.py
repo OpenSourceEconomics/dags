@@ -1,9 +1,11 @@
+# Required because tests assert that annotations are strings.
 from __future__ import annotations
 
 import inspect
 import warnings
+from collections.abc import Callable
 from functools import partial
-from typing import TYPE_CHECKING, Any, Literal
+from typing import Any, Literal
 
 import pytest
 
@@ -17,9 +19,6 @@ from dags.dag import (
     get_annotations,
 )
 from dags.exceptions import CyclicDependencyError, DagsError
-
-if TYPE_CHECKING:
-    from collections.abc import Callable
 
 
 def _utility(_consumption: float, _leisure: int, leisure_weight: float) -> float:

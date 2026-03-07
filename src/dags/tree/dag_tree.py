@@ -1,7 +1,5 @@
 """Functionality for concatenating functions in a DAG tree."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Sequence
 from typing import Any
 
@@ -82,7 +80,7 @@ def create_tree_with_input_types(
         targets=_targets,
     )
     arglist = create_arguments_of_concatenated_function(functions=_functions, dag=dag)
-    execution_info = create_execution_info(_functions, dag)
+    execution_info = create_execution_info(_functions, dag, verify_annotations=True)
     args = get_annotations_from_execution_info(
         execution_info,
         arglist=arglist,
@@ -95,7 +93,7 @@ def create_dag_tree(
     functions: NestedFunctionDict,
     inputs: NestedInputDict,
     targets: NestedTargetDict | None,
-) -> nx.DiGraph[str]:
+) -> nx.DiGraph:
     """Build a DAG from the given functions, targets, and input structure.
 
     Args:

@@ -1,10 +1,6 @@
 """Type definitions used across the dags package."""
 
-from __future__ import annotations
-
-from typing import ParamSpec, TypeVar
-
-from typing_extensions import TypeVarTuple
+from typing import ParamSpec, TypeVar, TypeVarTuple
 
 # ParamSpec representing the full signature (positional and keyword parameters) of a
 # callable

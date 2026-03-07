@@ -18,19 +18,29 @@ pixi run -e py314 tests          # Run tests with Python 3.14
 pixi run -e py313 tests-with-cov # Run tests with coverage
 ```
 
-Available Python environments: `py310`, `py311`, `py312`, `py313`, `py314`
+Available Python environments: `py311`, `py312`, `py313`, `py314`
 
 ### Type Checking
 
 ```bash
-pixi run ty check src tests
+pixi run ty
 ```
 
 ### Linting & Formatting
 
 ```bash
-pixi run pre-commit run --all-files
+pixi run prek run --all-files
 ```
+
+### Building Docs
+
+```bash
+pixi run -e docs build-docs    # Build HTML docs with Jupyter Book
+pixi run -e docs view-docs     # Live preview of docs
+```
+
+Documentation uses **Jupyter Book 2.0** with **MyST** markdown. Config is in
+`docs/myst.yml`. Docs include executable Jupyter notebooks.
 
 ## Project Structure
 
@@ -38,14 +48,26 @@ pixi run pre-commit run --all-files
 src/dags/
 ├── __init__.py          # Main exports
 ├── annotations.py       # Type annotation handling
-├── dag.py              # Core DAG functionality (concatenate_functions)
-├── exceptions.py       # Custom exceptions
-├── signature.py        # Function signature utilities
-└── tree/               # Tree-related utilities
+├── dag.py               # Core DAG functionality (concatenate_functions)
+├── exceptions.py        # Custom exceptions
+├── output.py            # Output processing utilities
+├── signature.py         # Function signature utilities
+├── typing.py            # Type definitions
+├── utils.py             # General utilities
+└── tree/                # Tree-related utilities
+
+docs/
+├── myst.yml             # Jupyter Book config
+├── index.ipynb          # Homepage
+├── getting_started.ipynb # Getting started guide
+├── usage_patterns.ipynb # Interactive examples notebook
+├── tree.ipynb           # Tree utilities docs
+└── api.md               # API reference
 
 tests/
-├── test_annotations.py # Annotation tests
-├── test_dag.py        # DAG concatenation tests
+├── test_annotations.py  # Annotation tests
+├── test_dag.py          # DAG concatenation tests
+├── test_signature.py    # Signature tests
 └── ...
 ```
 
@@ -59,7 +81,8 @@ tests/
 
 ## Code Style
 
-- Uses `from __future__ import annotations` for string annotations
-- Ruff for linting (target: Python 3.10)
+- Does **not** use `from __future__ import annotations` or `TYPE_CHECKING` blocks
+- Ruff for linting (target: Python 3.11)
 - ty for type checking (all rules set to error)
-- NumPy docstring convention
+- Google docstring convention
+- User-facing APIs accept `Sequence` (not `list`) for input parameters

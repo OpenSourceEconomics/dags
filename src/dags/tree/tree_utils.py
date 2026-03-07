@@ -1,7 +1,5 @@
 """Utilities for handling qualified names in nested dictionaries."""
 
-from __future__ import annotations
-
 import re
 
 import flatten_dict as fd

@@ -1,7 +1,5 @@
 """Core DAG functionality for combining interdependent functions."""
 
-from __future__ import annotations
-
 import functools
 import inspect
 import warnings
@@ -93,7 +91,7 @@ def concatenate_functions(  # noqa: PLR0913
     functions: Mapping[str, Callable[..., Any]] | Sequence[Callable[..., Any]],
     targets: str | Sequence[str] | None = None,
     *,
-    dag: nx.DiGraph[str] | None = None,
+    dag: nx.DiGraph | None = None,
     return_type: Literal["tuple", "list", "dict"] = "tuple",
     aggregator: Callable[[T, T], T] | None = None,
     aggregator_return_type: str | None = None,
@@ -180,7 +178,7 @@ def concatenate_functions(  # noqa: PLR0913
 def create_dag(
     functions: Mapping[str, Callable[..., Any]] | Sequence[Callable[..., Any]],
     targets: str | Sequence[str] | None,
-) -> nx.DiGraph[str]:
+) -> nx.DiGraph:
     """Build a directed acyclic graph (DAG) from functions.
 
     Functions can depend on the output of other functions as inputs, as long as the
@@ -218,7 +216,7 @@ def create_dag(
 
 
 def _create_combined_function_from_dag(  # noqa: PLR0913
-    dag: nx.DiGraph[str],
+    dag: nx.DiGraph,
     functions: Mapping[str, Callable[..., Any]] | Sequence[Callable[..., Any]],
     targets: str | Sequence[str] | None,
     return_type: Literal["tuple", "list", "dict"] = "tuple",
@@ -384,7 +382,7 @@ def get_ancestors(
 
     ancestors: set[str] = set()
     for target in _targets:
-        ancestors |= nx.ancestors(dag, target)  # type: ignore[invalid-argument-type]
+        ancestors |= nx.ancestors(dag, target)
         if include_targets:
             ancestors.add(target)
     return ancestors
@@ -456,10 +454,9 @@ def _fail_if_functions_are_missing(
         raise MissingFunctionsError(msg)
 
 
-def _fail_if_dag_contains_cycle(dag: nx.DiGraph[str]) -> None:
+def _fail_if_dag_contains_cycle(dag: nx.DiGraph) -> None:
     """Check for cycles in DAG."""
-    cycles = list(nx.simple_cycles(dag))  # type: ignore[invalid-argument-type]
-
+    cycles = list(nx.simple_cycles(dag))
     if len(cycles) > 0:
         formatted = format_list_linewise(cycles)
         msg = f"The DAG contains one or more cycles:\n{formatted}"
@@ -468,7 +465,7 @@ def _fail_if_dag_contains_cycle(dag: nx.DiGraph[str]) -> None:
 
 def _create_complete_dag(
     functions: dict[str, Callable[..., Any]],
-) -> nx.DiGraph[str]:
+) -> nx.DiGraph:
     """Create the complete DAG.
 
     This DAG is constructed from all functions and not pruned by specified root nodes or
@@ -485,13 +482,13 @@ def _create_complete_dag(
     functions_arguments_dict = {
         name: get_free_arguments(function) for name, function in functions.items()
     }
-    return nx.DiGraph(functions_arguments_dict).reverse()
+    return nx.DiGraph(functions_arguments_dict).reverse()  # ty: ignore[invalid-argument-type]
 
 
 def _limit_dag_to_targets_and_their_ancestors(
-    dag: nx.DiGraph[str],
+    dag: nx.DiGraph,
     targets: list[str],
-) -> nx.DiGraph[str]:
+) -> nx.DiGraph:
     """Limit DAG to targets and their ancestors.
 
     Args:
@@ -505,8 +502,7 @@ def _limit_dag_to_targets_and_their_ancestors(
     """
     used_nodes = set(targets)
     for target in targets:
-        used_nodes = used_nodes | set(nx.ancestors(dag, target))  # type: ignore[invalid-argument-type]
-
+        used_nodes = used_nodes | set(nx.ancestors(dag, target))
     all_nodes = set(dag.nodes)
 
     unused_nodes = all_nodes - used_nodes
@@ -518,7 +514,7 @@ def _limit_dag_to_targets_and_their_ancestors(
 
 def create_arguments_of_concatenated_function(
     functions: dict[str, Callable[..., Any]],
-    dag: nx.DiGraph[str],
+    dag: nx.DiGraph,
 ) -> list[str]:
     """Create the signature of the concatenated function.
 
@@ -538,7 +534,7 @@ def create_arguments_of_concatenated_function(
 
 def create_execution_info(
     functions: dict[str, Callable[..., Any]],
-    dag: nx.DiGraph[str],
+    dag: nx.DiGraph,
     *,
     verify_annotations: bool = False,
     lexsort_key: Callable[[str], Any] | None = None,
@@ -565,7 +561,7 @@ def create_execution_info(
 
     """
     out = {}
-    for node in nx.lexicographical_topological_sort(dag, key=lexsort_key):  # type: ignore[invalid-argument-type]
+    for node in nx.lexicographical_topological_sort(dag, key=lexsort_key):
         if node in functions:
             out[node] = FunctionExecutionInfo(
                 name=node,
@@ -623,11 +619,6 @@ def _create_concatenated_function(
         args = arglist
         return_annotation = inspect.Parameter.empty
 
-    @with_signature(
-        args=args,
-        enforce=enforce_signature,
-        return_annotation=return_annotation,
-    )
     def concatenated(*args: Any, **kwargs: Any) -> tuple[Any, ...]:
         results = {**dict(zip(arglist, args, strict=False)), **kwargs}
         for name, info in execution_info.items():
@@ -637,7 +628,13 @@ def _create_concatenated_function(
 
         return tuple(results[target] for target in targets)
 
-    return concatenated
+    concatenated.__name__ = "The concatenated function"
+    return with_signature(
+        concatenated,
+        args=args,
+        enforce=enforce_signature,
+        return_annotation=return_annotation,
+    )
 
 
 def _infer_aggregator_return_type(
@@ -739,7 +736,7 @@ def get_annotations_from_execution_info(
             if earlier_type not in current_type and current_type not in earlier_type:
                 arg_is_function = arg in execution_info
                 if arg_is_function:
-                    explanation = f"function {arg} has return type: {earlier_type}."
+                    explanation = f"function {arg} has return type: '{earlier_type}'."
                 else:
                     explanation = (
                         f"type annotation '{arg}: {earlier_type}' is used elsewhere."
@@ -747,7 +744,7 @@ def get_annotations_from_execution_info(
 
                 errors.append(
                     f"function {name} has the argument type annotation '{arg}: "
-                    f"{current_type}', but {explanation}"
+                    f"{current_type}',\nbut {explanation}"
                 )
 
         types.update(info.argument_annotations)

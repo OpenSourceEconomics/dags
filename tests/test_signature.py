@@ -1,3 +1,4 @@
+# Required because tests assert that annotations are strings.
 from __future__ import annotations
 
 import inspect
@@ -36,8 +37,8 @@ def example_signature_annotated() -> inspect.Signature:
 
 def test_create_signature(example_signature: inspect.Signature) -> None:
     created = _create_signature(
-        args_types={"a": inspect.Parameter.empty, "b": inspect.Parameter.empty},
-        kwargs_types={"c": inspect.Parameter.empty},
+        args_types={"a": inspect.Parameter.empty, "b": inspect.Parameter.empty},  # ty: ignore[invalid-argument-type]
+        kwargs_types={"c": inspect.Parameter.empty},  # ty: ignore[invalid-argument-type]
     )
     assert created == example_signature
 
@@ -141,7 +142,7 @@ def test_with_signature_decorator_duplicated_arguments() -> None:
 
     with pytest.raises(
         InvalidFunctionArgumentsError,
-        match=r"f\(\) got multiple values for argument b",
+        match=r"f got multiple values for argument b",
     ):
         f(1, 2, b=3)
 
@@ -153,7 +154,7 @@ def test_with_signature_decorator_invalid_keyword_arguments() -> None:
 
     with pytest.raises(
         InvalidFunctionArgumentsError,
-        match=r"f\(\) got unexpected keyword argument d",
+        match=r"f got unexpected keyword argument d",
     ):
         f(1, 2, d=4)
 
@@ -204,6 +205,30 @@ def test_rename_arguments_direct_call_annotated() -> None:
         "c": "bool",
         "return": "float",
     }
+
+
+def test_with_signature_decorator_missing_arguments() -> None:
+    @with_signature(args=["a", "b"], kwargs=["c"])
+    def f(*args, **kwargs):
+        return sum(args) + sum(kwargs.values())
+
+    with pytest.raises(
+        InvalidFunctionArgumentsError,
+        match="missing required argument",
+    ):
+        f(1)
+
+
+def test_with_signature_decorator_missing_all_arguments() -> None:
+    @with_signature(args=["a", "b"], kwargs=["c"])
+    def f(*args, **kwargs):
+        return sum(args) + sum(kwargs.values())
+
+    with pytest.raises(
+        InvalidFunctionArgumentsError,
+        match=r"missing required arguments.*a.*b",
+    ):
+        f()
 
 
 def test_with_signature_invalid_args_type() -> None:
