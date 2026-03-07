@@ -137,6 +137,9 @@ def with_signature(
                 _fail_if_invalid_keyword_arguments(
                     present_kwargs, valid_kwargs, funcname
                 )
+                _fail_if_missing_arguments(
+                    present_args, present_kwargs, valid_kwargs, funcname
+                )
             return func(*args, **kwargs)
 
         wrapper_with_signature.__signature__ = signature  # ty: ignore[unresolved-attribute]
@@ -153,7 +156,7 @@ def _fail_if_too_many_positional_arguments(
 ) -> None:
     if len(present_args) > len(argnames):
         msg = (
-            f"{funcname}() takes {len(argnames)} positional arguments "
+            f"{funcname} takes {len(argnames)} positional arguments "
             f"but {len(present_args)} were given"
         )
         raise InvalidFunctionArgumentsError(msg)
@@ -166,7 +169,7 @@ def _fail_if_duplicated_arguments(
     if problematic:
         s = "s" if len(problematic) >= 2 else ""  # noqa: PLR2004
         problem_str = ", ".join(list(problematic))
-        msg = f"{funcname}() got multiple values for argument{s} {problem_str}"
+        msg = f"{funcname} got multiple values for argument{s} {problem_str}"
         raise InvalidFunctionArgumentsError(msg)
 
 
@@ -177,7 +180,22 @@ def _fail_if_invalid_keyword_arguments(
     if problematic:
         s = "s" if len(problematic) >= 2 else ""  # noqa: PLR2004
         problem_str = ", ".join(list(problematic))
-        msg = f"{funcname}() got unexpected keyword argument{s} {problem_str}"
+        msg = f"{funcname} got unexpected keyword argument{s} {problem_str}"
+        raise InvalidFunctionArgumentsError(msg)
+
+
+def _fail_if_missing_arguments(
+    present_args: set[str],
+    present_kwargs: set[str],
+    required_args: set[str],
+    funcname: str,
+) -> None:
+    provided = present_args | present_kwargs
+    missing = required_args - provided
+    if missing:
+        s = "s" if len(missing) >= 2 else ""  # noqa: PLR2004
+        missing_str = ", ".join(sorted(missing))
+        msg = f"{funcname} is missing required argument{s}: {missing_str}"
         raise InvalidFunctionArgumentsError(msg)
 
 
