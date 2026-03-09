@@ -6,6 +6,8 @@ releases are available on [conda-forge](https://anaconda.org/conda-forge/dags).
 
 ## 0.5.0
 
+- :gh:`75` Streamline public API (:ghuser:`hmgaudecker`).
+
 - :gh:`65` Update docs and use Jupyter Book for documentation (:ghuser:`hmgaudecker`).
 
 - :gh:`72` Remove type checking blocks (:ghuser:`hmgaudecker`).
