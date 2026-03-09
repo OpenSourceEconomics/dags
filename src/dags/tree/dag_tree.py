@@ -57,7 +57,7 @@ def create_tree_with_input_types(
         functions=functions,
         top_level_inputs=set(top_level_inputs),
     )
-    functions_for_flat_dags = functions_without_tree_logic(
+    functions_for_flat_dags = get_functions_without_tree_logic(
         functions=functions,
         top_level_namespace=top_level_namespace,
     )
@@ -109,7 +109,7 @@ def create_dag_tree(
         functions=functions,
         inputs=inputs,
     )
-    functions_for_flat_dags = functions_without_tree_logic(
+    functions_for_flat_dags = get_functions_without_tree_logic(
         functions=functions,
         top_level_namespace=top_level_namespace,
     )
@@ -141,7 +141,7 @@ def concatenate_functions_tree(
         functions=functions,
         inputs=inputs,
     )
-    functions_for_flat_dags = functions_without_tree_logic(
+    functions_for_flat_dags = get_functions_without_tree_logic(
         functions=functions,
         top_level_namespace=top_level_namespace,
     )
@@ -162,7 +162,7 @@ def concatenate_functions_tree(
     return wrapper
 
 
-def functions_without_tree_logic(
+def get_functions_without_tree_logic(
     functions: NestedFunctionDict,
     top_level_namespace: set[str],
 ) -> QNameFunctionDict:
@@ -192,7 +192,7 @@ def functions_without_tree_logic(
 
     qname_functions = {}
     for path, func in tree_path_functions.items():
-        renamed = one_function_without_tree_logic(
+        renamed = get_one_function_without_tree_logic(
             function=func,
             tree_path=path,
             top_level_namespace=top_level_namespace,
@@ -202,7 +202,7 @@ def functions_without_tree_logic(
     return qname_functions
 
 
-def one_function_without_tree_logic(
+def get_one_function_without_tree_logic(
     function: Callable[..., Any],
     tree_path: tuple[str, ...],
     top_level_namespace: set[str],

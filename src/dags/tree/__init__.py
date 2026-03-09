@@ -4,12 +4,8 @@ from dags.tree.dag_tree import (
     concatenate_functions_tree,
     create_dag_tree,
     create_tree_with_input_types,
-    functions_without_tree_logic,
-    one_function_without_tree_logic,
-)
-from dags.tree.exceptions import (
-    RepeatedTopLevelElementError,
-    TrailingUnderscoreError,
+    get_functions_without_tree_logic,
+    get_one_function_without_tree_logic,
 )
 from dags.tree.tree_utils import (
     QNAME_DELIMITER,
@@ -22,28 +18,14 @@ from dags.tree.tree_utils import (
     unflatten_from_qnames,
     unflatten_from_tree_paths,
 )
-from dags.tree.validation import (
-    fail_if_path_elements_have_trailing_underscores,
-    fail_if_paths_are_invalid,
-    fail_if_top_level_elements_repeated_in_paths,
-    fail_if_top_level_elements_repeated_in_single_path,
-)
 
 __all__ = [
     # Primary functions
     "create_tree_with_input_types",
     "create_dag_tree",
     "concatenate_functions_tree",
-    "functions_without_tree_logic",
-    "one_function_without_tree_logic",
-    # Validation functions
-    "fail_if_paths_are_invalid",
-    "fail_if_path_elements_have_trailing_underscores",
-    "fail_if_top_level_elements_repeated_in_paths",
-    "fail_if_top_level_elements_repeated_in_single_path",
-    # Exceptions
-    "RepeatedTopLevelElementError",
-    "TrailingUnderscoreError",
+    "get_functions_without_tree_logic",
+    "get_one_function_without_tree_logic",
     # Qualified name utilities
     "QNAME_DELIMITER",
     "flatten_to_qnames",

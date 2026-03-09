@@ -104,6 +104,25 @@ Rename function parameters using a mapping dict. Can be used as a decorator or c
 
 ---
 
+### `dags.with_signature`
+
+```python
+with_signature(
+    func: Callable | None = None,
+    *,
+    args: Mapping[str, str] | Sequence[str] | None = None,
+    kwargs: Mapping[str, str] | Sequence[str] | None = None,
+    enforce: bool = True,
+    return_annotation: Any = inspect.Parameter.empty,
+) -> Callable
+```
+
+Add a signature to a function of type `f(*args, **kwargs)`. Can be used as a decorator with or without arguments.
+
+`dags.signature`
+
+---
+
 ## Tree Utilities
 
 All tree symbols are available from `dags.tree`.
@@ -264,10 +283,10 @@ Create a nested input structure template with type annotations based on function
 
 ---
 
-### `dags.tree.functions_without_tree_logic`
+### `dags.tree.get_functions_without_tree_logic`
 
 ```python
-functions_without_tree_logic(
+get_functions_without_tree_logic(
     functions: NestedFunctionDict,
     top_level_namespace: set[str],
 ) -> QNameFunctionDict
@@ -279,10 +298,10 @@ Flatten a nested function dict and rename all parameters to qualified absolute n
 
 ---
 
-### `dags.tree.one_function_without_tree_logic`
+### `dags.tree.get_one_function_without_tree_logic`
 
 ```python
-one_function_without_tree_logic(
+get_one_function_without_tree_logic(
     function: Callable,
     tree_path: tuple[str, ...],
     top_level_namespace: set[str],
@@ -297,7 +316,9 @@ Convert a single function from relative parameter names to qualified absolute na
 
 ## Tree Validation
 
-### `dags.tree.fail_if_paths_are_invalid`
+All validation symbols are available from `dags.tree.validation`.
+
+### `dags.tree.validation.fail_if_paths_are_invalid`
 
 ```python
 fail_if_paths_are_invalid(
@@ -316,7 +337,7 @@ Validate all tree paths for trailing underscores and repeated top-level elements
 
 ---
 
-### `dags.tree.fail_if_path_elements_have_trailing_underscores`
+### `dags.tree.validation.fail_if_path_elements_have_trailing_underscores`
 
 ```python
 fail_if_path_elements_have_trailing_underscores(
@@ -330,7 +351,7 @@ Check that no non-leaf path element ends with an underscore.
 
 ---
 
-### `dags.tree.fail_if_top_level_elements_repeated_in_paths`
+### `dags.tree.validation.fail_if_top_level_elements_repeated_in_paths`
 
 ```python
 fail_if_top_level_elements_repeated_in_paths(
@@ -345,7 +366,7 @@ Fail if any top-level namespace element appears deeper in the hierarchy.
 
 ---
 
-### `dags.tree.fail_if_top_level_elements_repeated_in_single_path`
+### `dags.tree.validation.fail_if_top_level_elements_repeated_in_single_path`
 
 ```python
 fail_if_top_level_elements_repeated_in_single_path(
