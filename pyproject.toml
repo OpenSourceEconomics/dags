@@ -34,9 +34,18 @@ name = "Janoś Gabler"
 email = "janos.gabler@gmail.com"
 [[project.authors]]
 name = "Tobias Raabe"
+[[project.authors]]
+name = "Tim Mensinger"
+email = "mensingertim@gmail.com"
+[[project.authors]]
+name = "Hans-Martin von Gaudecker"
+email = "hmgaudecker@uni-bonn.de"
 [[project.maintainers]]
 name = "Hans-Martin von Gaudecker"
 email = "hmgaudecker@uni-bonn.de"
+[[project.maintainers]]
+name = "Tim Mensinger"
+email = "mensingertim@gmail.com"
 [project.urls]
 Github = "https://github.com/OpenSourceEconomics/dags"
 Repository = "https://github.com/OpenSourceEconomics/dags"
