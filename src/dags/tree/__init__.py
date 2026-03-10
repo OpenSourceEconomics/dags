@@ -23,6 +23,9 @@ from dags.tree.tree_utils import (
     unflatten_from_tree_paths,
 )
 from dags.tree.typing import NestedFunctionDict, QNameFunctionDict
+from dags.tree.validation import (
+    fail_if_paths_are_invalid as _fail_if_paths_are_invalid,
+)
 
 
 def one_function_without_tree_logic(
@@ -42,6 +45,20 @@ def one_function_without_tree_logic(
         tree_path=tree_path,
         top_level_namespace=top_level_namespace,
     )
+
+
+def fail_if_paths_are_invalid(
+    *args: Any,
+    **kwargs: Any,
+) -> None:
+    """Deprecated: Use dags.tree.validation.fail_if_paths_are_invalid instead."""
+    warnings.warn(
+        "'fail_if_paths_are_invalid' is deprecated, "
+        "update the package calling it to a version released after 15 March 2026.",
+        FutureWarning,
+        stacklevel=2,
+    )
+    _fail_if_paths_are_invalid(*args, **kwargs)
 
 
 def functions_without_tree_logic(
@@ -69,6 +86,7 @@ __all__ = [
     "get_functions_without_tree_logic",
     "get_one_function_without_tree_logic",
     # Deprecated
+    "fail_if_paths_are_invalid",
     "functions_without_tree_logic",
     "one_function_without_tree_logic",
     # Qualified name utilities
