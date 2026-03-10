@@ -1,5 +1,9 @@
 """Module for handling DAG trees with nested dictionaries and qualified names."""
 
+import warnings
+from collections.abc import Callable
+from typing import Any
+
 from dags.tree.dag_tree import (
     concatenate_functions_tree,
     create_dag_tree,
@@ -18,6 +22,44 @@ from dags.tree.tree_utils import (
     unflatten_from_qnames,
     unflatten_from_tree_paths,
 )
+from dags.tree.typing import NestedFunctionDict, QNameFunctionDict
+
+
+def one_function_without_tree_logic(
+    function: Callable[..., Any],
+    tree_path: tuple[str, ...],
+    top_level_namespace: set[str],
+) -> Callable[..., Any]:
+    """Deprecated: Use get_one_function_without_tree_logic instead."""
+    warnings.warn(
+        "'one_function_without_tree_logic' is deprecated, "
+        "update the package calling it to a version released after 15 March 2026.",
+        FutureWarning,
+        stacklevel=2,
+    )
+    return get_one_function_without_tree_logic(
+        function=function,
+        tree_path=tree_path,
+        top_level_namespace=top_level_namespace,
+    )
+
+
+def functions_without_tree_logic(
+    functions: NestedFunctionDict,
+    top_level_namespace: set[str],
+) -> QNameFunctionDict:
+    """Deprecated: Use get_functions_without_tree_logic instead."""
+    warnings.warn(
+        "'functions_without_tree_logic' is deprecated, "
+        "update the package calling it to a version released after 15 March 2026.",
+        FutureWarning,
+        stacklevel=2,
+    )
+    return get_functions_without_tree_logic(
+        functions=functions,
+        top_level_namespace=top_level_namespace,
+    )
+
 
 __all__ = [
     # Primary functions
@@ -26,6 +68,9 @@ __all__ = [
     "concatenate_functions_tree",
     "get_functions_without_tree_logic",
     "get_one_function_without_tree_logic",
+    # Deprecated
+    "functions_without_tree_logic",
+    "one_function_without_tree_logic",
     # Qualified name utilities
     "QNAME_DELIMITER",
     "flatten_to_qnames",

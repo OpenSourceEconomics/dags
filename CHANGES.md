@@ -8,6 +8,11 @@ releases are available on [conda-forge](https://anaconda.org/conda-forge/dags).
 
 - :gh:`75` Streamline public API (:ghuser:`hmgaudecker`).
 
+  - Deprecate `one_function_without_tree_logic` and
+    `functions_without_tree_logic` in favour of
+    `get_one_function_without_tree_logic` and
+    `get_functions_without_tree_logic`.
+
 - :gh:`65` Update docs and use Jupyter Book for documentation (:ghuser:`hmgaudecker`).
 
 - :gh:`72` Remove type checking blocks (:ghuser:`hmgaudecker`).
