@@ -513,3 +513,66 @@ def test_aggregator_no_inference_when_set_annotations_false() -> None:
 
     assert aggregated() is False
     assert "return" not in inspect.get_annotations(aggregated)
+
+
+def test_concatenate_functions_invalid_return_type_raises() -> None:
+    with pytest.raises(DagsError, match="Invalid return type"):
+        concatenate_functions(
+            functions=[_leisure, _consumption],
+            targets=["_leisure", "_consumption"],
+            return_type="set",  # type: ignore[arg-type]
+        )
+
+
+def test_get_ancestors_include_targets() -> None:
+    calculated = get_ancestors(
+        functions=[_utility, _unrelated, _leisure, _consumption],
+        targets="_utility",
+        include_targets=True,
+    )
+    expected = {
+        "_utility",
+        "_consumption",
+        "_leisure",
+        "working_hours",
+        "wage",
+        "leisure_weight",
+    }
+    assert calculated == expected
+
+
+def test_concatenate_functions_non_string_targets() -> None:
+    with pytest.raises(DagsError, match="Targets must be strings"):
+        concatenate_functions(
+            functions={"f": lambda: 1},
+            targets=[1],  # type: ignore[list-item]
+        )
+
+
+def test_aggregator_exception_in_get_annotations() -> None:
+    """Test that an aggregator whose annotations cause an exception is handled."""
+
+    def f1() -> int:
+        return 1
+
+    def f2() -> int:
+        return 2
+
+    # Create an object that is callable but raises on get_annotations
+    class BadAggregator:
+        def __call__(self, a: int, b: int) -> int:
+            return a + b
+
+        @property
+        def __annotations__(self) -> dict[str, Any]:
+            msg = "bad annotations"
+            raise TypeError(msg)
+
+    aggregator = BadAggregator()
+    result = concatenate_functions(
+        functions={"f1": f1, "f2": f2},
+        targets=["f1", "f2"],
+        aggregator=aggregator,
+        set_annotations=True,
+    )
+    assert result() == 3

@@ -237,3 +237,11 @@ def test_with_signature_invalid_args_type() -> None:
         @with_signature(args="invalid")
         def f(*args, **kwargs):
             pass
+
+
+def test_with_signature_invalid_args_type_int() -> None:
+    with pytest.raises(DagsError, match="Invalid type for arg"):
+
+        @with_signature(args=42)  # type: ignore[arg-type]
+        def f(*args, **kwargs):
+            pass
