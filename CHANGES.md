@@ -6,6 +6,8 @@ releases are available on [conda-forge](https://anaconda.org/conda-forge/dags).
 
 ## 0.5.0
 
+- :gh:`76` Add a couple of tests to bring coverage to 100% (:ghuser:`hmgaudecker`).
+
 - :gh:`75` Streamline public API (:ghuser:`hmgaudecker`).
 
   - Deprecate `one_function_without_tree_logic`,
