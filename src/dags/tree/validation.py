@@ -37,7 +37,7 @@ def fail_if_paths_are_invalid(  # noqa: PLR0913
 
     Note: Sometimes you want to pass both `functions` (the nested function dict you will
     start out with) and `abs_qnames_functions` (the result of running
-    `functions_without_tree_logic` on `functions`, which contains the converted
+    `get_functions_without_tree_logic` on `functions`, which contains the converted
     parameters of functions, too). Even though the former may be seen as a subset of the
     latter, the conversion to qualified absolute names is not innocuous when it comes to
     the check for trailing underscores. The reason is that the conversion from qualified
@@ -48,7 +48,7 @@ def fail_if_paths_are_invalid(  # noqa: PLR0913
         functions:
             The nested function dict.
         abs_qnames_functions:
-            The result of running `functions_without_tree_logic` on `functions`.
+            The result of running `get_functions_without_tree_logic` on `functions`.
         data_tree:
             The tree of input data (typically not used together with `input_structure`).
         input_structure:

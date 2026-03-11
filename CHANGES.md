@@ -6,6 +6,14 @@ releases are available on [conda-forge](https://anaconda.org/conda-forge/dags).
 
 ## 0.5.0
 
+- :gh:`75` Streamline public API (:ghuser:`hmgaudecker`).
+
+  - Deprecate `one_function_without_tree_logic`,
+    `functions_without_tree_logic`, and `fail_if_paths_are_invalid`
+    in favor of `get_one_function_without_tree_logic`,
+    `get_functions_without_tree_logic`, and
+    `dags.tree.validation.fail_if_paths_are_invalid`.
+
 - :gh:`65` Update docs and use Jupyter Book for documentation (:ghuser:`hmgaudecker`).
 
 - :gh:`72` Remove type checking blocks (:ghuser:`hmgaudecker`).

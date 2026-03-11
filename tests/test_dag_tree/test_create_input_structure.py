@@ -5,7 +5,8 @@ from __future__ import annotations
 
 import pytest
 
-from dags.tree import RepeatedTopLevelElementError, create_tree_with_input_types
+from dags.tree import create_tree_with_input_types
+from dags.tree.exceptions import RepeatedTopLevelElementError
 from dags.tree.typing import (
     NestedFunctionDict,
     NestedInputStructureDict,

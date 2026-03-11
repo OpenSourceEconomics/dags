@@ -10,7 +10,7 @@ from dags.tree.dag_tree import (
     _get_top_level_namespace_final,
     _get_top_level_namespace_initial,
     _map_parameters_rel_to_abs,
-    functions_without_tree_logic,
+    get_functions_without_tree_logic,
 )
 from dags.tree.typing import (
     Callable,
@@ -191,7 +191,7 @@ def test_correct_argument_names(
         functions=functions,
         inputs=input_structure,
     )
-    qname_functions = functions_without_tree_logic(
+    qname_functions = get_functions_without_tree_logic(
         functions=functions,
         top_level_namespace=top_level_namespace,
     )
