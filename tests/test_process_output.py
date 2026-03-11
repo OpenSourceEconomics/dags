@@ -4,6 +4,7 @@ from typing import Any
 
 import pytest
 
+from dags.exceptions import DagsError
 from dags.output import (
     aggregated_output,
     dict_output,
@@ -88,3 +89,29 @@ def test_list_output_decorator() -> None:
         return (1, 2)
 
     assert f() == [1, 2]
+
+
+def test_dict_output_keys_none() -> None:
+    with pytest.raises(DagsError, match="'keys' parameter is required"):
+        dict_output(keys=None)  # ty: ignore[invalid-argument-type]
+
+
+def test_aggregated_output_aggregator_none() -> None:
+    with pytest.raises(DagsError, match="'aggregator' parameter is required"):
+        aggregated_output(aggregator=None)  # ty: ignore[invalid-argument-type]
+
+
+def test_aggregated_output_direct_call() -> None:
+    def f():
+        return (10, 20)
+
+    g = aggregated_output(f, aggregator=lambda x, y: x + y)
+    assert g() == 30
+
+
+def test_aggregated_output_decorator_usage() -> None:
+    @aggregated_output(aggregator=lambda x, y: x + y)
+    def f():
+        return (10, 20)
+
+    assert f() == 30

@@ -5,6 +5,7 @@ import functools
 import pytest
 
 from dags.tree import concatenate_functions_tree
+from dags.tree.dag_tree import create_dag_tree
 from dags.tree.typing import (
     NestedFunctionDict,
     NestedInputDict,
@@ -176,3 +177,16 @@ def test_partialled_function_argument() -> None:
         enforce_signature=True,
     )
     assert concatenated_func({"a": 1}) == {"f": 2}
+
+
+def test_create_dag_tree(functions_simple: NestedFunctionDict) -> None:
+    inputs: NestedInputDict = {
+        "n1": {"a": 1, "b": 2},
+        "n2": {"a": 3, "b": {"g": 4}},
+    }
+    targets: NestedTargetDict = {"n1": {"f": None}}
+
+    dag = create_dag_tree(functions=functions_simple, inputs=inputs, targets=targets)
+
+    assert "n1__f" in dag.nodes
+    assert "n1__g" in dag.nodes
