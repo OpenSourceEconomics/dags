@@ -35,14 +35,33 @@ def one_function_without_tree_logic(
 ) -> Callable[..., Any]:
     """Deprecated: Use get_one_function_without_tree_logic instead."""
     warnings.warn(
-        "'one_function_without_tree_logic' is deprecated, "
-        "update the package calling it to a version released after 15 March 2026.",
-        FutureWarning,
+        message="'one_function_without_tree_logic' is deprecated in favor of "
+        "'get_one_function_without_tree_logic'.\n"
+        "Update the package calling it to a version released after 15 March 2026.",
+        category=FutureWarning,
         stacklevel=2,
     )
     return get_one_function_without_tree_logic(
         function=function,
         tree_path=tree_path,
+        top_level_namespace=top_level_namespace,
+    )
+
+
+def functions_without_tree_logic(
+    functions: NestedFunctionDict,
+    top_level_namespace: set[str],
+) -> QNameFunctionDict:
+    """Deprecated: Use get_functions_without_tree_logic instead."""
+    warnings.warn(
+        message="'functions_without_tree_logic' is deprecated in favor of "
+        "'get_functions_without_tree_logic'.\n"
+        "Update the package calling it to a version released after 15 March 2026.",
+        category=FutureWarning,
+        stacklevel=2,
+    )
+    return get_functions_without_tree_logic(
+        functions=functions,
         top_level_namespace=top_level_namespace,
     )
 
@@ -53,29 +72,13 @@ def fail_if_paths_are_invalid(
 ) -> None:
     """Deprecated: Use dags.tree.validation.fail_if_paths_are_invalid instead."""
     warnings.warn(
-        "'fail_if_paths_are_invalid' is deprecated, "
-        "update the package calling it to a version released after 15 March 2026.",
-        FutureWarning,
+        message="Calling 'fail_if_paths_are_invalid' from the dags.tree namespace "
+        "directly is deprecated.\n"
+        "Update the package calling it to a version released after 15 March 2026.",
+        category=FutureWarning,
         stacklevel=2,
     )
     _fail_if_paths_are_invalid(*args, **kwargs)
-
-
-def functions_without_tree_logic(
-    functions: NestedFunctionDict,
-    top_level_namespace: set[str],
-) -> QNameFunctionDict:
-    """Deprecated: Use get_functions_without_tree_logic instead."""
-    warnings.warn(
-        "'functions_without_tree_logic' is deprecated, "
-        "update the package calling it to a version released after 15 March 2026.",
-        FutureWarning,
-        stacklevel=2,
-    )
-    return get_functions_without_tree_logic(
-        functions=functions,
-        top_level_namespace=top_level_namespace,
-    )
 
 
 __all__ = [
