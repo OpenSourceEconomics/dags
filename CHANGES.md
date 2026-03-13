@@ -4,12 +4,14 @@ This is a record of all past dags releases and what went into them in reverse
 chronological order. We follow [semantic versioning](https://semver.org/) and all
 releases are available on [conda-forge](https://anaconda.org/conda-forge/dags).
 
-## 0.5.0
+## 0.5.1
 
 - :gh:`79` Use AGENTS.md, update hooks and rules (:ghuser:`hmgaudecker`).
 
 - :gh:`78` Fix `decorator_rename_arguments` by calling `get_free_arguments` inside the
   decorator (:ghuser:`hmgaudecker`).
+
+## 0.5.0
 
 - :gh:`76` Add a couple of tests to bring coverage to 100% (:ghuser:`hmgaudecker`).
 
