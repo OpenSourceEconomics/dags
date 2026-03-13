@@ -75,40 +75,39 @@ extend-ignore = [
   "TC002",  # Move third-party import into a type-checking block
   "TC003",  # Move standard library import into a type-checking block
   "TRY003", # Long messages outside exception class
-  "ANN401",
-  "FA100",
-  "FA102",
+  "ANN401", # Dynamically typed expressions (typing.Any) are disallowed
+  "FA100",  # Missing from __future__ import annotations
+  "FA102",  # Missing from __future__ import annotations
 ]
 per-file-ignores."docs/**/*" = [
-  "ANN001",
-  "ANN002",
-  "ANN003",
-  "ANN201",
-  "ANN202",
-  "ARG001",
-  "D100",
-  "D103",
-  "D104",
-  "T201",
+  "ANN001", # Missing type annotation for function argument
+  "ANN002", # Missing type annotation for *args
+  "ANN003", # Missing type annotation for **kwargs
+  "ANN201", # Missing return type annotation for public function
+  "ANN202", # Missing return type annotation for private function
+  "ARG001", # Unused function argument
+  "D100",   # Missing docstring in public module
+  "D103",   # Missing docstring in public function
+  "D104",   # Missing docstring in public package
+  "T201",   # print found
 ]
-per-file-ignores."src/dags/tree/__init__.py" = [ "RUF022" ]
 per-file-ignores."tests/*" = [
-  "ANN001",
-  "ANN002",
-  "ANN003",
-  "ANN201",
-  "ANN202",
-  "D100",
-  "D103",
-  "D104",
-  "D401",
-  "FBT001",
-  "INP001",
-  "PLC2401",
-  "PLR2004",
-  "S101",
+  "ANN001",  # Missing type annotation for function argument
+  "ANN002",  # Missing type annotation for *args
+  "ANN003",  # Missing type annotation for **kwargs
+  "ANN201",  # Missing return type annotation for public function
+  "ANN202",  # Missing return type annotation for private function
+  "D100",    # Missing docstring in public module
+  "D103",    # Missing docstring in public function
+  "D104",    # Missing docstring in public package
+  "D401",    # First line of docstring should be in imperative mood
+  "FBT001",  # Boolean-typed positional argument in function definition
+  "INP001",  # Implicit namespace packages
+  "PLC2401", # Variable name contains a non-ASCII character
+  "PLR2004", # Magic value used in comparison
+  "S101",    # Use of assert
 ]
-per-file-ignores."tests/test_dag.py" = [ "ARG001" ]
+per-file-ignores."tests/test_dag.py" = [ "ARG001" ]  # Unused function argument
 pydocstyle.convention = "google"
 
 [tool.pyproject-fmt]
@@ -173,7 +172,7 @@ docs = [ "docs", "py314" ]
 py311 = [ "py311", "tests" ]
 py312 = [ "py312", "tests" ]
 py313 = [ "py313", "tests" ]
-py314 = [ "py314", "tests", "ty-task" ]
+py314 = [ "py314", "tests", "type-checking" ]
 [tool.pixi.feature.docs.dependencies]
 jupyter-book = ">=2.0"
 mystmd = "*"
@@ -198,10 +197,10 @@ pytest-xdist = "*"
 [tool.pixi.feature.tests.tasks]
 tests = "pytest"
 tests-with-cov = "pytest --cov-report=xml --cov=./"
-[tool.pixi.feature.ty-task.pypi-dependencies]
+[tool.pixi.feature.type-checking.pypi-dependencies]
 ty = "*"
 types-networkx = "*"
-[tool.pixi.feature.ty-task.tasks]
+[tool.pixi.feature.type-checking.tasks]
 ty = "ty check"
 [tool.pixi.pypi-dependencies]
 dags = { path = ".", editable = true }

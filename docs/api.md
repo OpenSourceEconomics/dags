@@ -19,11 +19,12 @@ concatenate_functions(
 ) -> Callable[..., Any]
 ```
 
-Combine multiple interdependent functions into a single callable. Functions are executed in topological order based on name-matching dependencies.
+Combine multiple interdependent functions into a single callable. Functions are executed
+in topological order based on name-matching dependencies.
 
 `dags.dag`
 
----
+______________________________________________________________________
 
 ### `dags.create_dag`
 
@@ -38,7 +39,7 @@ Build a directed acyclic graph from functions without creating a combined functi
 
 `dags.dag`
 
----
+______________________________________________________________________
 
 ### `dags.get_ancestors`
 
@@ -55,7 +56,7 @@ Find all functions that a set of targets depends on.
 
 `dags.dag`
 
----
+______________________________________________________________________
 
 ## Annotations & Signatures
 
@@ -70,11 +71,12 @@ get_annotations(
 ) -> dict[str, str] | dict[str, type]
 ```
 
-Get type annotations from a function, handling `functools.partial` and Python 3.14 edge cases. Returns a dict keyed by argument names plus `"return"`.
+Get type annotations from a function, handling `functools.partial` and Python 3.14 edge
+cases. Returns a dict keyed by argument names plus `"return"`.
 
 `dags.annotations`
 
----
+______________________________________________________________________
 
 ### `dags.get_free_arguments`
 
@@ -86,7 +88,7 @@ Get parameter names of a function, excluding arguments bound via `functools.part
 
 `dags.annotations`
 
----
+______________________________________________________________________
 
 ### `dags.rename_arguments`
 
@@ -98,11 +100,12 @@ rename_arguments(
 ) -> Callable
 ```
 
-Rename function parameters using a mapping dict. Can be used as a decorator or called directly.
+Rename function parameters using a mapping dict. Can be used as a decorator or called
+directly.
 
 `dags.signature`
 
----
+______________________________________________________________________
 
 ### `dags.with_signature`
 
@@ -117,11 +120,12 @@ with_signature(
 ) -> Callable
 ```
 
-Add a signature to a function of type `f(*args, **kwargs)`. Can be used as a decorator with or without arguments.
+Add a signature to a function of type `f(*args, **kwargs)`. Can be used as a decorator
+with or without arguments.
 
 `dags.signature`
 
----
+______________________________________________________________________
 
 ## Tree Utilities
 
@@ -133,7 +137,7 @@ The delimiter used for qualified names: `"__"`.
 
 `dags.tree.tree_utils`
 
----
+______________________________________________________________________
 
 ### `dags.tree.qname_from_tree_path`
 
@@ -145,7 +149,7 @@ Convert a tree path tuple to a qualified name string (e.g., `("a", "b")` → `"a
 
 `dags.tree.tree_utils`
 
----
+______________________________________________________________________
 
 ### `dags.tree.tree_path_from_qname`
 
@@ -157,7 +161,7 @@ Convert a qualified name string to a tree path tuple.
 
 `dags.tree.tree_utils`
 
----
+______________________________________________________________________
 
 ### `dags.tree.flatten_to_qnames`
 
@@ -169,7 +173,7 @@ Flatten a nested dict to a flat dict with qualified name keys.
 
 `dags.tree.tree_utils`
 
----
+______________________________________________________________________
 
 ### `dags.tree.unflatten_from_qnames`
 
@@ -181,7 +185,7 @@ Restore a nested dict from a flat dict with qualified name keys.
 
 `dags.tree.tree_utils`
 
----
+______________________________________________________________________
 
 ### `dags.tree.flatten_to_tree_paths`
 
@@ -193,7 +197,7 @@ Flatten a nested dict to a flat dict with tuple keys.
 
 `dags.tree.tree_utils`
 
----
+______________________________________________________________________
 
 ### `dags.tree.unflatten_from_tree_paths`
 
@@ -205,7 +209,7 @@ Restore a nested dict from a flat dict with tuple keys.
 
 `dags.tree.tree_utils`
 
----
+______________________________________________________________________
 
 ### `dags.tree.qnames`
 
@@ -217,7 +221,7 @@ Return a list of all qualified name keys from a nested dict.
 
 `dags.tree.tree_utils`
 
----
+______________________________________________________________________
 
 ### `dags.tree.tree_paths`
 
@@ -229,7 +233,7 @@ Return a list of all tree path keys from a nested dict.
 
 `dags.tree.tree_utils`
 
----
+______________________________________________________________________
 
 ## Tree DAG Functions
 
@@ -245,11 +249,12 @@ concatenate_functions_tree(
 ) -> Callable[[NestedInputDict], NestedOutputDict]
 ```
 
-Combine a nested dictionary of functions into a single callable that takes nested inputs and returns nested outputs.
+Combine a nested dictionary of functions into a single callable that takes nested inputs
+and returns nested outputs.
 
 `dags.tree.dag_tree`
 
----
+______________________________________________________________________
 
 ### `dags.tree.create_dag_tree`
 
@@ -265,7 +270,7 @@ Build a DAG from nested function dictionaries and input structure.
 
 `dags.tree.dag_tree`
 
----
+______________________________________________________________________
 
 ### `dags.tree.create_tree_with_input_types`
 
@@ -277,11 +282,13 @@ create_tree_with_input_types(
 ) -> NestedInputStructureDict
 ```
 
-Create a nested input structure template with type annotations based on functions and targets. Useful for discovering the expected input shape before calling `concatenate_functions_tree`.
+Create a nested input structure template with type annotations based on functions and
+targets. Useful for discovering the expected input shape before calling
+`concatenate_functions_tree`.
 
 `dags.tree.dag_tree`
 
----
+______________________________________________________________________
 
 ### `dags.tree.get_functions_without_tree_logic`
 
@@ -292,11 +299,12 @@ get_functions_without_tree_logic(
 ) -> QNameFunctionDict
 ```
 
-Flatten a nested function dict and rename all parameters to qualified absolute names, producing a flat dict suitable for `concatenate_functions`.
+Flatten a nested function dict and rename all parameters to qualified absolute names,
+producing a flat dict suitable for `concatenate_functions`.
 
 `dags.tree.dag_tree`
 
----
+______________________________________________________________________
 
 ### `dags.tree.get_one_function_without_tree_logic`
 
@@ -308,11 +316,12 @@ get_one_function_without_tree_logic(
 ) -> Callable
 ```
 
-Convert a single function from relative parameter names to qualified absolute names given its tree path and top-level namespace.
+Convert a single function from relative parameter names to qualified absolute names
+given its tree path and top-level namespace.
 
 `dags.tree.dag_tree`
 
----
+______________________________________________________________________
 
 ## Tree Validation
 
@@ -331,11 +340,12 @@ fail_if_paths_are_invalid(
 ) -> None
 ```
 
-Validate all tree paths for trailing underscores and repeated top-level elements. Raises `TrailingUnderscoreError` or `RepeatedTopLevelElementError`.
+Validate all tree paths for trailing underscores and repeated top-level elements. Raises
+`TrailingUnderscoreError` or `RepeatedTopLevelElementError`.
 
 `dags.tree.validation`
 
----
+______________________________________________________________________
 
 ### `dags.tree.validation.fail_if_path_elements_have_trailing_underscores`
 
@@ -349,7 +359,7 @@ Check that no non-leaf path element ends with an underscore.
 
 `dags.tree.validation`
 
----
+______________________________________________________________________
 
 ### `dags.tree.validation.fail_if_top_level_elements_repeated_in_paths`
 
@@ -364,7 +374,7 @@ Fail if any top-level namespace element appears deeper in the hierarchy.
 
 `dags.tree.validation`
 
----
+______________________________________________________________________
 
 ### `dags.tree.validation.fail_if_top_level_elements_repeated_in_single_path`
 
@@ -379,18 +389,18 @@ Same check as above, for a single path.
 
 `dags.tree.validation`
 
----
+______________________________________________________________________
 
 ## Exceptions
 
-| Exception | Module | Description |
-|-----------|--------|-------------|
-| `DagsError` | `dags.exceptions` | Base exception for all dags errors |
-| `CyclicDependencyError` | `dags.exceptions` | DAG contains a cycle |
-| `MissingFunctionsError` | `dags.exceptions` | Target functions not provided |
-| `AnnotationMismatchError` | `dags.exceptions` | Type annotations conflict between functions |
-| `NonStringAnnotationError` | `dags.exceptions` | Non-string annotation with `set_annotations=True` |
-| `InvalidFunctionArgumentsError` | `dags.exceptions` | Invalid function arguments (too many positional, duplicated, unexpected keyword) |
-| `ValidationError` | `dags.exceptions` | Base for validation errors |
-| `RepeatedTopLevelElementError` | `dags.tree.exceptions` | Top-level element repeated in tree path |
-| `TrailingUnderscoreError` | `dags.tree.exceptions` | Non-leaf path element ends with underscore |
+| Exception                       | Module                 | Description                                                                      |
+| ------------------------------- | ---------------------- | -------------------------------------------------------------------------------- |
+| `DagsError`                     | `dags.exceptions`      | Base exception for all dags errors                                               |
+| `CyclicDependencyError`         | `dags.exceptions`      | DAG contains a cycle                                                             |
+| `MissingFunctionsError`         | `dags.exceptions`      | Target functions not provided                                                    |
+| `AnnotationMismatchError`       | `dags.exceptions`      | Type annotations conflict between functions                                      |
+| `NonStringAnnotationError`      | `dags.exceptions`      | Non-string annotation with `set_annotations=True`                                |
+| `InvalidFunctionArgumentsError` | `dags.exceptions`      | Invalid function arguments (too many positional, duplicated, unexpected keyword) |
+| `ValidationError`               | `dags.exceptions`      | Base for validation errors                                                       |
+| `RepeatedTopLevelElementError`  | `dags.tree.exceptions` | Top-level element repeated in tree path                                          |
+| `TrailingUnderscoreError`       | `dags.tree.exceptions` | Non-leaf path element ends with underscore                                       |

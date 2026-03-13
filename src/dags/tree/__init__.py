@@ -82,20 +82,17 @@ def fail_if_paths_are_invalid(
 
 
 __all__ = [
-    # Primary functions
-    "create_tree_with_input_types",
-    "create_dag_tree",
-    "concatenate_functions_tree",
-    "get_functions_without_tree_logic",
-    "get_one_function_without_tree_logic",
-    # Deprecated
-    "fail_if_paths_are_invalid",
-    "functions_without_tree_logic",
-    "one_function_without_tree_logic",
-    # Qualified name utilities
     "QNAME_DELIMITER",
+    "concatenate_functions_tree",
+    "create_dag_tree",
+    "create_tree_with_input_types",
+    "fail_if_paths_are_invalid",
     "flatten_to_qnames",
     "flatten_to_tree_paths",
+    "functions_without_tree_logic",
+    "get_functions_without_tree_logic",
+    "get_one_function_without_tree_logic",
+    "one_function_without_tree_logic",
     "qname_from_tree_path",
     "qnames",
     "tree_path_from_qname",
