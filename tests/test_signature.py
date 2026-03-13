@@ -248,9 +248,6 @@ def test_with_signature_invalid_args_type_int() -> None:
             pass
 
 
-# --- Tests for rename_arguments with functools.partial inputs ---
-
-
 def test_rename_arguments_partial_with_positional_bound_arg() -> None:
     def f(a, b):
         return a + b
