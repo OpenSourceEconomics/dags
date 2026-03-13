@@ -3,9 +3,9 @@
 import functools
 import inspect
 from collections.abc import Callable, Mapping, Sequence
-from typing import Any, cast, overload
+from typing import Any, overload
 
-from dags.annotations import get_annotations
+from dags.annotations import get_annotations, get_free_arguments
 from dags.exceptions import DagsError, InvalidFunctionArgumentsError
 from dags.typing import P, R
 
@@ -230,7 +230,12 @@ def rename_arguments(  # noqa: C901
 
     def decorator_rename_arguments(func: Callable[P, R]) -> Callable[..., R]:
         old_signature = inspect.signature(func)
-        old_parameters: dict[str, inspect.Parameter] = dict(old_signature.parameters)
+        free_arguments = set(get_free_arguments(func))
+        old_parameters: dict[str, inspect.Parameter] = {
+            name: param
+            for name, param in old_signature.parameters.items()
+            if name in free_arguments
+        }
         old_annotations = get_annotations(func)
 
         parameters: list[inspect.Parameter] = []
@@ -271,16 +276,7 @@ def rename_arguments(  # noqa: C901
         wrapper_rename_arguments.__signature__ = signature  # ty: ignore[unresolved-attribute]
         wrapper_rename_arguments.__annotations__ = annotations
 
-        # Preserve function type
-        if isinstance(func, functools.partial):
-            partial_wrapper = functools.partial(
-                wrapper_rename_arguments, *func.args, **func.keywords
-            )
-            out = cast("Callable[P, R]", partial_wrapper)
-        else:
-            out = wrapper_rename_arguments
-
-        return out
+        return wrapper_rename_arguments
 
     if func is not None:
         return decorator_rename_arguments(func)
