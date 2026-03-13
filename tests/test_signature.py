@@ -1,6 +1,7 @@
 # Required because tests assert that annotations are strings.
 from __future__ import annotations
 
+import functools
 import inspect
 
 import pytest
@@ -245,3 +246,60 @@ def test_with_signature_invalid_args_type_int() -> None:
         @with_signature(args=42)  # type: ignore[arg-type]
         def f(*args, **kwargs):
             pass
+
+
+# --- Tests for rename_arguments with functools.partial inputs ---
+
+
+def test_rename_arguments_partial_with_positional_bound_arg() -> None:
+    def f(a, b):
+        return a + b
+
+    p = functools.partial(f, 1)
+    renamed = rename_arguments(p, mapper={"b": "x"})
+    assert renamed(x=2) == 3
+
+
+def test_rename_arguments_partial_with_keyword_bound_arg() -> None:
+    def f(a, b):
+        return a * b
+
+    p = functools.partial(f, b=10)
+    renamed = rename_arguments(p, mapper={"a": "x"})
+    assert renamed(x=5) == 50
+
+
+def test_rename_arguments_partial_positional_call() -> None:
+    def f(a, b):
+        return f"{a}-{b}"
+
+    p = functools.partial(f, "hello")
+    renamed = rename_arguments(p, mapper={"b": "x"})
+    assert renamed("world") == "hello-world"
+
+
+def test_rename_arguments_partial_bound_arg_not_in_mapper() -> None:
+    def f(a, b, c):
+        return a + b + c
+
+    p = functools.partial(f, 100)
+    renamed = rename_arguments(p, mapper={"b": "x"})
+    assert renamed(x=20, c=3) == 123
+
+
+def test_rename_arguments_partial_multiple_bound_args() -> None:
+    def f(a, b, c):
+        return a + b + c
+
+    p = functools.partial(f, 10, c=30)
+    renamed = rename_arguments(p, mapper={"b": "y"})
+    assert renamed(y=20) == 60
+
+
+def test_rename_arguments_decorator_on_partial() -> None:
+    def f(a, b):
+        return a + b
+
+    p = functools.partial(f, 1)
+    renamed = rename_arguments(mapper={"b": "x"})(p)
+    assert renamed(x=2) == 3
