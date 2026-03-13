@@ -5,7 +5,7 @@ repos:
       - id: check-hooks-apply
       - id: check-useless-excludes
   - repo: https://github.com/tox-dev/pyproject-fmt
-    rev: v2.16.2
+    rev: v2.18.1
     hooks:
       - id: pyproject-fmt
   - repo: https://github.com/lyz-code/yamlfix
@@ -46,8 +46,12 @@ repos:
     rev: v1.38.0
     hooks:
       - id: yamllint
+  - repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: 0.37.0
+    hooks:
+      - id: check-github-workflows
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.5
+    rev: v0.15.6
     hooks:
       - id: ruff-check
         args:
@@ -79,6 +83,14 @@ repos:
         args:
           - --wrap
           - '88'
-        files: (CLAUDE\.md|README\.md)
+        files: (AGENTS\.md|CLAUDE\.md|README\.md)
+      - id: mdformat
+        additional_dependencies:
+          - mdformat-myst
+          - mdformat-ruff
+        args:
+          - --wrap
+          - '88'
+        files: docs/.
 ci:
   autoupdate_schedule: monthly
