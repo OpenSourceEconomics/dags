@@ -13,6 +13,9 @@ releases are available on [conda-forge](https://anaconda.org/conda-forge/dags).
 
 ## 0.5.0
 
+- :gh:`77` Fix `decorator_rename_arguments` by calling `get_free_arguments` inside the
+  decorator (:ghuser:`hmgaudecker`).
+
 - :gh:`76` Add a couple of tests to bring coverage to 100% (:ghuser:`hmgaudecker`).
 
 - :gh:`75` Streamline public API (:ghuser:`hmgaudecker`).
