@@ -4,6 +4,25 @@ This is a record of all past dags releases and what went into them in reverse
 chronological order. We follow [semantic versioning](https://semver.org/) and all
 releases are available on [conda-forge](https://anaconda.org/conda-forge/dags).
 
+## Unreleased
+
+- :gh:`82` **Breaking:** `with_signature`, `rename_arguments`, and the `*_output`
+  converters (`single_output`, `dict_output`, `list_output`, `aggregated_output`)
+  now advertise the `*args, **kwargs` forwarder shape on the wrapper's
+  `__annotations__` (`{"args": object, "kwargs": object}`). The user-described
+  view — parameter names, type strings, and return annotation — stays on the
+  wrapper's `__signature__`. Runtime type checkers that read `__annotations__`
+  (beartype, typeguard, `typing.get_type_hints`) therefore treat dags wrappers
+  as the permissive forwarders they actually are, instead of enforcing the
+  wrapped function's per-parameter annotations against the wrapper's `*args,
+  **kwargs`. `dags.get_annotations` recovers the user view from `__signature__`
+  via its existing args/kwargs-mismatch fallback, so dags' own machinery is
+  unaffected. Callers that previously read `func.__annotations__` directly for
+  the user-typed view must switch to `inspect.signature(func)` or
+  `dags.get_annotations(func)`. The `forwarder` parameter added during this PR's
+  development is removed — the forwarder shape is now the only behaviour
+  (:ghuser:`hmgaudecker`).
+
 ## 0.5.1
 
 - :gh:`79` Use AGENTS.md, update hooks and rules (:ghuser:`hmgaudecker`).

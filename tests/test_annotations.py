@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import functools
-import inspect
 from typing import Literal
 
 import numpy as np
@@ -67,7 +66,7 @@ def test_concatenate_functions_without_input(
         "list": [],
         "dict": {},
     }
-    assert inspect.get_annotations(concatenated, eval_str=True) == {
+    assert get_annotations(concatenated, eval_str=True) == {
         "return": expected_type[return_type],
     }
 

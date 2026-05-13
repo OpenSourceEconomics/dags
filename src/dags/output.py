@@ -3,9 +3,11 @@
 import functools
 import inspect
 from collections.abc import Callable, Sequence
-from typing import Any, Unpack, overload
+from typing import Any, Unpack, cast, overload
 
+from dags.annotations import get_annotations
 from dags.exceptions import DagsError
+from dags.signature import forwarder_annotations
 from dags.typing import MixedTupleType, P, T
 
 
@@ -16,15 +18,24 @@ def _apply_return_annotation(
 ) -> None:
     """Apply a new return annotation to a wrapper function.
 
-    Updates both __signature__ and __annotations__ on the wrapper.
+    The user-described view (parameters from `func`, plus the new
+    `return_annotation`) is written to the wrapper's `__signature__`. The
+    wrapper's `__annotations__` advertises the `*args, **kwargs` forwarder
+    shape — the wrapper accepts anything at the Python level and only
+    `func` expects the typed arguments. See `forwarder_annotations` for
+    the rationale; `dags.get_annotations` recovers the user view from
+    `__signature__`.
+
+    `func` is itself typically a dags wrapper (e.g. the `with_signature`
+    output of `concatenate_functions`), so its return annotation lives on
+    `__signature__`, not `__annotations__` — read it via
+    `dags.get_annotations`.
     """
     signature = inspect.signature(func)
-    annotations = inspect.get_annotations(func)
-    if "return" in annotations:
+    if "return" in get_annotations(func):
         signature = signature.replace(return_annotation=return_annotation)
-        annotations["return"] = return_annotation
     wrapper.__signature__ = signature  # ty: ignore[unresolved-attribute]
-    wrapper.__annotations__ = annotations
+    wrapper.__annotations__ = forwarder_annotations()
 
 
 def single_output(
@@ -40,9 +51,13 @@ def single_output(
         return raw[0]
 
     if set_annotations:
-        annotations = inspect.get_annotations(func)
+        annotations = get_annotations(func)
         if "return" in annotations:
-            tuple_of_types: tuple[str, ...] = annotations["return"]
+            # `func` is a tuple-returning concatenated function; its return
+            # annotation (recovered from `__signature__`) is a tuple of type
+            # strings, which `get_annotations`' `dict[str, str]` type cannot
+            # express.
+            tuple_of_types = cast("tuple[str, ...]", annotations["return"])
             _apply_return_annotation(wrapper_single_output, func, tuple_of_types[0])
 
     return wrapper_single_output
@@ -88,9 +103,9 @@ def dict_output(
             return dict(zip(keys, raw, strict=True))
 
         if set_annotations:
-            annotations = inspect.get_annotations(func)
+            annotations = get_annotations(func)
             if "return" in annotations:
-                tuple_of_types: tuple[str, ...] = annotations["return"]
+                tuple_of_types = cast("tuple[str, ...]", annotations["return"])
                 return_annotation = dict(zip(keys, tuple_of_types, strict=True))
                 _apply_return_annotation(wrapper_dict_output, func, return_annotation)
 
@@ -112,9 +127,9 @@ def list_output(
         return list(raw)
 
     if set_annotations:
-        annotations = inspect.get_annotations(func)
+        annotations = get_annotations(func)
         if "return" in annotations:
-            tuple_of_types: tuple[str, ...] = annotations["return"]
+            tuple_of_types = cast("tuple[str, ...]", annotations["return"])
             _apply_return_annotation(wrapper_list_output, func, list(tuple_of_types))
 
     return wrapper_list_output

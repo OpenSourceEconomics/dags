@@ -6,6 +6,7 @@ import inspect
 
 import pytest
 
+from dags.annotations import get_annotations
 from dags.exceptions import DagsError, InvalidFunctionArgumentsError
 from dags.signature import _create_signature, rename_arguments, with_signature
 
@@ -38,8 +39,8 @@ def example_signature_annotated() -> inspect.Signature:
 
 def test_create_signature(example_signature: inspect.Signature) -> None:
     created = _create_signature(
-        args_types={"a": inspect.Parameter.empty, "b": inspect.Parameter.empty},  # ty: ignore[invalid-argument-type]
-        kwargs_types={"c": inspect.Parameter.empty},  # ty: ignore[invalid-argument-type]
+        args_types={"a": inspect.Parameter.empty, "b": inspect.Parameter.empty},
+        kwargs_types={"c": inspect.Parameter.empty},
     )
     assert created == example_signature
 
@@ -124,6 +125,101 @@ def test_with_signature_decorator_no_enforcing(
     assert f(x=3) == 3
 
 
+def test_with_signature_advertises_forwarder_shape_on_annotations() -> None:
+    """`with_signature` advertises the `*args, **kwargs` forwarder on `__annotations__`.
+
+    The wrapper is a generic `*args, **kwargs` forwarder; its
+    `__annotations__` says so (`{"args": object, "kwargs": object}`).
+    Runtime type checkers reading `__annotations__` (beartype, typeguard,
+    `typing.get_type_hints`) therefore treat the wrapper as permissive and
+    do not enforce the wrapped function's per-parameter annotations.
+    """
+
+    @with_signature(args={"a": "int"}, kwargs={"b": "float"}, return_annotation="float")
+    def f(*args, **kwargs):
+        return sum(args) + sum(kwargs.values())
+
+    assert f.__annotations__ == {"args": object, "kwargs": object}
+    assert "a" not in f.__annotations__
+    assert "b" not in f.__annotations__
+    assert "return" not in f.__annotations__
+
+
+def test_with_signature_keeps_user_view_on_signature() -> None:
+    """`with_signature` keeps the user-described view on `__signature__`.
+
+    Introspection tools using `inspect.signature` see parameter names,
+    kinds, and the type strings passed via `args` / `kwargs`, even though
+    `__annotations__` only carries the forwarder shape.
+    """
+
+    @with_signature(args={"a": "int"}, kwargs={"b": "float"}, return_annotation="float")
+    def f(*args, **kwargs):
+        return sum(args) + sum(kwargs.values())
+
+    sig = inspect.signature(f)
+    assert sig.parameters["a"].annotation == "int"
+    assert sig.parameters["b"].annotation == "float"
+    assert sig.return_annotation == "float"
+
+
+def test_with_signature_get_annotations_recovers_user_view() -> None:
+    """`dags.get_annotations` recovers the user view from a `with_signature` wrapper.
+
+    The args/kwargs-mismatch fallback recognises the forwarder shape on
+    `__annotations__` and reads the user-described view off `__signature__`
+    instead, so dags' own machinery (DAG resolution, signature tooling)
+    keeps working on wrappers that advertise the forwarder shape.
+    """
+
+    @with_signature(args={"a": "int"}, kwargs={"b": "float"}, return_annotation="float")
+    def f(*args, **kwargs):
+        return sum(args) + sum(kwargs.values())
+
+    recovered = get_annotations(f)
+    assert recovered["a"] == "int"
+    assert recovered["b"] == "float"
+    assert recovered["return"] == "float"
+
+
+def test_rename_arguments_advertises_forwarder_shape_on_annotations() -> None:
+    """`rename_arguments` advertises the forwarder shape on `__annotations__`.
+
+    Same semantics as `with_signature`: the wrapper is a forwarder, so its
+    `__annotations__` is the forwarder shape and the renamed user view
+    lives on `__signature__`.
+    """
+
+    def f(a: int, b: float) -> float:
+        return a + b
+
+    renamed = rename_arguments(f, mapper={"a": "x"})
+
+    assert renamed.__annotations__ == {"args": object, "kwargs": object}
+    assert "x" not in renamed.__annotations__
+    sig = inspect.signature(renamed)
+    assert "x" in sig.parameters
+    assert "b" in sig.parameters
+    assert sig.return_annotation == "float"
+
+
+def test_rename_arguments_get_annotations_recovers_user_view() -> None:
+    """`dags.get_annotations` recovers the renamed view from the wrapper."""
+
+    def f(a: int, b: float) -> float:
+        return a + b
+
+    renamed = rename_arguments(f, mapper={"a": "x"})
+
+    recovered = get_annotations(renamed)
+    assert recovered["x"] == "int"
+    assert recovered["b"] == "float"
+    assert recovered["return"] == "float"
+    sig = inspect.signature(renamed)
+    assert "x" in sig.parameters
+    assert "b" in sig.parameters
+
+
 def test_with_signature_decorator_too_many_positional_arguments() -> None:
     @with_signature(args=["a", "b"], kwargs=["c"])
     def f(*args, **kwargs):
@@ -175,7 +271,11 @@ def test_rename_arguments_decorator_annotated() -> None:
     def f(d: int, e: float, *, f: bool) -> float:
         return d + e + f
 
-    assert inspect.get_annotations(f) == {
+    # `__annotations__` carries the forwarder shape; the renamed user view
+    # is recovered via `dags.get_annotations` (which falls back to
+    # `__signature__`).
+    assert f.__annotations__ == {"args": object, "kwargs": object}
+    assert get_annotations(f) == {
         "a": "int",
         "b": "float",
         "c": "bool",
@@ -200,7 +300,10 @@ def test_rename_arguments_direct_call_annotated() -> None:
 
     g = rename_arguments(f, mapper={"e": "b", "d": "a", "f": "c"})
 
-    assert inspect.get_annotations(g) == {
+    # `__annotations__` carries the forwarder shape; the renamed user view
+    # is recovered via `dags.get_annotations`.
+    assert g.__annotations__ == {"args": object, "kwargs": object}
+    assert get_annotations(g) == {
         "a": "int",
         "b": "float",
         "c": "bool",
@@ -243,7 +346,7 @@ def test_with_signature_invalid_args_type() -> None:
 def test_with_signature_invalid_args_type_int() -> None:
     with pytest.raises(DagsError, match="Invalid type for arg"):
 
-        @with_signature(args=42)  # type: ignore[arg-type]
+        @with_signature(args=42)  # ty: ignore[invalid-argument-type]
         def f(*args, **kwargs):
             pass
 

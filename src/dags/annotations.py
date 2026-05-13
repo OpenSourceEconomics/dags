@@ -137,23 +137,37 @@ def _get_annotations_from_signature(
 ) -> dict[str, Any]:
     """Extract annotations from the function signature.
 
-    This is a fallback for when inspect.get_annotations returns incorrect results,
-    such as in Python 3.14's args/kwargs annotation mismatch case.
+    This is a fallback for when inspect.get_annotations returns incorrect results:
+    the Python 3.14 args/kwargs annotation mismatch, and dags wrappers
+    (`with_signature`, `rename_arguments`, the `*_output` converters), which
+    advertise the `*args, **kwargs` forwarder shape on `__annotations__` and
+    keep the user-described view on `__signature__`.
 
     """
     sig = inspect.signature(func)
     annotations: dict[str, Any] = {}
     for param_name, param in sig.parameters.items():
         if param.annotation != inspect.Parameter.empty:
-            annotations[param_name] = (
-                param.annotation
-                if eval_str or isinstance(param.annotation, str)
-                else _get_str_repr(param.annotation)
+            annotations[param_name] = _normalise_annotation(
+                param.annotation, eval_str=eval_str
             )
     if sig.return_annotation != inspect.Signature.empty:
-        annotations["return"] = (
-            sig.return_annotation
-            if eval_str or isinstance(sig.return_annotation, str)
-            else _get_str_repr(sig.return_annotation)
+        annotations["return"] = _normalise_annotation(
+            sig.return_annotation, eval_str=eval_str
         )
     return annotations
+
+
+def _normalise_annotation(annotation: Any, *, eval_str: bool) -> Any:
+    """Normalise a single signature annotation for `get_annotations`.
+
+    With `eval_str=True` the annotation is returned untouched. With
+    `eval_str=False` the caller wants strings: bare `type` objects are
+    reduced to their `__name__`, but strings and the structured return
+    annotations produced by the `*_output` converters (a `tuple` / `list`
+    / `dict` of type strings) are passed through as-is — stringifying
+    those would lose their structure.
+    """
+    if eval_str or isinstance(annotation, (str, tuple, list, dict)):
+        return annotation
+    return _get_str_repr(annotation)

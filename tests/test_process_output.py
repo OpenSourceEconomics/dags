@@ -31,7 +31,13 @@ def test_single_output(f: Callable[..., Any]) -> None:
 
 def test_single_output_annotations(f: Callable[..., Any]) -> None:
     g = single_output(f, set_annotations=True)
-    assert inspect.get_annotations(g) == {"foo": "bool", "return": "int"}
+    # The wrapper advertises the `*args, **kwargs` forwarder shape on
+    # `__annotations__`; the user view (params + transformed return) lives
+    # on `__signature__`.
+    assert g.__annotations__ == {"args": object, "kwargs": object}
+    sig = inspect.signature(g)
+    assert sig.parameters["foo"].annotation == "bool"
+    assert sig.return_annotation == "int"
 
 
 def test_dict_output(f: Callable[..., Any]) -> None:
@@ -41,10 +47,10 @@ def test_dict_output(f: Callable[..., Any]) -> None:
 
 def test_dict_output_annotations(f: Callable[..., Any]) -> None:
     g = dict_output(f, keys=["a", "b"], set_annotations=True)
-    assert inspect.get_annotations(g) == {
-        "foo": "bool",
-        "return": {"a": "int", "b": "float"},
-    }
+    assert g.__annotations__ == {"args": object, "kwargs": object}
+    sig = inspect.signature(g)
+    assert sig.parameters["foo"].annotation == "bool"
+    assert sig.return_annotation == {"a": "int", "b": "float"}
 
 
 def test_list_output(f: Callable[..., Any]) -> None:
@@ -54,7 +60,10 @@ def test_list_output(f: Callable[..., Any]) -> None:
 
 def test_list_output_annotations(f: Callable[..., Any]) -> None:
     g = list_output(f, set_annotations=True)
-    assert inspect.get_annotations(g) == {"foo": "bool", "return": ["int", "float"]}
+    assert g.__annotations__ == {"args": object, "kwargs": object}
+    sig = inspect.signature(g)
+    assert sig.parameters["foo"].annotation == "bool"
+    assert sig.return_annotation == ["int", "float"]
 
 
 def test_aggregated_output_decorator(f: Callable[..., Any]) -> None:

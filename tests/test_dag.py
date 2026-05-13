@@ -110,7 +110,7 @@ def test_concatenate_functions_no_target_annotations(
         "leisure_weight": "float",
         "return": ("float", "int", "float"),
     }
-    assert inspect.get_annotations(concatenated_no_target) == expected_annotations
+    assert get_annotations(concatenated_no_target) == expected_annotations
 
 
 def test_concatenate_functions_single_target_results(
@@ -133,7 +133,7 @@ def test_concatenate_functions_single_target_annotations(
         "leisure_weight": "float",
         "return": "float",
     }
-    assert inspect.get_annotations(concatenated_utility_target) == expected_annotations
+    assert get_annotations(concatenated_utility_target) == expected_annotations
 
 
 @pytest.mark.parametrize("return_type", ["tuple", "list", "dict"])
@@ -184,7 +184,7 @@ def test_concatenate_functions_multi_target_annotations(
         "leisure_weight": "float",
         "return": return_annotations[return_type],
     }
-    assert inspect.get_annotations(concatenated) == expected_annotation
+    assert get_annotations(concatenated) == expected_annotation
 
 
 def test_get_ancestors_many_ancestors() -> None:
@@ -252,7 +252,7 @@ def test_partialled_argument_is_ignored() -> None:
     )
 
     assert concatenated(c=True, d=4) == 1 + 2 + float(True) + 4
-    assert inspect.get_annotations(concatenated) == {
+    assert get_annotations(concatenated) == {
         "c": "bool",
         "d": "int",
         "return": "float",
@@ -344,7 +344,7 @@ def test_concatenate_functions_no_annotations_set_annotations() -> None:
         set_annotations=True,
     )
 
-    assert inspect.get_annotations(concatenated) == {
+    assert get_annotations(concatenated) == {
         "a": "no_annotation_found",
         "return": ("no_annotation_found",),
     }
@@ -373,7 +373,7 @@ def test_aggregator_return_type_explicit() -> None:
     )
 
     assert aggregated() is False
-    assert inspect.get_annotations(aggregated)["return"] == "bool"
+    assert get_annotations(aggregated)["return"] == "bool"
 
 
 def test_aggregator_return_type_inferred_from_targets() -> None:
@@ -394,7 +394,7 @@ def test_aggregator_return_type_inferred_from_targets() -> None:
 
     assert aggregated() is False
     # Return type should be inferred from targets (both bool)
-    assert inspect.get_annotations(aggregated)["return"] == "bool"
+    assert get_annotations(aggregated)["return"] == "bool"
 
 
 def test_aggregator_return_type_inferred_from_typed_aggregator() -> None:
@@ -418,7 +418,7 @@ def test_aggregator_return_type_inferred_from_typed_aggregator() -> None:
 
     assert aggregated() is False
     # Return type should be inferred from aggregator
-    assert inspect.get_annotations(aggregated)["return"] == "bool"
+    assert get_annotations(aggregated)["return"] == "bool"
 
 
 def test_aggregator_return_type_warns_when_cannot_infer() -> None:
@@ -462,7 +462,7 @@ def test_aggregator_return_type_mixed_target_types_uses_aggregator() -> None:
 
     assert aggregated() == 3.0
     # Return type should be inferred from aggregator since target types differ
-    assert inspect.get_annotations(aggregated)["return"] == "float"
+    assert get_annotations(aggregated)["return"] == "float"
 
 
 def test_aggregator_return_type_ignored_when_set_annotations_false() -> None:
@@ -484,8 +484,8 @@ def test_aggregator_return_type_ignored_when_set_annotations_false() -> None:
     )
 
     assert aggregated() is False
-    # No return annotation should be set
-    assert "return" not in inspect.get_annotations(aggregated)
+    # No return annotation should be set on the wrapper's signature.
+    assert inspect.signature(aggregated).return_annotation is inspect.Signature.empty
 
 
 def test_aggregator_no_inference_when_set_annotations_false() -> None:
@@ -512,7 +512,7 @@ def test_aggregator_no_inference_when_set_annotations_false() -> None:
         )
 
     assert aggregated() is False
-    assert "return" not in inspect.get_annotations(aggregated)
+    assert inspect.signature(aggregated).return_annotation is inspect.Signature.empty
 
 
 def test_concatenate_functions_invalid_return_type_raises() -> None:
@@ -520,7 +520,7 @@ def test_concatenate_functions_invalid_return_type_raises() -> None:
         concatenate_functions(
             functions=[_leisure, _consumption],
             targets=["_leisure", "_consumption"],
-            return_type="set",  # type: ignore[arg-type]
+            return_type="set",  # ty: ignore[invalid-argument-type]
         )
 
 
@@ -545,7 +545,7 @@ def test_concatenate_functions_non_string_targets() -> None:
     with pytest.raises(DagsError, match="Targets must be strings"):
         concatenate_functions(
             functions={"f": lambda: 1},
-            targets=[1],  # type: ignore[list-item]
+            targets=[1],  # ty: ignore[invalid-argument-type]
         )
 
 
