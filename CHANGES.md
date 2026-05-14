@@ -6,6 +6,8 @@ releases are available on [conda-forge](https://anaconda.org/conda-forge/dags).
 
 ## Unreleased
 
+## 0.6.0
+
 - :gh:`82` **Breaking:** `with_signature`, `rename_arguments`, and the `*_output`
   converters (`single_output`, `dict_output`, `list_output`, `aggregated_output`)
   now advertise the `*args, **kwargs` forwarder shape on the wrapper's
