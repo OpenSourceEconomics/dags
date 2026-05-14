@@ -1,4 +1,4 @@
-@https://raw.githubusercontent.com/OpenSourceEconomics/ai-instructions/make-submodule/profiles/tier-a.md
+@.ai-instructions/profiles/tier-a.md
 
 # dags
 
