@@ -8,7 +8,7 @@ releases are available on [conda-forge](https://anaconda.org/conda-forge/dags).
 
 ## 0.6.0
 
-- :gh:`82` **Breaking:** Make dags wrappers play nicely with runtime type checkers
+- :gh:`82` Make dags wrappers play nicely with runtime type checkers
   (:ghuser:`hmgaudecker`).
 
 ## 0.5.1
