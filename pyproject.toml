@@ -88,6 +88,7 @@ python = "~=3.14.0"
 [tool.pixi.feature.tests.dependencies]
 numpy = "*"
 [tool.pixi.feature.tests.pypi-dependencies]
+beartype = "*"
 pytest = "*"
 pytest-cov = "*"
 pytest-xdist = "*"

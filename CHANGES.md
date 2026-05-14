@@ -20,7 +20,9 @@ releases are available on [conda-forge](https://anaconda.org/conda-forge/dags).
   unaffected. Callers that previously read `func.__annotations__` directly for
   the user-typed view must switch to `inspect.signature(func)` or
   `dags.get_annotations(func)`. The `forwarder` parameter added during this PR's
-  development is removed — the forwarder shape is now the only behaviour
+  development is removed — the forwarder shape is now the only behaviour. A
+  `beartype` test dependency and `tests/test_runtime_type_checkers.py` guard the
+  forwarder-shape invariant against a real runtime type checker
   (:ghuser:`hmgaudecker`).
 
 ## 0.5.1
