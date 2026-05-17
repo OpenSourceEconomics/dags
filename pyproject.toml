@@ -60,6 +60,53 @@ build.targets.wheel.sources = [ "src" ]
 metadata.allow-direct-references = true
 version.source = "vcs"
 
+[tool.pixi.dependencies]
+jupyterlab = "*"
+prek = "*"
+python = ">=3.11,<3.15"
+[tool.pixi.environments]
+docs = [ "docs", "py314" ]
+py311 = [ "py311", "tests" ]
+py312 = [ "py312", "tests" ]
+py313 = [ "py313", "tests" ]
+py314 = [ "py314", "tests", "type-checking" ]
+[tool.pixi.feature.docs.dependencies]
+jupyter-book = ">=2.0"
+mystmd = "*"
+numpy = "*"
+[tool.pixi.feature.docs.tasks]
+build-docs = { cmd = "jupyter book build --html --execute", cwd = "docs" }
+view-docs = { cmd = "jupyter book start --execute", cwd = "docs" }
+[tool.pixi.feature.py311.dependencies]
+python = "~=3.11.0"
+[tool.pixi.feature.py312.dependencies]
+python = "~=3.12.0"
+[tool.pixi.feature.py313.dependencies]
+python = "~=3.13.0"
+[tool.pixi.feature.py314.dependencies]
+python = "~=3.14.0"
+[tool.pixi.feature.tests.dependencies]
+numpy = "*"
+[tool.pixi.feature.tests.pypi-dependencies]
+beartype = "*"
+pytest = "*"
+pytest-cov = "*"
+pytest-xdist = "*"
+[tool.pixi.feature.tests.tasks]
+tests = "pytest"
+tests-with-cov = "pytest --cov-report=xml --cov=./"
+[tool.pixi.feature.type-checking.pypi-dependencies]
+ty = "*"
+types-networkx = "*"
+[tool.pixi.feature.type-checking.tasks]
+ty = "ty check"
+[tool.pixi.pypi-dependencies]
+dags = { path = ".", editable = true }
+pdbp = "*"
+[tool.pixi.workspace]
+channels = [ "conda-forge" ]
+platforms = [ "linux-64", "osx-64", "osx-arm64", "win-64" ]
+
 [tool.ruff]
 fix = true
 unsafe-fixes = false
@@ -138,76 +185,24 @@ expand_tables = [
   "tool.pixi.workspace",
 ]
 
-[tool.pytest]
-ini_options.addopts = [ "--pdbcls=pdbp:Pdb" ]
-ini_options.filterwarnings = []
-ini_options.norecursedirs = [ "docs" ]
-
 [tool.ty]
 rules.ambiguous-protocol-member = "error"
 rules.deprecated = "error"
 rules.division-by-zero = "error"
 rules.ignore-comment-unknown-rule = "error"
-rules.invalid-argument-type = "error"
+rules.ineffective-final = "error"
+rules.invalid-enum-member-annotation = "error"
 rules.invalid-ignore-comment = "error"
-rules.invalid-return-type = "error"
-rules.possibly-missing-attribute = "error"
-rules.possibly-missing-implicit-call = "error"
-rules.possibly-missing-import = "error"
-rules.possibly-unresolved-reference = "error"
+rules.invalid-legacy-positional-parameter = "error"
 rules.redundant-cast = "error"
-rules.undefined-reveal = "error"
-rules.unresolved-global = "error"
-rules.unsupported-base = "error"
+rules.unused-awaitable = "error"
 rules.unused-ignore-comment = "error"
-rules.useless-overload-body = "error"
 src.exclude = [ "docs/**/*.ipynb" ]
 
-[tool.pixi.dependencies]
-jupyterlab = "*"
-prek = "*"
-python = ">=3.11,<3.15"
-[tool.pixi.environments]
-docs = [ "docs", "py314" ]
-py311 = [ "py311", "tests" ]
-py312 = [ "py312", "tests" ]
-py313 = [ "py313", "tests" ]
-py314 = [ "py314", "tests", "type-checking" ]
-[tool.pixi.feature.docs.dependencies]
-jupyter-book = ">=2.0"
-mystmd = "*"
-numpy = "*"
-[tool.pixi.feature.docs.tasks]
-build-docs = { cmd = "jupyter book build --html --execute", cwd = "docs" }
-view-docs = { cmd = "jupyter book start --execute", cwd = "docs" }
-[tool.pixi.feature.py311.dependencies]
-python = "~=3.11.0"
-[tool.pixi.feature.py312.dependencies]
-python = "~=3.12.0"
-[tool.pixi.feature.py313.dependencies]
-python = "~=3.13.0"
-[tool.pixi.feature.py314.dependencies]
-python = "~=3.14.0"
-[tool.pixi.feature.tests.dependencies]
-numpy = "*"
-[tool.pixi.feature.tests.pypi-dependencies]
-pytest = "*"
-pytest-cov = "*"
-pytest-xdist = "*"
-[tool.pixi.feature.tests.tasks]
-tests = "pytest"
-tests-with-cov = "pytest --cov-report=xml --cov=./"
-[tool.pixi.feature.type-checking.pypi-dependencies]
-ty = "*"
-types-networkx = "*"
-[tool.pixi.feature.type-checking.tasks]
-ty = "ty check"
-[tool.pixi.pypi-dependencies]
-dags = { path = ".", editable = true }
-pdbp = "*"
-[tool.pixi.workspace]
-channels = [ "conda-forge" ]
-platforms = [ "linux-64", "osx-64", "osx-arm64", "win-64" ]
+[tool.pytest]
+ini_options.addopts = [ "--pdbcls=pdbp:Pdb" ]
+ini_options.filterwarnings = []
+ini_options.norecursedirs = [ "docs" ]
 
 [tool.yamlfix]
 line_length = 88

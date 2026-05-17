@@ -5,7 +5,7 @@ import inspect
 from collections.abc import Callable, Mapping, Sequence
 from typing import Any, overload
 
-from dags.annotations import get_annotations, get_free_arguments
+from dags.annotations import get_free_arguments
 from dags.exceptions import DagsError, InvalidFunctionArgumentsError
 from dags.typing import P, R
 
@@ -52,21 +52,6 @@ def _create_signature(
     )
 
 
-def _create_annotations(
-    args_types: dict[str, str] | dict[str, type[inspect._empty]],
-    kwargs_types: dict[str, str] | dict[str, type[inspect._empty]],
-    return_annotation: Any,
-) -> (
-    dict[str, str]
-    | dict[str, str | type[inspect._empty]]
-    | dict[str, type[inspect._empty]]
-):
-    annotations = args_types | kwargs_types
-    if return_annotation is not inspect.Parameter.empty:
-        annotations["return"] = return_annotation
-    return annotations
-
-
 @overload
 def with_signature(
     func: Callable[P, R],
@@ -98,6 +83,16 @@ def with_signature(
 ) -> Callable[P, R] | Callable[[Callable[P, R]], Callable[P, R]]:
     """Add a signature to a function of type `f(*args, **kwargs)` (decorator).
 
+    The user-described view (parameter names, kinds, and any type strings
+    passed via `args` / `kwargs`) is written to the wrapper's
+    `__signature__`. The wrapper's `__annotations__` advertises the
+    `*args, **kwargs` forwarder shape instead — the wrapper genuinely
+    accepts anything at the Python level, and only the wrapped function
+    expects the user-typed arguments. Runtime type checkers (beartype,
+    typeguard) read `__annotations__` and therefore treat the wrapper as
+    permissive; `dags.get_annotations` recovers the user view from
+    `__signature__` via its built-in args/kwargs-mismatch fallback.
+
     Caveats: The created signature only contains the names of arguments and whether
     they are keyword-only. There is no way of setting default values or type hints.
 
@@ -123,7 +118,6 @@ def with_signature(
         _args = _map_names_to_types(args)
         _kwargs = _map_names_to_types(kwargs)
         signature = _create_signature(_args, _kwargs, return_annotation)
-        annotations = _create_annotations(_args, _kwargs, return_annotation)
         valid_kwargs: set[str] = set(_kwargs) | set(_args)
         funcname: str = getattr(func, "__name__", "function")
 
@@ -143,12 +137,34 @@ def with_signature(
             return func(*args, **kwargs)
 
         wrapper_with_signature.__signature__ = signature  # ty: ignore[unresolved-attribute]
-        wrapper_with_signature.__annotations__ = annotations
+        wrapper_with_signature.__annotations__ = forwarder_annotations()
         return wrapper_with_signature
 
     if func is not None:
         return decorator_with_signature(func)
     return decorator_with_signature
+
+
+def forwarder_annotations() -> dict[str, Any]:
+    """Build `__annotations__` advertising a `*args, **kwargs` forwarder.
+
+    Every dags wrapper (`with_signature`, `rename_arguments`, the
+    `*_output` converters) is a `def wrapper(*args, **kwargs)` forwarder:
+    it accepts anything at the Python level and delegates to the wrapped
+    function. Its `__annotations__` reflects that — `{"args": object,
+    "kwargs": object}` — so runtime type checkers reading
+    `__annotations__` (beartype, typeguard, `typing.get_type_hints`) see a
+    permissive forwarder and do not enforce the wrapped function's
+    per-parameter annotations against the wrapper's actual arguments.
+
+    The user-described view (parameter names, types, return annotation)
+    lives on the wrapper's `__signature__` instead, and
+    `dags.get_annotations` recovers it from there via its
+    args/kwargs-mismatch fallback. No return annotation is written so
+    there are no string forward refs to resolve against the wrapper's
+    `__module__`, where the referenced names may not be importable.
+    """
+    return {"args": object, "kwargs": object}
 
 
 def _fail_if_too_many_positional_arguments(
@@ -213,10 +229,19 @@ def rename_arguments(
 ) -> Callable[[Callable[P, R]], Callable[..., R]]: ...
 
 
-def rename_arguments(  # noqa: C901
-    func: Callable[P, R] | None = None, *, mapper: Mapping[str, str] | None = None
+def rename_arguments(
+    func: Callable[P, R] | None = None,
+    *,
+    mapper: Mapping[str, str] | None = None,
 ) -> Callable[..., R] | Callable[[Callable[P, R]], Callable[..., R]]:
     """Rename positional and keyword arguments of func.
+
+    The renamed user-described view is written to the wrapper's
+    `__signature__`. The wrapper's `__annotations__` advertises the
+    `*args, **kwargs` forwarder shape — runtime type checkers see a
+    permissive forwarder, and `dags.get_annotations` recovers the renamed
+    view from `__signature__` via its args/kwargs-mismatch fallback. See
+    `forwarder_annotations` for the rationale.
 
     Args:
         func (callable): The function of which the arguments are renamed.
@@ -236,24 +261,14 @@ def rename_arguments(  # noqa: C901
             for name, param in old_signature.parameters.items()
             if name in free_arguments
         }
-        old_annotations = get_annotations(func)
 
         parameters: list[inspect.Parameter] = []
-        annotations: dict[str, str] = {}
         # mapper is assumed not to be None when renaming is desired.
         for name, param in old_parameters.items():
             if mapper is not None and name in mapper:
                 parameters.append(param.replace(name=mapper[name]))
             else:
                 parameters.append(param)
-
-        # annotations do not contain information on partialled arguments, and therefore
-        # do not exactly align with the parameters.
-        for name, annotation in old_annotations.items():
-            if mapper is not None and name in mapper:
-                annotations[mapper[name]] = annotation
-            else:
-                annotations[name] = annotation
 
         signature = inspect.Signature(
             parameters=parameters, return_annotation=old_signature.return_annotation
@@ -274,7 +289,7 @@ def rename_arguments(  # noqa: C901
             return func(*args, **internal_kwargs)
 
         wrapper_rename_arguments.__signature__ = signature  # ty: ignore[unresolved-attribute]
-        wrapper_rename_arguments.__annotations__ = annotations
+        wrapper_rename_arguments.__annotations__ = forwarder_annotations()
 
         return wrapper_rename_arguments
 

@@ -4,6 +4,13 @@ This is a record of all past dags releases and what went into them in reverse
 chronological order. We follow [semantic versioning](https://semver.org/) and all
 releases are available on [conda-forge](https://anaconda.org/conda-forge/dags).
 
+## Unreleased
+
+## 0.6.0
+
+- :gh:`82` Make dags wrappers play nicely with runtime type checkers
+  (:ghuser:`hmgaudecker`).
+
 ## 0.5.1
 
 - :gh:`79` Use AGENTS.md, update hooks and rules (:ghuser:`hmgaudecker`).
