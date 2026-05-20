@@ -110,7 +110,7 @@ def with_signature(
         enforce: Whether the signature should be enforced or just
             added to the function for introspection. This creates runtime
             overhead.
-        return_annotation: The return type hint. By default, the return annotation is
+        return_annotation: The return annotation. By default, it is
             `inspect.Parameter.empty`.
 
     Returns:
