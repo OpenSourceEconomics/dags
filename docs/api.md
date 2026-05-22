@@ -121,7 +121,9 @@ with_signature(
 ```
 
 Add a signature to a function of type `f(*args, **kwargs)`. Can be used as a decorator
-with or without arguments.
+with or without arguments. The dict form of `args`/`kwargs` maps parameter names to
+type-hint strings and `return_annotation` sets the return type — both written to the
+wrapper's `__signature__`. Default values cannot be set.
 
 `dags.signature`
 
