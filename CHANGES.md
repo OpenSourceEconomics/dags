@@ -6,6 +6,11 @@ releases are available on [conda-forge](https://anaconda.org/conda-forge/dags).
 
 ## Unreleased
 
+- :gh:`84` Refresh CI/pre-commit pins and lock; pin ty to 0.0.23
+  (:ghuser:`hmgaudecker`).
+- :gh:`83` Fix `with_signature` docstring and `api.md` to describe its type-hint
+  support (:ghuser:`hmgaudecker`).
+
 ## 0.6.0
 
 - :gh:`82` Make dags wrappers play nicely with runtime type checkers
