@@ -96,7 +96,7 @@ pytest-xdist = "*"
 tests = "pytest"
 tests-with-cov = "pytest --cov-report=xml --cov=./"
 [tool.pixi.feature.type-checking.pypi-dependencies]
-ty = "*"
+ty = "==0.0.23"
 types-networkx = "*"
 [tool.pixi.feature.type-checking.tasks]
 ty = "ty check"
