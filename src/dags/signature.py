@@ -83,30 +83,34 @@ def with_signature(
 ) -> Callable[P, R] | Callable[[Callable[P, R]], Callable[P, R]]:
     """Add a signature to a function of type `f(*args, **kwargs)` (decorator).
 
-    The user-described view (parameter names, kinds, and any type strings
-    passed via `args` / `kwargs`) is written to the wrapper's
-    `__signature__`. The wrapper's `__annotations__` advertises the
-    `*args, **kwargs` forwarder shape instead — the wrapper genuinely
+    The user-described view (parameter names, kinds, and any type hints passed
+    via the dict form of `args` / `kwargs` or via `return_annotation`) is written
+    to the wrapper's `__signature__`. The wrapper's `__annotations__` advertises
+    the `*args, **kwargs` forwarder shape instead — the wrapper genuinely
     accepts anything at the Python level, and only the wrapped function
     expects the user-typed arguments. Runtime type checkers (beartype,
     typeguard) read `__annotations__` and therefore treat the wrapper as
     permissive; `dags.get_annotations` recovers the user view from
     `__signature__` via its built-in args/kwargs-mismatch fallback.
 
-    Caveats: The created signature only contains the names of arguments and whether
-    they are keyword-only. There is no way of setting default values or type hints.
+    The created signature carries argument names, whether each argument is
+    keyword-only, and—when the dict form of `args`/`kwargs` is used or
+    `return_annotation` is set—parameter and return type hints (written to
+    `__signature__`, as described above). Default values cannot be set.
 
     Args:
         func: The function to be decorated. Should take `*args`
             and `**kwargs` as only arguments.
         args: If a list, the names of positional or keyword arguments. If a dict,
-            the names of positional or keyword arguments and their types as strings.
+            the names of positional or keyword arguments mapped to their type hints
+            (as strings).
         kwargs: If a list, the names of keyword only arguments. If a dict,
-            the names of keyword only arguments and their types as strings.
+            the names of keyword only arguments mapped to their type hints (as
+            strings).
         enforce: Whether the signature should be enforced or just
             added to the function for introspection. This creates runtime
             overhead.
-        return_annotation: The return annotation. By default, the return annotation is
+        return_annotation: The return annotation. By default, it is
             `inspect.Parameter.empty`.
 
     Returns:
