@@ -46,16 +46,11 @@ class FunctionExecutionInfo:
             coincides with the __annotations__ attribute of the function. For partialled
             functions, this is a dictionary with the names of the free arguments as keys
             and their expected types as values, as well as the return type of the
-            function stored under the key "return". Type annotations must be strings,
-            else a NonStringAnnotationError is raised.
+            function stored under the key "return". When `verify_annotations` is True,
+            non-string annotations are converted to their string representation.
         arguments: The names of the arguments of the function.
         argument_annotations: The argument annotations of the function.
         return_annotation: The return annotation of the function.
-
-    Raises:
-    ------
-        NonStringAnnotationError: If `verify_annotations` is `True` and the type
-            annotations are not strings.
 
     """
 
@@ -135,11 +130,11 @@ def concatenate_functions(  # noqa: PLR0913
             return annotation of the concatenated function reflects the requested return
             type and number of targets (e.g., for two targets returned as a list, the
             return annotation is a list of their respective type hints). Note that this
-            is not a valid type annotation and should not be used for type checking. All
-            annotations must be strings; otherwise, a NonStringAnnotationError is
-            raised. To ensure string annotations, enclose them in quotes or use "from
-            __future__ import annotations" at the top of your file. An
-            AnnotationMismatchError is raised if annotations differ between functions.
+            is not a valid type annotation and should not be used for type checking.
+            Annotations need not be strings: non-string annotations (e.g. when "from
+            __future__ import annotations" is not used, or on Python 3.14+) are
+            converted to their string representation. An AnnotationMismatchError is
+            raised if annotations differ between functions.
         lexsort_key (callable or None): A function that takes a string and returns a
             value that can be used to sort the nodes. This is used to sort the nodes
             in the topological sort. If None, the nodes are sorted alphabetically.
@@ -150,9 +145,6 @@ def concatenate_functions(  # noqa: PLR0913
 
     Raises:
     ------
-        - NonStringAnnotationError: If `set_annotations` is `True` and the type
-            annotations are not strings.
-
         - AnnotationMismatchError: If `set_annotations` is `True` and there are
             incompatible annotations in the DAG's components.
 
@@ -254,11 +246,11 @@ def _create_combined_function_from_dag(  # noqa: PLR0913
             return annotation of the concatenated function reflects the requested return
             type and number of targets (e.g., for two targets returned as a list, the
             return annotation is a list of their respective type hints). Note that this
-            is not a valid type annotation and should not be used for type checking. All
-            annotations must be strings; otherwise, a NonStringAnnotationError is
-            raised. To ensure string annotations, enclose them in quotes or use "from
-            __future__ import annotations" at the top of your file. An
-            AnnotationMismatchError is raised if annotations differ between functions.
+            is not a valid type annotation and should not be used for type checking.
+            Annotations need not be strings: non-string annotations (e.g. when "from
+            __future__ import annotations" is not used, or on Python 3.14+) are
+            converted to their string representation. An AnnotationMismatchError is
+            raised if annotations differ between functions.
         lexsort_key (callable or None): A function that takes a string and returns a
             value that can be used to sort the nodes. This is used to sort the nodes
             in the topological sort. If None, the nodes are sorted alphabetically.
@@ -269,9 +261,6 @@ def _create_combined_function_from_dag(  # noqa: PLR0913
 
     Raises:
     ------
-        - NonStringAnnotationError: If `set_annotations` is `True` and the type
-            annotations are not strings.
-
         - AnnotationMismatchError: If `set_annotations` is `True` and there are
             incompatible annotations in the DAG's components.
 
@@ -554,11 +543,6 @@ def create_execution_info(
         dict: Dictionary with functions and their arguments for each node in the DAG.
             The functions are already in topological_sort order.
 
-    Raises:
-    ------
-        NonStringAnnotationError: If `verify_annotations` is `True` and the type
-            annotations are not strings.
-
     """
     out = {}
     for node in nx.lexicographical_topological_sort(dag, key=lexsort_key):
@@ -595,11 +579,11 @@ def _create_concatenated_function(
             return annotation of the concatenated function reflects the requested return
             type and number of targets (e.g., for two targets returned as a list, the
             return annotation is a list of their respective type hints). Note that this
-            is not a valid type annotation and should not be used for type checking. All
-            annotations must be strings; otherwise, a NonStringAnnotationError is
-            raised. To ensure string annotations, enclose them in quotes or use "from
-            __future__ import annotations" at the top of your file. An
-            AnnotationMismatchError is raised if annotations differ between functions.
+            is not a valid type annotation and should not be used for type checking.
+            Annotations need not be strings: non-string annotations (e.g. when "from
+            __future__ import annotations" is not used, or on Python 3.14+) are
+            converted to their string representation. An AnnotationMismatchError is
+            raised if annotations differ between functions.
 
     Returns:
     -------
