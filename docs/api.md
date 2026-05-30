@@ -401,7 +401,7 @@ ______________________________________________________________________
 | `CyclicDependencyError`         | `dags.exceptions`      | DAG contains a cycle                                                             |
 | `MissingFunctionsError`         | `dags.exceptions`      | Target functions not provided                                                    |
 | `AnnotationMismatchError`       | `dags.exceptions`      | Type annotations conflict between functions                                      |
-| `NonStringAnnotationError`      | `dags.exceptions`      | Non-string annotation with `set_annotations=True`                                |
+| `NonStringAnnotationError`      | `dags.exceptions`      | Reserved; not currently raised — non-string annotations are converted to strings |
 | `InvalidFunctionArgumentsError` | `dags.exceptions`      | Invalid function arguments (too many positional, duplicated, unexpected keyword) |
 | `ValidationError`               | `dags.exceptions`      | Base for validation errors                                                       |
 | `RepeatedTopLevelElementError`  | `dags.tree.exceptions` | Top-level element repeated in tree path                                          |

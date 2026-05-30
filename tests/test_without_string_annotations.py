@@ -5,7 +5,9 @@ check what happens when annotations are not strings.
 
 """
 
-from dags.dag import FunctionExecutionInfo
+import inspect
+
+from dags.dag import FunctionExecutionInfo, concatenate_functions
 
 
 def test_function_execution_info() -> None:
@@ -32,3 +34,35 @@ def test_function_execution_info_verify_annotations_converts_to_strings() -> Non
     )
     # Annotations should now be strings
     assert info.annotations == {"a": "int", "b": "float", "return": "float"}
+
+
+def test_concatenate_functions_set_annotations_converts_non_string_annotations() -> (
+    None
+):
+    """`set_annotations=True` converts non-string annotations to strings.
+
+    Regression test for the documented behavior: non-string annotations (here
+    real `int`/`float` type objects, because this module does not use
+    `from __future__ import annotations`) must be converted to their string
+    representation rather than raising. See ``NonStringAnnotationError``, which
+    is reserved but not currently raised.
+    """
+
+    def a() -> int:
+        return 1
+
+    def b(a: int) -> float:
+        return a + 1.5
+
+    combined = concatenate_functions(
+        {"a": a, "b": b},
+        targets="b",
+        set_annotations=True,
+    )
+
+    signature = inspect.signature(combined)
+    # `a` is a function (target ancestor), so the combined function has no free
+    # arguments. The propagated return annotation is the string form of `float`.
+    assert list(signature.parameters) == []
+    assert signature.return_annotation == "float"
+    assert combined() == 2.5

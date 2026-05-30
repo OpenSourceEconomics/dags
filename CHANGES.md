@@ -6,6 +6,11 @@ releases are available on [conda-forge](https://anaconda.org/conda-forge/dags).
 
 ## Unreleased
 
+- Fix docstrings and docs that incorrectly stated `set_annotations=True` requires
+  string annotations and raises `NonStringAnnotationError`. Since :gh:`67`, non-string
+  annotations are converted to their string representation and the exception is never
+  raised. Added a regression test for this behavior.
+
 ## 0.6.0
 
 - :gh:`82` Make dags wrappers play nicely with runtime type checkers
