@@ -29,47 +29,51 @@ dependencies = [
   "flatten-dict",
   "networkx>=3.6",
 ]
+[[project.maintainers]]
+name = "Hans-Martin von Gaudecker"
+email = "hmgaudecker@uni-bonn.de"
+
+[[project.maintainers]]
+name = "Tim Mensinger"
+email = "mensingertim@gmail.com"
 [[project.authors]]
 name = "Janoś Gabler"
 email = "janos.gabler@gmail.com"
+
 [[project.authors]]
 name = "Tobias Raabe"
+
 [[project.authors]]
 name = "Tim Mensinger"
 email = "mensingertim@gmail.com"
+
 [[project.authors]]
 name = "Hans-Martin von Gaudecker"
 email = "hmgaudecker@uni-bonn.de"
-[[project.maintainers]]
-name = "Hans-Martin von Gaudecker"
-email = "hmgaudecker@uni-bonn.de"
-[[project.maintainers]]
-name = "Tim Mensinger"
-email = "mensingertim@gmail.com"
 [project.urls]
 Github = "https://github.com/OpenSourceEconomics/dags"
 Repository = "https://github.com/OpenSourceEconomics/dags"
 Tracker = "https://github.com/OpenSourceEconomics/dags/issues"
 
 [tool.hatch]
+version.source = "vcs"
+metadata.allow-direct-references = true
 build.hooks.vcs.version-file = "src/dags/_version.py"
 build.targets.sdist.exclude = [ "tests" ]
 build.targets.sdist.only-packages = true
 build.targets.wheel.only-include = [ "src" ]
 build.targets.wheel.sources = [ "src" ]
-metadata.allow-direct-references = true
-version.source = "vcs"
 
+[tool.pixi.workspace]
+channels = [ "conda-forge" ]
+platforms = [ "linux-64", "osx-64", "osx-arm64", "win-64" ]
 [tool.pixi.dependencies]
 jupyterlab = "*"
 prek = "*"
 python = ">=3.11,<3.15"
-[tool.pixi.environments]
-docs = [ "docs", "py314" ]
-py311 = [ "py311", "tests" ]
-py312 = [ "py312", "tests" ]
-py313 = [ "py313", "tests" ]
-py314 = [ "py314", "tests", "type-checking" ]
+[tool.pixi.pypi-dependencies]
+dags = { path = ".", editable = true }
+pdbp = "*"
 [tool.pixi.feature.docs.dependencies]
 jupyter-book = ">=2.0"
 mystmd = "*"
@@ -100,12 +104,12 @@ ty = "*"
 types-networkx = "*"
 [tool.pixi.feature.type-checking.tasks]
 ty = "ty check"
-[tool.pixi.pypi-dependencies]
-dags = { path = ".", editable = true }
-pdbp = "*"
-[tool.pixi.workspace]
-channels = [ "conda-forge" ]
-platforms = [ "linux-64", "osx-64", "osx-arm64", "win-64" ]
+[tool.pixi.environments]
+docs = [ "docs", "py314" ]
+py311 = [ "py311", "tests" ]
+py312 = [ "py312", "tests" ]
+py313 = [ "py313", "tests" ]
+py314 = [ "py314", "tests", "type-checking" ]
 
 [tool.ruff]
 fix = true
@@ -113,18 +117,18 @@ unsafe-fixes = false
 [tool.ruff.lint]
 select = [ "ALL" ]
 extend-ignore = [
+  "ANN401", # Dynamically typed expressions (typing.Any) are disallowed
   "COM812", # Conflicts with ruff-format
   "EM101",  # Exception must not use a string literal
   "EM102",  # Exception must not use an f-string literal
+  "FA100",  # Missing from __future__ import annotations
+  "FA102",  # Missing from __future__ import annotations
   "FIX002", # Line contains TODO
   "ISC001", # Conflicts with ruff-format
   "TC001",  # Move application import into a type-checking block
   "TC002",  # Move third-party import into a type-checking block
   "TC003",  # Move standard library import into a type-checking block
   "TRY003", # Long messages outside exception class
-  "ANN401", # Dynamically typed expressions (typing.Any) are disallowed
-  "FA100",  # Missing from __future__ import annotations
-  "FA102",  # Missing from __future__ import annotations
 ]
 per-file-ignores."docs/**/*" = [
   "ANN001", # Missing type annotation for function argument
@@ -161,7 +165,6 @@ pydocstyle.convention = "google"
 column_width = 88
 max_supported_python = "3.14"
 table_format = "long"
-collapse_tables = [ "tool.hatch", "tool.pytest", "tool.ty" ]
 expand_tables = [
   "tool.pixi.dependencies",
   "tool.pixi.environments",
@@ -184,8 +187,10 @@ expand_tables = [
   "tool.pixi.pypi-dependencies.dags",
   "tool.pixi.workspace",
 ]
+collapse_tables = [ "tool.hatch", "tool.pytest", "tool.ty" ]
 
 [tool.ty]
+src.exclude = [ "docs/**/*.ipynb" ]
 rules.ambiguous-protocol-member = "error"
 rules.deprecated = "error"
 rules.division-by-zero = "error"
@@ -197,12 +202,11 @@ rules.invalid-legacy-positional-parameter = "error"
 rules.redundant-cast = "error"
 rules.unused-awaitable = "error"
 rules.unused-ignore-comment = "error"
-src.exclude = [ "docs/**/*.ipynb" ]
 
 [tool.pytest]
+ini_options.norecursedirs = [ "docs" ]
 ini_options.addopts = [ "--pdbcls=pdbp:Pdb" ]
 ini_options.filterwarnings = []
-ini_options.norecursedirs = [ "docs" ]
 
 [tool.yamlfix]
 line_length = 88
