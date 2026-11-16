@@ -76,8 +76,8 @@ python = ">=3.11,<3.16"
 dags = { path = ".", editable = true }
 pdbp = "*"
 [tool.pixi.feature.docs.dependencies]
-jupyter-book = ">=2.0"
-mystmd = "*"
+jupyter-book = ">=2.1.7"
+mystmd = ">=1.13.0"
 numpy = "*"
 [tool.pixi.feature.docs.tasks]
 build-docs = { cmd = "jupyter book build --html --execute", cwd = "docs" }
