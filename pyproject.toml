@@ -223,6 +223,12 @@ ini_options.norecursedirs = [ "docs" ]
 ini_options.addopts = [ "--pdbcls=pdbp:Pdb" ]
 ini_options.filterwarnings = []
 
+# Read by the `dead-code` hook (`.ai-instructions/hooks/dead_code.py`). A library
+# lists its package under `public`, so only `_`-private definitions are reported.
+[tool.dead-code]
+consumers = [ "src", "docs" ]
+public = [ "src/dags/" ]
+
 [tool.yamlfix]
 line_length = 88
 none_representation = "null"

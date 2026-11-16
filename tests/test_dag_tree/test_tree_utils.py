@@ -3,7 +3,6 @@
 import pytest
 
 from dags.tree.tree_utils import (
-    _is_python_identifier,
     flatten_to_qnames,
     flatten_to_tree_paths,
     qname_from_tree_path,
@@ -14,37 +13,6 @@ from dags.tree.tree_utils import (
     unflatten_from_tree_paths,
 )
 from dags.tree.typing import NestedFunctionDict
-
-
-@pytest.mark.parametrize(
-    ("s", "expected"),
-    [
-        ("", False),
-        ("1", False),
-        ("_", True),
-        ("_1", True),
-        ("__", True),
-        ("_a", True),
-        ("_A", True),
-        ("a", True),
-        ("a1", True),
-        ("a_", True),
-        ("ab", True),
-        ("aB", True),
-        ("A", True),
-        ("A1", True),
-        ("A_", True),
-        ("Ab", True),
-        ("AB", True),
-        ("ÄB", True),
-        ("ä", True),
-        ("äb", True),
-        ("Ä", True),
-        ("ß", True),
-    ],
-)
-def test_is_python_identifier(s: str, expected: bool) -> None:
-    assert _is_python_identifier(s) == expected
 
 
 def _bb() -> None:

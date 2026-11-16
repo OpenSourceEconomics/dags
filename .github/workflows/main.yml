@@ -56,6 +56,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
+        with:
+          # `.ai-instructions` carries the dead-code script.
+          submodules: true
       - uses: prefix-dev/setup-pixi@v0.11.3
         with:
           pixi-version: v0.84.2
@@ -65,4 +68,7 @@ jobs:
           environments: py314
       - name: Run ty
         run: pixi run --locked -e py314 prek run ty --all-files
+        shell: bash -el {0}
+      - name: Refuse dead internal and test code
+        run: pixi run --locked -e py314 prek run dead-code --all-files
         shell: bash -el {0}
