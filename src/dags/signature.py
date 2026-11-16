@@ -140,7 +140,7 @@ def with_signature(
                 )
             return func(*args, **kwargs)
 
-        wrapper_with_signature.__signature__ = signature  # ty: ignore[unresolved-attribute]
+        wrapper_with_signature.__signature__ = signature  # ty: ignore[missing-attribute]
         wrapper_with_signature.__annotations__ = forwarder_annotations()
         return wrapper_with_signature
 
@@ -292,7 +292,7 @@ def rename_arguments(
                     internal_kwargs[name] = value
             return func(*args, **internal_kwargs)
 
-        wrapper_rename_arguments.__signature__ = signature  # ty: ignore[unresolved-attribute]
+        wrapper_rename_arguments.__signature__ = signature  # ty: ignore[missing-attribute]
         wrapper_rename_arguments.__annotations__ = forwarder_annotations()
 
         return wrapper_rename_arguments

@@ -3,7 +3,7 @@
 import functools
 import inspect
 from collections.abc import Callable, Sequence
-from typing import Any, Unpack, cast, overload
+from typing import Any, cast, overload
 
 from dags.annotations import get_annotations
 from dags.exceptions import DagsError
@@ -34,12 +34,12 @@ def _apply_return_annotation(
     signature = inspect.signature(func)
     if "return" in get_annotations(func):
         signature = signature.replace(return_annotation=return_annotation)
-    wrapper.__signature__ = signature  # ty: ignore[unresolved-attribute]
+    wrapper.__signature__ = signature  # ty: ignore[missing-attribute]
     wrapper.__annotations__ = forwarder_annotations()
 
 
 def single_output(
-    func: Callable[P, tuple[T, *Unpack[MixedTupleType]]] | Callable[P, tuple[T, ...]],
+    func: Callable[P, tuple[T, *MixedTupleType]] | Callable[P, tuple[T, ...]],
     *,
     set_annotations: bool = False,
 ) -> Callable[P, T]:

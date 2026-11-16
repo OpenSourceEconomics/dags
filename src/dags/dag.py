@@ -419,8 +419,8 @@ def _harmonize_functions(
     functions: Mapping[str, Callable[..., Any]] | Sequence[Callable[..., Any]],
 ) -> dict[str, Callable[..., Any]]:
     if isinstance(functions, Mapping):
-        return {k: v for k, v in functions.items()}  # noqa: C416  # ty: ignore[invalid-return-type]
-    return {func.__name__: func for func in functions}  # ty: ignore[unresolved-attribute]
+        return {k: v for k, v in functions.items()}  # noqa: C416
+    return {func.__name__: func for func in functions}  # ty: ignore[missing-attribute]
 
 
 def _harmonize_targets(
