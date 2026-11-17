@@ -1,10 +1,7 @@
 """Type definitions for DAG tree module."""
 
 from collections.abc import Callable, Mapping
-from typing import Any, TypeVar
-
-# Type variables
-T = TypeVar("T")
+from typing import Any
 
 # Basic nested structure types
 NestedStructureDict = Mapping[str, "Any | NestedStructureDict"]

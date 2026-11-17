@@ -7,7 +7,6 @@ from typing import Any, overload
 
 from dags.annotations import get_free_arguments
 from dags.exceptions import DagsError, InvalidFunctionArgumentsError
-from dags.typing import P, R
 
 
 def _create_signature(
@@ -53,7 +52,7 @@ def _create_signature(
 
 
 @overload
-def with_signature(
+def with_signature[**P, R](
     func: Callable[P, R],
     *,
     args: Mapping[str, str] | Sequence[str] | None = None,
@@ -64,7 +63,7 @@ def with_signature(
 
 
 @overload
-def with_signature(
+def with_signature[**P, R](
     *,
     args: Mapping[str, str] | Sequence[str] | None = None,
     kwargs: Mapping[str, str] | Sequence[str] | None = None,
@@ -73,7 +72,7 @@ def with_signature(
 ) -> Callable[[Callable[P, R]], Callable[P, R]]: ...
 
 
-def with_signature(
+def with_signature[**P, R](
     func: Callable[P, R] | None = None,
     *,
     args: Mapping[str, str] | Sequence[str] | None = None,
@@ -220,7 +219,7 @@ def _fail_if_missing_arguments(
 
 
 @overload
-def rename_arguments(
+def rename_arguments[**P, R](
     func: Callable[P, R],
     *,
     mapper: Mapping[str, str],
@@ -228,12 +227,12 @@ def rename_arguments(
 
 
 @overload
-def rename_arguments(
+def rename_arguments[**P, R](
     *, mapper: Mapping[str, str]
 ) -> Callable[[Callable[P, R]], Callable[..., R]]: ...
 
 
-def rename_arguments(
+def rename_arguments[**P, R](
     func: Callable[P, R] | None = None,
     *,
     mapper: Mapping[str, str] | None = None,
