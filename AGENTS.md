@@ -22,7 +22,7 @@ pixi run -e docs build-docs      # Build HTML docs with Jupyter Book
 pixi run -e docs view-docs       # Live preview of docs
 ```
 
-Available Python environments: `py311`, `py312`, `py313`, `py314`, `py315`
+Available Python environments: `py312`, `py313`, `py314`, `py315`
 
 Documentation uses **Jupyter Book 2.0** with **MyST** markdown. Config is in
 `docs/myst.yml`. Docs include executable Jupyter notebooks.
@@ -67,7 +67,7 @@ tests/
 ## Code Style
 
 - Does **not** use `from __future__ import annotations` or `TYPE_CHECKING` blocks
-- Ruff for linting (target: Python 3.11)
+- Ruff for linting (target: Python 3.12)
 - ty for type checking (all rules set to error)
 - Google docstring convention
 - User-facing APIs accept `Sequence` (not `list`) for input parameters
