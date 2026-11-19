@@ -22,7 +22,6 @@ from dags.exceptions import (
 )
 from dags.output import aggregated_output, dict_output, list_output, single_output
 from dags.signature import with_signature
-from dags.typing import T
 from dags.utils import format_list_linewise
 
 
@@ -87,7 +86,7 @@ class FunctionExecutionInfo:
         return self.annotations["return"]
 
 
-def concatenate_functions(  # noqa: PLR0913
+def concatenate_functions[T](  # noqa: PLR0913
     functions: Mapping[str, Callable[..., Any]] | Sequence[Callable[..., Any]],
     targets: str | Sequence[str] | None = None,
     *,
@@ -215,7 +214,7 @@ def create_dag(
     return dag
 
 
-def _create_combined_function_from_dag(  # noqa: PLR0913
+def _create_combined_function_from_dag[T](  # noqa: PLR0913
     dag: nx.DiGraph,
     functions: Mapping[str, Callable[..., Any]] | Sequence[Callable[..., Any]],
     targets: str | Sequence[str] | None,
@@ -637,7 +636,7 @@ def _create_concatenated_function(
     )
 
 
-def _infer_aggregator_return_type(
+def _infer_aggregator_return_type[T](
     aggregator: Callable[[T, T], T],
     explicit_type: str | None,
     target_types: tuple[str, ...],

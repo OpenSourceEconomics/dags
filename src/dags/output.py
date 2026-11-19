@@ -8,7 +8,6 @@ from typing import Any, cast, overload
 from dags.annotations import get_annotations
 from dags.exceptions import DagsError
 from dags.signature import forwarder_annotations
-from dags.typing import MixedTupleType, P, T
 
 
 def _apply_return_annotation(
@@ -38,7 +37,7 @@ def _apply_return_annotation(
     wrapper.__annotations__ = forwarder_annotations()
 
 
-def single_output(
+def single_output[**P, T, *MixedTupleType](
     func: Callable[P, tuple[T, *MixedTupleType]] | Callable[P, tuple[T, ...]],
     *,
     set_annotations: bool = False,
@@ -64,7 +63,7 @@ def single_output(
 
 
 @overload
-def dict_output(
+def dict_output[**P, T](
     func: Callable[P, tuple[T, ...]],
     *,
     keys: Sequence[str],
@@ -73,12 +72,12 @@ def dict_output(
 
 
 @overload
-def dict_output(
+def dict_output[**P, T](
     *, keys: Sequence[str], set_annotations: bool = False
 ) -> Callable[[Callable[P, tuple[T, ...]]], Callable[P, dict[str, T]]]: ...
 
 
-def dict_output(
+def dict_output[**P, T](
     func: Callable[P, tuple[T, ...]] | None = None,
     *,
     keys: Sequence[str] | None = None,
@@ -116,7 +115,7 @@ def dict_output(
     return decorator_dict_output
 
 
-def list_output(
+def list_output[**P, T](
     func: Callable[P, tuple[T, ...]], *, set_annotations: bool = False
 ) -> Callable[P, list[T]]:
     """Convert tuple output to list output."""
@@ -136,7 +135,7 @@ def list_output(
 
 
 @overload
-def aggregated_output(
+def aggregated_output[**P, T](
     func: Callable[P, tuple[T, ...]],
     *,
     aggregator: Callable[[T, T], T],
@@ -146,7 +145,7 @@ def aggregated_output(
 
 
 @overload
-def aggregated_output(
+def aggregated_output[**P, T](
     *,
     aggregator: Callable[[T, T], T],
     set_annotations: bool = False,
@@ -154,7 +153,7 @@ def aggregated_output(
 ) -> Callable[[Callable[P, tuple[T, ...]]], Callable[P, T]]: ...
 
 
-def aggregated_output(
+def aggregated_output[**P, T](
     func: Callable[P, tuple[T, ...]] | None = None,
     *,
     aggregator: Callable[[T, T], T] | None = None,

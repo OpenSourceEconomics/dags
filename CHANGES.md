@@ -6,6 +6,9 @@ releases are available on [conda-forge](https://anaconda.org/conda-forge/dags).
 
 ## Unreleased
 
+- :gh:`91` Drop Python 3.11 support; declare type parameters with PEP 695 syntax and
+  remove `dags.typing` (:ghuser:`hmgaudecker`).
+
 ## 0.6.0
 
 - :gh:`82` Make dags wrappers play nicely with runtime type checkers

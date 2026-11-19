@@ -8,7 +8,7 @@ description = "Tools to create executable dags from interdependent functions."
 readme = { file = "README.md", content-type = "text/markdown" }
 keywords = []
 license = { file = "LICENSE" }
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Intended Audience :: Science/Research",
@@ -17,7 +17,6 @@ classifiers = [
   "Operating System :: Microsoft :: Windows",
   "Operating System :: POSIX",
   "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
@@ -71,7 +70,7 @@ platforms = [ "linux-64", "osx-64", "osx-arm64", "win-64" ]
 [tool.pixi.dependencies]
 jupyterlab = "*"
 prek = ">=0.5.9"
-python = ">=3.11,<3.16"
+python = ">=3.12,<3.16"
 [tool.pixi.pypi-dependencies]
 dags = { path = ".", editable = true }
 pdbp = "*"
@@ -82,8 +81,6 @@ numpy = "*"
 [tool.pixi.feature.docs.tasks]
 build-docs = { cmd = "jupyter book build --html --execute", cwd = "docs" }
 view-docs = { cmd = "jupyter book start --execute", cwd = "docs" }
-[tool.pixi.feature.py311.dependencies]
-python = "~=3.11.0"
 [tool.pixi.feature.py312.dependencies]
 python = "~=3.12.0"
 [tool.pixi.feature.py313.dependencies]
@@ -106,7 +103,6 @@ tests = "pytest"
 tests-with-cov = "pytest --cov-report=xml --cov=./"
 [tool.pixi.environments]
 docs = [ "docs", "py314" ]
-py311 = [ "py311", "tests" ]
 py312 = [ "py312", "tests" ]
 py313 = [ "py313", "tests" ]
 py314 = [ "py314", "tests" ]
@@ -179,8 +175,6 @@ expand_tables = [
   "tool.pixi.feature.docs",
   "tool.pixi.feature.docs.dependencies",
   "tool.pixi.feature.docs.tasks",
-  "tool.pixi.feature.py311",
-  "tool.pixi.feature.py311.dependencies",
   "tool.pixi.feature.py312",
   "tool.pixi.feature.py312.dependencies",
   "tool.pixi.feature.py313",
