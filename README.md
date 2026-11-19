@@ -87,7 +87,7 @@ More examples can be found in the
   hard coding the combined function.
 - When there is more than one target, you can determine whether the result is returned
   as tuple, list or dict or pass in an aggregator to combine the multiple outputs.
-- Since the relationships are discoverd from function signatures, dags provides
+- Since the relationships are discovered from function signatures, dags provides
   decorators to rename arguments in order to make it easy to wrap functions you do not
   control yourself.
 

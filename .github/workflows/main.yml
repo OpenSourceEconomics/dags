@@ -24,15 +24,15 @@ jobs:
           - macos-latest  # arm
           - windows-latest
         environment:
-          - py311
           - py312
           - py313
           - py314
+          - py315
     steps:
-      - uses: actions/checkout@v6
-      - uses: prefix-dev/setup-pixi@v0.9.4
+      - uses: actions/checkout@v7.0.1
+      - uses: prefix-dev/setup-pixi@v0.11.3
         with:
-          pixi-version: v0.68.1
+          pixi-version: v0.84.2
           cache: true
           cache-write: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
           frozen: true
@@ -40,28 +40,34 @@ jobs:
       - name: Run all tests except Linux and py314.
         if: runner.os != 'Linux' || matrix.environment != 'py314'
         shell: bash -el {0}
-        run: pixi run -e ${{ matrix.environment }} tests
+        run: pixi run --locked -e ${{ matrix.environment }} tests
       - name: Run tests with codecov on Linux and py314.
         if: runner.os == 'Linux' && matrix.environment == 'py314'
         shell: bash -el {0}
-        run: pixi run -e ${{ matrix.environment }} tests-with-cov
+        run: pixi run --locked -e ${{ matrix.environment }} tests-with-cov
       - name: Upload coverage report.
         if: runner.os == 'Linux' && matrix.environment == 'py314'
-        uses: codecov/codecov-action@v6
+        uses: codecov/codecov-action@v7.1.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-  run-ty:
-    name: Run ty
+  code-analysis:
+    name: Code analysis
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: prefix-dev/setup-pixi@v0.9.4
+      - uses: actions/checkout@v7.0.1
         with:
-          pixi-version: v0.68.1
+          # `.ai-instructions` carries the dead-code script.
+          submodules: true
+      - uses: prefix-dev/setup-pixi@v0.11.3
+        with:
+          pixi-version: v0.84.2
           cache: true
           cache-write: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
           frozen: true
           environments: py314
-      - name: Run ty
-        run: pixi run -e py314 ty
+      - name: Check types
+        run: pixi run --locked -e py314 prek run ty --all-files
+        shell: bash -el {0}
+      - name: Check for unused code
+        run: pixi run --locked -e py314 prek run dead-code --all-files
         shell: bash -el {0}
