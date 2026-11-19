@@ -50,8 +50,8 @@ jobs:
         uses: codecov/codecov-action@v7.1.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-  run-ty:
-    name: Run ty
+  code-analysis:
+    name: Code analysis
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
@@ -65,9 +65,9 @@ jobs:
           cache-write: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
           frozen: true
           environments: py314
-      - name: Run ty
+      - name: Check types
         run: pixi run --locked -e py314 prek run ty --all-files
         shell: bash -el {0}
-      - name: Refuse dead internal and test code
+      - name: Check for unused code
         run: pixi run --locked -e py314 prek run dead-code --all-files
         shell: bash -el {0}

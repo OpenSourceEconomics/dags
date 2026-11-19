@@ -169,13 +169,13 @@ repos:
 ci:
   autoupdate_schedule: monthly
   # pre-commit.ci has no pixi environments and blocks network at hook runtime;
-  # the GitHub Actions `run-ty` job covers type checking, and pixi-lock-check
+  # the GitHub Actions `code-analysis` job covers type checking, and pixi-lock-check
   # needs a pixi binary that pre-commit.ci does not provide.
   #
   # The hooks above that run files from the `.ai-instructions` submodule
   # fail as a missing file on pre-commit.ci, which clones without submodules.
   # `pre-push-hooks-installed` asks about the local clone and is meaningless on
-  # a runner anyway; `dead-code` runs in the GitHub Actions `run-ty` job, which
+  # a runner anyway; `dead-code` runs in the GitHub Actions `code-analysis` job, which
   # checks out the submodule; the notebook check loses CI coverage and holds
   # only where the submodule is present.
   skip:
