@@ -1,7 +1,5 @@
 """Utilities for handling qualified names in nested dictionaries."""
 
-import re
-
 import flatten_dict as fd
 import flatten_dict.reducers
 import flatten_dict.splitters
@@ -10,7 +8,6 @@ from dags.tree.typing import FlatQNameDict, FlatTreePathDict, NestedStructureDic
 
 # Constants for qualified names
 QNAME_DELIMITER: str = "__"
-_python_identifier: str = r"[a-zA-Z_\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF][a-zA-Z0-9_\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]*"  # noqa: E501
 
 # Reducers and splitters to flatten/unflatten dicts with qualified names as keys
 _qualified_name_reducer = fd.reducers.make_reducer(delimiter=QNAME_DELIMITER)
@@ -119,16 +116,3 @@ def unflatten_from_tree_paths(flat_tree_paths: FlatTreePathDict) -> NestedStruct
         A nested dictionary.
     """
     return fd.unflatten(flat_tree_paths, splitter="tuple")
-
-
-def _is_python_identifier(s: str) -> bool:
-    """Check if a string is a valid Python identifier.
-
-    Args:
-        s: String to check
-
-    Returns:
-    -------
-        True if valid identifier, False otherwise
-    """
-    return bool(re.fullmatch(_python_identifier, s))

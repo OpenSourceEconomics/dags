@@ -13,16 +13,16 @@ annotations, and execute function graphs.
 This project uses [pixi](https://pixi.sh) for environment management.
 
 ```bash
-pixi run -e py313 tests          # Run tests with Python 3.13
 pixi run -e py314 tests          # Run tests with Python 3.14
-pixi run -e py313 tests-with-cov # Run tests with coverage
-pixi run ty                      # Type checking
-prek run --all-files             # Linting & formatting
-pixi run -e docs build-docs     # Build HTML docs with Jupyter Book
-pixi run -e docs view-docs      # Live preview of docs
+pixi run -e py315 tests          # Run tests with Python 3.15
+pixi run -e py314 tests-with-cov # Run tests with coverage
+prek run ty --all-files          # Type checking (ty runs as a prek hook)
+prek run --all-files             # Linting, formatting & type checking
+pixi run -e docs build-docs      # Build HTML docs with Jupyter Book
+pixi run -e docs view-docs       # Live preview of docs
 ```
 
-Available Python environments: `py311`, `py312`, `py313`, `py314`
+Available Python environments: `py312`, `py313`, `py314`, `py315`
 
 Documentation uses **Jupyter Book 2.0** with **MyST** markdown. Config is in
 `docs/myst.yml`. Docs include executable Jupyter notebooks.
@@ -37,7 +37,6 @@ src/dags/
 ├── exceptions.py        # Custom exceptions
 ├── output.py            # Output processing utilities
 ├── signature.py         # Function signature utilities
-├── typing.py            # Type definitions
 ├── utils.py             # General utilities
 └── tree/                # Tree-related utilities
 
@@ -67,7 +66,7 @@ tests/
 ## Code Style
 
 - Does **not** use `from __future__ import annotations` or `TYPE_CHECKING` blocks
-- Ruff for linting (target: Python 3.11)
+- Ruff for linting (target: Python 3.12)
 - ty for type checking (all rules set to error)
 - Google docstring convention
 - User-facing APIs accept `Sequence` (not `list`) for input parameters

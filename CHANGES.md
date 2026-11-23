@@ -6,6 +6,9 @@ releases are available on [conda-forge](https://anaconda.org/conda-forge/dags).
 
 ## Unreleased
 
+- :gh:`90` Support Python 3.15, drop Python 3.11, modernize type annotations,
+  and update development tools (:ghuser:`hmgaudecker`).
+
 ## 0.6.0
 
 - :gh:`82` Make dags wrappers play nicely with runtime type checkers

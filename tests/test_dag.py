@@ -350,9 +350,7 @@ def test_concatenate_functions_no_annotations_set_annotations() -> None:
     }
 
 
-# ======================================================================================
 # Tests for aggregator return type inference
-# ======================================================================================
 
 
 def test_aggregator_return_type_explicit() -> None:

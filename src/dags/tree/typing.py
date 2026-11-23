@@ -1,10 +1,7 @@
 """Type definitions for DAG tree module."""
 
 from collections.abc import Callable, Mapping
-from typing import Any, TypeVar
-
-# Type variables
-T = TypeVar("T")
+from typing import Any
 
 # Basic nested structure types
 NestedStructureDict = Mapping[str, "Any | NestedStructureDict"]
@@ -23,10 +20,10 @@ QNameFunctionDict = dict[str, Callable[..., Any]]
 TreePathFunctionDict = dict[tuple[str, ...], Callable[..., Any]]
 
 # Input structure types
-NestedInputStructureDict = Mapping[str, "str | None | NestedInputStructureDict"]
+NestedInputStructureDict = Mapping[str, "str | NestedInputStructureDict | None"]
 QNameInputStructureDict = dict[str, "str | None"]
 TreePathInputStructureDict = dict[tuple[str, ...], "str | None"]
 
 # Target types
-NestedTargetDict = Mapping[str, "str | None | NestedTargetDict"]
+NestedTargetDict = Mapping[str, "str | NestedTargetDict | None"]
 QNameTargetList = list[str]
