@@ -4,7 +4,7 @@ This is a record of all past dags releases and what went into them in reverse
 chronological order. We follow [semantic versioning](https://semver.org/) and all
 releases are available on [conda-forge](https://anaconda.org/conda-forge/dags).
 
-## Unreleased
+## 0.7.0
 
 - :gh:`90` Support Python 3.15, drop Python 3.11, modernize type annotations,
   and update development tools (:ghuser:`hmgaudecker`).
